@@ -77,31 +77,12 @@ body::before {
 .sticky-ctas {
   position: fixed;
   right: 24px;
-  bottom: calc(32px + env(safe-area-inset-bottom, 0px));
+  bottom: 32px;
   z-index: 1000;
   display: flex;
   flex-direction: column;
   gap: 12px;
   align-items: flex-end;
-}
-
-/* Safe-area background patches — paint black into top/bottom unsafe zones */
-.safe-area-top-patch,
-.safe-area-bottom-patch {
-  position: fixed;
-  left: 0;
-  right: 0;
-  background: #0A0A0A;
-  pointer-events: none;
-  z-index: 499;
-}
-.safe-area-top-patch {
-  top: 0;
-  height: calc(env(safe-area-inset-top, 0px) + 4px);
-}
-.safe-area-bottom-patch {
-  bottom: 0;
-  height: calc(env(safe-area-inset-bottom, 0px) + 4px);
 }
 
 .sticky-btn {
@@ -166,7 +147,6 @@ nav {
   right: 0;
   z-index: 500;
   padding: 20px 48px;
-  padding-top: calc(20px + env(safe-area-inset-top, 0px));
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -177,7 +157,6 @@ nav.scrolled {
   background: rgba(10,10,10,0.92);
   backdrop-filter: blur(12px);
   padding: 14px 48px;
-  padding-top: calc(14px + env(safe-area-inset-top, 0px));
   border-bottom: 1px solid rgba(153,153,102,0.1);
 }
 
@@ -1988,7 +1967,6 @@ footer {
   right: 0;
   z-index: 1000;
   padding: 12px 16px;
-  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
   background: rgba(10,10,10,0.96);
   backdrop-filter: blur(12px);
   border-top: 1px solid rgba(153,153,102,0.2);
@@ -2447,10 +2425,6 @@ footer {
 
 <body>
 
-<!-- Safe-area background patches -->
-<div class="safe-area-top-patch" aria-hidden="true"></div>
-<div class="safe-area-bottom-patch" aria-hidden="true"></div>
-
 <!-- ============================================================
      STICKY FLOATING CTAs
      ============================================================ -->
@@ -2498,7 +2472,7 @@ footer {
      ============================================================ -->
 <section id="hero">
   <video class="hero-video" autoplay muted loop playsinline preload="auto" poster="main group photo.jpeg">
-    <source src="video edit.mp4" type="video/mp4">
+    <source src="First hero video_c.mp4" type="video/mp4">
   </video>
   <div class="hero-overlay"></div>
   <div class="hero-streak"></div>
