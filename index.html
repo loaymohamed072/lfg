@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>LFG Dubai | Running Club in Dubai &amp; Coaching with Ahmed Sam</title>
 <meta name="description" content="Join LFG Dubai, one of the fastest growing running clubs in Dubai with 1000+ members, weekly Wednesday runs, and private coaching with Ahmed Sam.">
 <meta name="robots" content="index, follow">
@@ -34,6 +34,8 @@ html {
   width: 100%;
   max-width: 100%;
   overflow-x: clip;
+  background: #0A0A0A;
+  min-height: 100%;
 }
 
 body {
@@ -44,6 +46,7 @@ body {
   width: 100%;
   max-width: 100%;
   position: relative;
+  min-height: 100%;
   cursor: default;
 }
 
@@ -144,6 +147,7 @@ nav {
   right: 0;
   z-index: 500;
   padding: 20px 48px;
+  padding-top: calc(20px + env(safe-area-inset-top, 0px));
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -228,6 +232,8 @@ nav.scrolled {
 #hero {
   position: relative;
   height: 100vh;
+  height: 100svh;
+  height: 100dvh;
   min-height: 700px;
   display: flex;
   flex-direction: column;
@@ -1962,6 +1968,7 @@ footer {
   right: 0;
   z-index: 1000;
   padding: 12px 16px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
   background: rgba(10,10,10,0.96);
   backdrop-filter: blur(12px);
   border-top: 1px solid rgba(153,153,102,0.2);
