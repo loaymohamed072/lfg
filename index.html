@@ -2035,10 +2035,10 @@ footer {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 48px;
-  padding: 14px 8px;
+  min-height: 52px;
+  padding: 16px 10px;
   font-family: var(--font-head);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -2058,8 +2058,15 @@ footer {
   border: 1.5px solid rgba(255,255,255,0.25);
 }
 @media (max-width: 768px) {
+  /* Hide desktop floating CTA stack entirely on mobile */
+  .sticky-ctas { display: none !important; }
   .sticky-ctas-desktop { display: none; }
   .mobile-sticky-bar { display: flex; }
+
+  /* Reserve bottom space so fixed dock never covers content */
+  body {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 /* ============================================================
