@@ -72,6 +72,11 @@ body::before {
 }
 
 /* ============================================================
+   MOBILE TOP SEAL (hidden on desktop)
+   ============================================================ */
+#top-seal { display: none; }
+
+/* ============================================================
    FLOATING STICKY CTAS
    ============================================================ */
 .sticky-ctas {
@@ -1671,9 +1676,47 @@ footer {
 }
 
 @media (max-width: 768px) {
+  :root {
+    --mobile-top-fill: max(env(safe-area-inset-top, 0px), 44px);
+  }
+
+  /* TOP SEAL — fixed black layer that fills the safe-area zone */
+  #top-seal {
+    display: block;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: var(--mobile-top-fill);
+    background: #0A0A0A;
+    z-index: 10000;
+    pointer-events: none;
+  }
+
+  /* NAV — sits directly below the seal, always black on mobile */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 10001;
+    background: #0A0A0A;
+    padding-top: calc(var(--mobile-top-fill) + 0.6rem);
+    padding-bottom: 0.75rem;
+    padding-left: 20px;
+    padding-right: 20px;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-bottom: none;
+  }
+  nav.scrolled {
+    background: #0A0A0A;
+    padding-top: calc(var(--mobile-top-fill) + 0.6rem);
+    padding-bottom: 0.75rem;
+    padding-left: 20px;
+    padding-right: 20px;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-bottom: 1px solid rgba(153,153,102,0.1);
+  }
+
   .nav-links { display: none; }
-  nav { padding: 10px 20px; }
-  nav.scrolled { padding: 6px 20px; }
   .nav-logo {
     height: 30px;
     transform-origin: left center;
@@ -1976,11 +2019,13 @@ footer {
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 1000;
-  padding: 0 16px 10px;
-  background: transparent;
-  gap: 10px;
-  align-items: center;
+  z-index: 9999;
+  padding: 10px 12px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  background: #0A0A0A;
+  border-top: 1px solid rgba(153,153,102,0.2);
+  gap: 8px;
+  align-items: stretch;
   transform: translateY(100%);
   transition: transform 0.35s cubic-bezier(0.16,1,0.3,1);
 }
@@ -1990,10 +2035,10 @@ footer {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 36px;
-  padding: 9px 6px;
+  min-height: 48px;
+  padding: 14px 8px;
   font-family: var(--font-head);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -2008,7 +2053,7 @@ footer {
   color: var(--black);
 }
 .mobile-sticky-secondary {
-  background: rgba(10,10,10,0.92);
+  background: transparent;
   color: var(--white);
   border: 1.5px solid rgba(255,255,255,0.25);
 }
@@ -2435,6 +2480,9 @@ footer {
 </head>
 
 <body>
+
+<!-- Mobile top seal — fills safe-area zone above nav -->
+<div id="top-seal" aria-hidden="true"></div>
 
 <!-- ============================================================
      STICKY FLOATING CTAs
