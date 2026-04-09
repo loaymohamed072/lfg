@@ -1,6 +1,5 @@
-# Large video files — too big for GitHub (use local hosting or CDN)
-*.mp4
+# Large original video files — excluded from GitHub
 *.mov
 *.MOV
-*.MP4
-new videos to check/
+new videos to check/*.mp4
+!new videos to check/*_c.mp4
