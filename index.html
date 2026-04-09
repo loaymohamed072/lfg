@@ -1,0 +1,2935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LFG Dubai | Running Club in Dubai &amp; Coaching with Ahmed Sam</title>
+<meta name="description" content="Join LFG Dubai, one of the fastest growing running clubs in Dubai with 1000+ members, weekly Wednesday runs, and private coaching with Ahmed Sam.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://lfgdubai.com/">
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700;1,800;1,900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --black: #0A0A0A;
+  --white: #FFFFFF;
+  --green: #999966;
+  --green-dim: rgba(153,153,102,0.15);
+  --green-glow: rgba(153,153,102,0.35);
+  --font-head: 'Barlow Condensed', sans-serif;
+  --font-body: 'Barlow', sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--black);
+  color: var(--white);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+  cursor: default;
+}
+
+/* Selection */
+::selection { background: var(--green); color: var(--black); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: var(--black); }
+::-webkit-scrollbar-thumb { background: var(--green); }
+
+/* ============================================================
+   NOISE GRAIN OVERLAY (global)
+   ============================================================ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.035;
+  pointer-events: none;
+  z-index: 9999;
+  animation: grain-shift 0.4s steps(1) infinite;
+}
+
+@keyframes grain-shift {
+  0%   { transform: translate(0,0); }
+  10%  { transform: translate(-2%,-3%); }
+  20%  { transform: translate(3%,1%); }
+  30%  { transform: translate(-1%,4%); }
+  40%  { transform: translate(4%,-2%); }
+  50%  { transform: translate(-3%,3%); }
+  60%  { transform: translate(2%,-4%); }
+  70%  { transform: translate(-4%,2%); }
+  80%  { transform: translate(3%,-1%); }
+  90%  { transform: translate(-2%,4%); }
+  100% { transform: translate(0,0); }
+}
+
+/* ============================================================
+   FLOATING STICKY CTAS
+   ============================================================ */
+.sticky-ctas {
+  position: fixed;
+  right: 24px;
+  bottom: 32px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.sticky-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 20px;
+  font-family: var(--font-head);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.sticky-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.4s;
+}
+
+.sticky-btn:hover::before { transform: translateX(100%); }
+.sticky-btn:hover { transform: translateY(-2px); }
+
+.sticky-btn.whatsapp {
+  background: var(--green);
+  color: var(--black);
+  box-shadow: 0 0 20px var(--green-glow);
+}
+.sticky-btn.whatsapp:hover {
+  box-shadow: 0 0 40px var(--green-glow), 0 0 80px rgba(153,153,102,0.2);
+}
+
+.sticky-btn.book {
+  background: transparent;
+  color: var(--white);
+  border: 1.5px solid rgba(255,255,255,0.3);
+}
+.sticky-btn.book:hover {
+  border-color: var(--green);
+  color: var(--green);
+  box-shadow: 0 0 20px var(--green-dim);
+}
+
+.sticky-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+/* ============================================================
+   NAV
+   ============================================================ */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 500;
+  padding: 20px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: background 0.3s, padding 0.3s;
+}
+
+nav.scrolled {
+  background: rgba(10,10,10,0.92);
+  backdrop-filter: blur(12px);
+  padding: 14px 48px;
+  border-bottom: 1px solid rgba(153,153,102,0.1);
+}
+
+.nav-logo {
+  height: 36px;
+  width: auto;
+  opacity: 0;
+  animation: logo-enter 0.8s 0.3s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+
+@keyframes logo-enter {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  list-style: none;
+}
+
+.nav-links a {
+  font-family: var(--font-head);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.65);
+  text-decoration: none;
+  transition: color 0.2s;
+  position: relative;
+}
+
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 0;
+  height: 1.5px;
+  background: var(--green);
+  transition: width 0.25s;
+}
+
+.nav-links a:hover { color: var(--white); }
+.nav-links a:hover::after { width: 100%; }
+
+.nav-cta {
+  font-family: var(--font-head);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--black) !important;
+  background: var(--green);
+  padding: 9px 20px;
+  text-decoration: none;
+  transition: box-shadow 0.2s, transform 0.2s !important;
+}
+.nav-cta:hover {
+  box-shadow: 0 0 24px var(--green-glow) !important;
+  transform: translateY(-1px) !important;
+}
+.nav-cta::after { display: none !important; }
+
+/* ============================================================
+   HERO
+   ============================================================ */
+#hero {
+  position: relative;
+  height: 100vh;
+  min-height: 700px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+}
+
+.hero-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 30%;
+  filter: grayscale(20%) contrast(1.1);
+  transform: scale(1.05);
+  animation: hero-slow-zoom 20s ease-in-out infinite alternate;
+}
+
+@keyframes hero-slow-zoom {
+  from { transform: scale(1.05); }
+  to   { transform: scale(1.12); }
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(0deg, rgba(10,10,10,0.97) 0%, rgba(10,10,10,0.6) 40%, rgba(10,10,10,0.3) 70%, rgba(10,10,10,0.5) 100%);
+  z-index: 1;
+}
+
+/* Light streak */
+.hero-streak {
+  position: absolute;
+  top: 0;
+  left: -30%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(105deg, transparent 40%, rgba(153,153,102,0.03) 50%, transparent 60%);
+  z-index: 2;
+  animation: streak-move 6s ease-in-out infinite;
+}
+
+@keyframes streak-move {
+  0%, 100% { transform: translateX(0) skewX(-5deg); opacity: 0.4; }
+  50%       { transform: translateX(160%) skewX(-5deg); opacity: 1; }
+}
+
+.hero-content {
+  position: relative;
+  z-index: 3;
+  padding: 0 64px 80px;
+  max-width: 1400px;
+}
+
+.hero-label {
+  font-family: var(--font-head);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 20px;
+  opacity: 0;
+  animation: fade-up 0.6s 0.5s ease forwards;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.hero-label::before {
+  content: '';
+  display: block;
+  width: 32px;
+  height: 1.5px;
+  background: var(--green);
+}
+
+.hero-headline {
+  font-family: var(--font-head);
+  font-size: clamp(72px, 11vw, 160px);
+  font-weight: 900;
+  line-height: 0.88;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  margin-bottom: 28px;
+  opacity: 0;
+  animation: headline-enter 0.9s 0.7s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+
+.hero-headline span {
+  color: var(--green);
+  display: inline-block;
+  position: relative;
+}
+
+.hero-headline span::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  left: 0;
+  width: 0;
+  height: 3px;
+  background: var(--green);
+  animation: underline-grow 0.6s 1.6s ease forwards;
+}
+
+@keyframes underline-grow { to { width: 100%; } }
+
+@keyframes headline-enter {
+  from { opacity: 0; transform: translateY(40px) skewY(2deg); }
+  to   { opacity: 1; transform: translateY(0) skewY(0deg); }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.hero-sub {
+  font-family: var(--font-head);
+  font-size: clamp(18px, 2.2vw, 26px);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(255,255,255,0.6);
+  text-transform: uppercase;
+  margin-bottom: 48px;
+  max-width: 480px;
+  opacity: 0;
+  animation: fade-up 0.7s 1.0s ease forwards;
+}
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  opacity: 0;
+  animation: fade-up 0.7s 1.2s ease forwards;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 40px;
+  background: var(--green);
+  color: var(--black);
+  font-family: var(--font-head);
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.25s, transform 0.2s;
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.15);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.3s;
+}
+.btn-primary:hover::before { transform: scaleX(1); transform-origin: left; }
+.btn-primary:hover {
+  box-shadow: 0 0 50px var(--green-glow), 0 0 100px rgba(153,153,102,0.15);
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 17px 40px;
+  background: transparent;
+  color: var(--white);
+  font-family: var(--font-head);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: 1.5px solid rgba(255,255,255,0.35);
+  transition: border-color 0.25s, color 0.25s, box-shadow 0.25s, transform 0.2s;
+}
+.btn-secondary:hover {
+  border-color: var(--green);
+  color: var(--green);
+  box-shadow: 0 0 24px var(--green-dim);
+  transform: translateY(-2px);
+}
+
+/* Arrow icon */
+.arrow-icon {
+  width: 14px;
+  height: 14px;
+  transition: transform 0.25s;
+}
+.btn-primary:hover .arrow-icon,
+.btn-secondary:hover .arrow-icon { transform: translateX(4px); }
+
+/* Hero bottom bar */
+.hero-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 0 64px 80px;
+}
+
+.hero-timer-box {
+  text-align: right;
+  opacity: 0;
+  animation: fade-up 0.7s 1.4s ease forwards;
+}
+
+.hero-timer-label {
+  font-family: var(--font-head);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 6px;
+}
+
+.hero-countdown {
+  font-family: var(--font-head);
+  font-size: clamp(36px, 4vw, 56px);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  color: var(--white);
+  line-height: 1;
+}
+
+.hero-countdown .sep {
+  color: var(--green);
+  animation: blink 1s step-start infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+.hero-when {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 0.08em;
+  margin-top: 6px;
+}
+
+/* ============================================================
+   SCROLL INDICATOR
+   ============================================================ */
+.scroll-indicator {
+  position: absolute;
+  bottom: 36px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  opacity: 0;
+  animation: fade-up 0.6s 2s ease forwards;
+}
+
+.scroll-line {
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(to bottom, var(--green), transparent);
+  animation: scroll-line-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes scroll-line-pulse {
+  0%, 100% { transform: scaleY(1); opacity: 0.6; }
+  50%       { transform: scaleY(1.3); opacity: 1; }
+}
+
+/* ============================================================
+   SECTION: AUTHORITY / GROUP PHOTO
+   ============================================================ */
+#authority {
+  position: relative;
+  height: 90vh;
+  min-height: 600px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.authority-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 30%;
+  filter: contrast(1.1) saturate(0.8);
+  transform: scale(1.1);
+  transition: transform 0.1s linear;
+  will-change: transform;
+}
+
+.authority-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(10,10,10,0.7) 0%, rgba(10,10,10,0.3) 40%, rgba(10,10,10,0.75) 100%);
+  z-index: 1;
+}
+
+.authority-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 40px;
+}
+
+.authority-number {
+  font-family: var(--font-head);
+  font-size: clamp(80px, 14vw, 200px);
+  font-weight: 900;
+  line-height: 0.85;
+  color: #ffffff;
+  -webkit-text-stroke: 0;
+  text-shadow: 0 2px 40px rgba(0,0,0,0.8);
+  letter-spacing: -0.02em;
+  display: block;
+  margin-bottom: 20px;
+}
+
+.authority-headline {
+  font-family: var(--font-head);
+  font-size: clamp(40px, 6vw, 88px);
+  font-weight: 900;
+  text-transform: uppercase;
+  line-height: 0.95;
+  letter-spacing: -0.01em;
+}
+
+.authority-headline em {
+  font-style: normal;
+  color: var(--green);
+}
+
+.authority-sub {
+  font-family: var(--font-head);
+  font-size: clamp(16px, 2vw, 22px);
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.5);
+  margin-top: 20px;
+}
+
+/* ============================================================
+   SECTION: WHAT LFG IS
+   ============================================================ */
+#what-lfg {
+  padding: 120px 64px;
+  position: relative;
+  overflow: hidden;
+}
+
+#what-lfg::before {
+  content: 'LFG';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-head);
+  font-size: clamp(200px, 30vw, 400px);
+  font-weight: 900;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255,255,255,0.03);
+  letter-spacing: -0.05em;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.section-tag {
+  font-family: var(--font-head);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 60px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.section-tag::before {
+  content: '';
+  width: 28px;
+  height: 1.5px;
+  background: var(--green);
+}
+
+.lfg-blocks {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: rgba(255,255,255,0.07);
+  position: relative;
+  z-index: 1;
+}
+
+.lfg-block {
+  background: var(--black);
+  padding: 56px 48px;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.3s;
+  cursor: default;
+}
+
+.lfg-block::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--green);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
+}
+
+.lfg-block::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 100%, rgba(153,153,102,0.06) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.lfg-block:hover { background: #0f0f0f; }
+.lfg-block:hover::before { transform: scaleX(1); }
+.lfg-block:hover::after { opacity: 1; }
+
+.lfg-block-num {
+  font-family: var(--font-head);
+  font-size: 80px;
+  font-weight: 900;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255,255,255,0.08);
+  line-height: 1;
+  margin-bottom: 24px;
+  display: block;
+  transition: -webkit-text-stroke-color 0.3s;
+}
+.lfg-block:hover .lfg-block-num { -webkit-text-stroke-color: rgba(153,153,102,0.25); }
+
+.lfg-block-title {
+  font-family: var(--font-head);
+  font-size: clamp(32px, 3.5vw, 48px);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  line-height: 0.95;
+  margin-bottom: 20px;
+}
+
+.lfg-block-text {
+  font-size: 15px;
+  color: rgba(255,255,255,0.5);
+  line-height: 1.6;
+  font-weight: 500;
+  max-width: 280px;
+}
+
+/* ============================================================
+   SECTION: NEXT RUN (CONVERSION)
+   ============================================================ */
+#next-run {
+  position: relative;
+  padding: 100px 64px;
+  background: var(--green);
+  overflow: hidden;
+}
+
+#next-run::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.05;
+  pointer-events: none;
+}
+
+.next-run-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 60px;
+  flex-wrap: wrap;
+}
+
+.next-run-left {}
+
+.next-run-tag {
+  font-family: var(--font-head);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(10,10,10,0.55);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.next-run-tag::before {
+  content: '';
+  width: 24px;
+  height: 1.5px;
+  background: rgba(10,10,10,0.4);
+}
+
+.next-run-headline {
+  font-family: var(--font-head);
+  font-size: clamp(56px, 8vw, 112px);
+  font-weight: 900;
+  text-transform: uppercase;
+  line-height: 0.87;
+  letter-spacing: -0.02em;
+  color: var(--black);
+}
+
+.next-run-detail {
+  margin-top: 28px;
+  font-family: var(--font-head);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(10,10,10,0.6);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.next-run-detail span { color: var(--black); }
+
+.next-run-right {
+  text-align: right;
+}
+
+.run-countdown-label {
+  font-family: var(--font-head);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: rgba(10,10,10,0.55);
+  margin-bottom: 12px;
+}
+
+.run-countdown {
+  font-family: var(--font-head);
+  font-size: clamp(52px, 7vw, 100px);
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  color: var(--black);
+  line-height: 1;
+}
+
+.run-countdown .sep {
+  color: rgba(10,10,10,0.3);
+  animation: blink 1s step-start infinite;
+}
+
+.run-join-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 32px;
+  padding: 20px 44px;
+  background: var(--black);
+  color: var(--green);
+  font-family: var(--font-head);
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+.run-join-btn svg { width: 18px; height: 18px; }
+.run-join-btn:hover {
+  background: #111;
+  box-shadow: 0 0 40px rgba(0,0,0,0.3);
+  transform: translateY(-3px);
+}
+
+/* ============================================================
+   SECTION: GALLERY / MOVEMENT
+   ============================================================ */
+#movement {
+  overflow: hidden;
+  padding: 80px 0;
+  position: relative;
+}
+
+.movement-tag {
+  font-family: var(--font-head);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin: 0 64px 48px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.movement-tag::before {
+  content: '';
+  width: 28px;
+  height: 1.5px;
+  background: var(--green);
+}
+
+.marquee-track {
+  display: flex;
+  gap: 4px;
+  width: max-content;
+}
+
+.marquee-track:first-child {
+  animation: marquee-left 22s linear infinite;
+}
+
+.marquee-track:last-child {
+  animation: marquee-right 28s linear infinite;
+  margin-top: 4px;
+}
+
+@keyframes marquee-left {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@keyframes marquee-right {
+  from { transform: translateX(-50%); }
+  to   { transform: translateX(0); }
+}
+
+.marquee-item {
+  flex-shrink: 0;
+  width: 320px;
+  height: 200px;
+  overflow: hidden;
+  position: relative;
+}
+
+.marquee-item img,
+.marquee-item video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(15%) contrast(1.1);
+  transition: filter 0.4s, transform 0.4s;
+}
+
+.marquee-item:hover img,
+.marquee-item:hover video {
+  filter: grayscale(0%) contrast(1.2);
+  transform: scale(1.06);
+}
+
+.marquee-item::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 0px solid var(--green);
+  transition: border-width 0.3s;
+  pointer-events: none;
+}
+.marquee-item:hover::after { border-width: 2px; }
+
+/* ============================================================
+   SECTION: FOUNDER
+   ============================================================ */
+#founder {
+  padding: 120px 64px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+#founder::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(153,153,102,0.3), transparent);
+}
+
+.founder-img-wrap {
+  position: relative;
+}
+
+.founder-img-wrap::before {
+  content: '';
+  position: absolute;
+  inset: -12px;
+  border: 1px solid rgba(153,153,102,0.12);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.founder-img-wrap::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(to top, var(--black), transparent);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.founder-img {
+  width: 100%;
+  height: 600px;
+  object-fit: cover;
+  object-position: center top;
+  filter: grayscale(15%) contrast(1.05);
+  display: block;
+  position: relative;
+  z-index: 1;
+  transition: filter 0.5s;
+}
+
+.founder-img-wrap:hover .founder-img { filter: grayscale(0%) contrast(1.1); }
+
+.founder-img-accent {
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: 60px;
+  height: 60px;
+  border-top: 2px solid var(--green);
+  border-left: 2px solid var(--green);
+  z-index: 3;
+}
+
+.founder-img-accent-br {
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 60px;
+  height: 60px;
+  border-bottom: 2px solid var(--green);
+  border-right: 2px solid var(--green);
+  z-index: 3;
+}
+
+.founder-content {}
+
+.founder-eyebrow {
+  font-family: var(--font-head);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 32px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.founder-eyebrow::before {
+  content: '';
+  width: 28px;
+  height: 1.5px;
+  background: var(--green);
+}
+
+.founder-quote {
+  font-family: var(--font-head);
+  font-size: clamp(36px, 4.5vw, 60px);
+  font-weight: 900;
+  text-transform: uppercase;
+  line-height: 0.95;
+  letter-spacing: -0.01em;
+  margin-bottom: 36px;
+}
+
+.founder-quote em {
+  font-style: italic;
+  color: var(--green);
+}
+
+.founder-bio {
+  font-size: 16px;
+  color: rgba(255,255,255,0.55);
+  line-height: 1.7;
+  font-weight: 400;
+  max-width: 420px;
+  margin-bottom: 40px;
+}
+
+.founder-name {
+  font-family: var(--font-head);
+  font-size: 32px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+
+.founder-title {
+  font-family: var(--font-head);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.35);
+}
+
+.founder-stats {
+  display: flex;
+  gap: 40px;
+  margin-top: 40px;
+  padding-top: 40px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.founder-stat {}
+
+.founder-stat-num {
+  font-family: var(--font-head);
+  font-size: 42px;
+  font-weight: 900;
+  color: var(--green);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.founder-stat-label {
+  font-family: var(--font-head);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+}
+
+/* ============================================================
+   SECTION: COACHING / BOOTCAMP
+   ============================================================ */
+#coaching {
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+}
+
+.coaching-video-wrap {
+  position: relative;
+  overflow: hidden;
+  height: 70vh;
+  min-height: 520px;
+}
+
+.coaching-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 20%;
+  filter: grayscale(20%) contrast(1.1) brightness(0.75);
+}
+
+.coaching-video-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(10,10,10,0.2) 0%, rgba(10,10,10,0.75) 100%);
+  z-index: 1;
+}
+
+.coaching-video-text {
+  position: absolute;
+  bottom: 52px;
+  left: 64px;
+  z-index: 3;
+}
+
+.coaching-video-headline {
+  font-family: var(--font-head);
+  font-size: clamp(48px, 7vw, 96px);
+  font-weight: 900;
+  text-transform: uppercase;
+  line-height: 0.88;
+  letter-spacing: -0.02em;
+}
+.coaching-video-headline em { font-style: normal; color: var(--green); }
+
+.coaching-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: rgba(255,255,255,0.07);
+}
+
+.coaching-card {
+  background: var(--black);
+  padding: 52px 44px;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.3s;
+}
+
+.coaching-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--green);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
+}
+
+.coaching-card:hover { background: #0d0d0d; }
+.coaching-card:hover::before { transform: scaleX(1); }
+
+.coaching-card-icon {
+  font-family: var(--font-head);
+  font-size: 72px;
+  font-weight: 900;
+  color: var(--green);
+  line-height: 1;
+  margin-bottom: 24px;
+  display: block;
+}
+
+.coaching-card-title {
+  font-family: var(--font-head);
+  font-size: clamp(26px, 2.8vw, 38px);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  margin-bottom: 16px;
+}
+
+.coaching-card-text {
+  font-size: 15px;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.6;
+  margin-bottom: 36px;
+}
+
+.coaching-card-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-head);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--green);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(153,153,102,0.3);
+  padding-bottom: 4px;
+  transition: border-color 0.2s, gap 0.2s;
+}
+.coaching-card-cta:hover { border-color: var(--green); gap: 14px; }
+.coaching-card-cta svg { width: 14px; height: 14px; }
+
+/* ============================================================
+   SECTION: SPONSOR
+   ============================================================ */
+#sponsor {
+  padding: 44px 64px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  flex-wrap: wrap;
+}
+
+.sponsor-label {
+  font-family: var(--font-head);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.18);
+  white-space: nowrap;
+}
+
+.sponsor-divider {
+  width: 1px;
+  height: 20px;
+  background: rgba(255,255,255,0.08);
+}
+
+.sponsor-logo-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  transition: filter 0.3s;
+}
+.sponsor-logo-link:hover .sponsor-logo-img {
+  filter: grayscale(1) brightness(0) invert(1) opacity(0.85);
+}
+
+.sponsor-logo-img {
+  height: 26px;
+  width: auto;
+  display: block;
+  filter: grayscale(1) brightness(0) invert(1) opacity(0.55);
+}
+
+/* ============================================================
+   SECTION: SPLIT DECISION
+   ============================================================ */
+#split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 80vh;
+  position: relative;
+}
+
+#split::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 1px;
+  height: 60%;
+  background: linear-gradient(to bottom, transparent, rgba(153,153,102,0.5), transparent);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.split-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 64px;
+  overflow: hidden;
+  cursor: pointer;
+  min-height: 600px;
+  text-decoration: none;
+  color: var(--white);
+}
+
+.split-panel-bg {
+  position: absolute;
+  inset: 0;
+  transition: transform 0.6s cubic-bezier(0.16,1,0.3,1);
+}
+
+.split-panel:hover .split-panel-bg { transform: scale(1.04); }
+
+.split-panel-bg img,
+.split-panel-bg video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 20%;
+  filter: grayscale(30%) brightness(0.5) contrast(1.1);
+  transition: filter 0.5s;
+}
+
+/* Ahmed portrait — ensure head/face is never cropped */
+.split-panel.right .split-panel-bg img {
+  object-position: center 8%;
+}
+
+.split-panel:hover .split-panel-bg img,
+.split-panel:hover .split-panel-bg video {
+  filter: grayscale(0%) brightness(0.45) contrast(1.15);
+}
+
+.split-panel-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 30%, rgba(10,10,10,0.85) 100%);
+  z-index: 1;
+  transition: background 0.4s;
+}
+
+.split-panel.left:hover .split-panel-overlay {
+  background: linear-gradient(180deg, rgba(153,153,102,0.05) 0%, rgba(10,10,10,0.88) 100%);
+}
+.split-panel.right:hover .split-panel-overlay {
+  background: linear-gradient(180deg, rgba(153,153,102,0.05) 0%, rgba(10,10,10,0.88) 100%);
+}
+
+.split-panel-content {
+  position: relative;
+  z-index: 2;
+}
+
+.split-direction {
+  font-family: var(--font-head);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.split-direction::before {
+  content: '';
+  width: 24px;
+  height: 1.5px;
+  background: var(--green);
+}
+
+.split-headline {
+  font-family: var(--font-head);
+  font-size: clamp(44px, 5.5vw, 76px);
+  font-weight: 900;
+  text-transform: uppercase;
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+  margin-bottom: 24px;
+  transition: color 0.3s;
+}
+
+.split-panel:hover .split-headline { color: var(--green); }
+
+.split-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-head);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 16px 32px;
+  transition: background 0.3s, color 0.3s, box-shadow 0.3s, gap 0.25s;
+}
+
+.split-panel.left .split-cta {
+  background: var(--green);
+  color: var(--black);
+}
+.split-panel.left:hover .split-cta {
+  box-shadow: 0 0 40px var(--green-glow);
+  gap: 18px;
+}
+
+.split-panel.right .split-cta {
+  background: transparent;
+  color: var(--white);
+  border: 1.5px solid rgba(255,255,255,0.3);
+}
+.split-panel.right:hover .split-cta {
+  background: var(--green);
+  color: var(--black);
+  border-color: var(--green);
+  box-shadow: 0 0 40px var(--green-glow);
+  gap: 18px;
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+footer {
+  padding: 48px 64px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.footer-logo {
+  height: 28px;
+  opacity: 0.65;
+}
+
+.footer-copy {
+  font-family: var(--font-head);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.25);
+}
+
+.footer-links {
+  display: flex;
+  gap: 28px;
+  list-style: none;
+}
+
+.footer-links a {
+  font-family: var(--font-head);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.3);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.footer-links a:hover { color: var(--green); }
+
+/* ============================================================
+   SCROLL REVEAL
+   ============================================================ */
+.reveal {
+  opacity: 0;
+  transform: translateY(36px);
+  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.16,1,0.3,1);
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-left {
+  opacity: 0;
+  transform: translateX(-40px);
+  transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.16,1,0.3,1);
+}
+.reveal-left.visible { opacity: 1; transform: translateX(0); }
+
+.reveal-right {
+  opacity: 0;
+  transform: translateX(40px);
+  transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.16,1,0.3,1);
+}
+.reveal-right.visible { opacity: 1; transform: translateX(0); }
+
+/* Stagger delays */
+.delay-1 { transition-delay: 0.1s; }
+.delay-2 { transition-delay: 0.2s; }
+.delay-3 { transition-delay: 0.3s; }
+.delay-4 { transition-delay: 0.4s; }
+
+/* ============================================================
+   SECTION: BOOKING EMBED
+   ============================================================ */
+#booking {
+  padding: 100px 64px;
+  background: #080808;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+#booking::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(153,153,102,0.3), transparent);
+}
+
+.booking-section-head {
+  text-align: center;
+  margin-bottom: 56px;
+}
+
+.booking-section-tag {
+  font-family: var(--font-head);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.booking-section-tag::before,
+.booking-section-tag::after {
+  content: '';
+  width: 28px;
+  height: 1.5px;
+  background: var(--green);
+}
+
+.booking-section-headline {
+  font-family: var(--font-head);
+  font-size: clamp(44px, 6vw, 80px);
+  font-weight: 900;
+  text-transform: uppercase;
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+  color: var(--white);
+  margin-bottom: 20px;
+}
+
+.booking-section-headline em {
+  font-style: normal;
+  color: var(--green);
+}
+
+.booking-section-sub {
+  font-size: 15px;
+  color: rgba(255,255,255,0.4);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  max-width: 400px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.booking-embed-wrap {
+  max-width: 780px;
+  margin: 0 auto;
+  border: 1px solid rgba(153,153,102,0.15);
+  background: #fff;
+  position: relative;
+}
+
+.booking-embed-wrap::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: -1px;
+  width: 48px; height: 48px;
+  border-top: 2px solid var(--green);
+  border-left: 2px solid var(--green);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.booking-embed-wrap::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; right: -1px;
+  width: 48px; height: 48px;
+  border-bottom: 2px solid var(--green);
+  border-right: 2px solid var(--green);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.booking-iframe {
+  width: 100%;
+  border: none;
+  display: block;
+  min-height: 700px;
+  background: #fff;
+}
+
+@media (max-width: 1024px) {
+  #booking { padding: 72px 32px; }
+}
+@media (max-width: 768px) {
+  #booking { padding: 56px 20px; }
+  .booking-section-headline { font-size: clamp(36px, 10vw, 56px); }
+  .booking-iframe { min-height: 780px; }
+}
+
+/* ============================================================
+   MOVING GRADIENT BG ACCENT
+   ============================================================ */
+.gradient-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  opacity: 0.06;
+  animation: orb-drift 12s ease-in-out infinite;
+}
+
+@keyframes orb-drift {
+  0%, 100% { transform: translate(0, 0); }
+  33%       { transform: translate(40px, -30px); }
+  66%       { transform: translate(-30px, 40px); }
+}
+
+/* ============================================================
+   MEDIA QUERIES
+   ============================================================ */
+@media (max-width: 1024px) {
+  .lfg-blocks { grid-template-columns: 1fr; }
+  .coaching-cards { grid-template-columns: 1fr; }
+  #founder { grid-template-columns: 1fr; gap: 48px; }
+  #split { grid-template-columns: 1fr; }
+  #split::after { display: none; }
+  .split-panel { min-height: 480px; }
+  .hero-content { padding: 0 32px 80px; }
+  .hero-bottom { padding: 0 32px 80px; }
+  nav { padding: 16px 32px; }
+  #what-lfg { padding: 80px 32px; }
+  #next-run { padding: 60px 32px; }
+  #coaching { }
+  .coaching-video-text { left: 32px; }
+  .coaching-card { padding: 40px 32px; }
+  #founder { padding: 80px 32px; }
+  footer { padding: 40px 32px; }
+  #sponsor { padding: 48px 32px; }
+  .split-panel { padding: 48px 32px; }
+}
+
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .hero-headline { font-size: clamp(56px, 15vw, 100px); }
+  .hero-bottom { display: none; }
+  .next-run-inner { flex-direction: column; }
+  .next-run-right { text-align: left; }
+  .founder-stats { gap: 24px; }
+  .authority-headline { font-size: clamp(32px, 8vw, 60px); }
+  .movement-tag { margin: 0 32px 32px; }
+  footer { flex-direction: column; align-items: flex-start; }
+}
+
+/* ============================================================
+   SEO SECTION: RUNNING CLUB + COACH
+   ============================================================ */
+.seo-section {
+  padding: 100px 64px;
+  position: relative;
+  overflow: hidden;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.seo-section + .seo-section {
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.seo-section::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(153,153,102,0.2), transparent);
+}
+
+.seo-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: start;
+  max-width: 1200px;
+}
+
+.seo-left {}
+
+.seo-eyebrow {
+  font-family: var(--font-head);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--green);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+.seo-eyebrow::before {
+  content: '';
+  width: 28px;
+  height: 1.5px;
+  background: var(--green);
+}
+
+.seo-heading {
+  font-family: var(--font-head);
+  font-size: clamp(36px, 4.5vw, 60px);
+  font-weight: 900;
+  text-transform: uppercase;
+  line-height: 0.92;
+  letter-spacing: -0.01em;
+  color: var(--white);
+  margin-bottom: 28px;
+}
+
+.seo-heading em {
+  font-style: normal;
+  color: var(--green);
+}
+
+.seo-body {
+  font-size: 15px;
+  color: rgba(255,255,255,0.5);
+  line-height: 1.75;
+  font-weight: 400;
+  max-width: 520px;
+}
+
+.seo-right {
+  padding-top: 6px;
+}
+
+.seo-points {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.seo-point {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 22px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  transition: border-color 0.25s;
+}
+.seo-point:first-child { border-top: 1px solid rgba(255,255,255,0.07); }
+.seo-point:hover { border-color: rgba(153,153,102,0.25); }
+
+.seo-point-mark {
+  font-family: var(--font-head);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--green);
+  min-width: 24px;
+  padding-top: 2px;
+}
+
+.seo-point-text {
+  font-family: var(--font-head);
+  font-size: clamp(18px, 2vw, 24px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  color: var(--white);
+  line-height: 1.1;
+}
+
+/* ============================================================
+   FAQ SECTION
+   ============================================================ */
+#faq {
+  padding: 100px 64px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  position: relative;
+}
+
+#faq::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(153,153,102,0.2), transparent);
+}
+
+.faq-head {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 80px;
+  align-items: start;
+  margin-bottom: 64px;
+}
+
+.faq-title {
+  font-family: var(--font-head);
+  font-size: clamp(36px, 4vw, 56px);
+  font-weight: 900;
+  text-transform: uppercase;
+  line-height: 0.92;
+  letter-spacing: -0.01em;
+  color: var(--white);
+  position: sticky;
+  top: 100px;
+}
+
+.faq-title em {
+  display: block;
+  font-style: normal;
+  color: var(--green);
+}
+
+.faq-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+.faq-group-label {
+  font-family: var(--font-head);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--green);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.faq-group-label::before {
+  content: '';
+  width: 20px;
+  height: 1.5px;
+  background: var(--green);
+}
+
+.faq-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.faq-item {
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+.faq-item:last-child { border-bottom: 1px solid rgba(255,255,255,0.08); }
+
+.faq-question {
+  width: 100%;
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px 0;
+  text-align: left;
+  cursor: pointer;
+  color: var(--white);
+  transition: color 0.2s;
+}
+
+.faq-question:hover { color: var(--green); }
+.faq-item.open .faq-question { color: var(--green); }
+
+.faq-q-text {
+  font-family: var(--font-head);
+  font-size: clamp(16px, 1.8vw, 21px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+}
+
+.faq-icon {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border: 1px solid rgba(255,255,255,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.2s, transform 0.3s;
+}
+.faq-question:hover .faq-icon,
+.faq-item.open .faq-icon {
+  border-color: var(--green);
+}
+.faq-item.open .faq-icon { transform: rotate(45deg); }
+
+.faq-icon svg { width: 10px; height: 10px; }
+
+.faq-answer {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.35s cubic-bezier(0.16,1,0.3,1);
+}
+
+.faq-answer-inner {
+  padding: 0 0 24px 0;
+  font-size: 15px;
+  color: rgba(255,255,255,0.5);
+  line-height: 1.7;
+  font-weight: 400;
+  max-width: 680px;
+}
+
+@media (max-width: 1024px) {
+  .seo-inner { grid-template-columns: 1fr; gap: 48px; }
+  .seo-section { padding: 72px 32px; }
+  .faq-head { grid-template-columns: 1fr; gap: 32px; }
+  .faq-title { position: static; }
+  #faq { padding: 72px 32px; }
+}
+
+@media (max-width: 768px) {
+  .seo-section { padding: 56px 20px; }
+  #faq { padding: 56px 20px; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ============================================================
+     STICKY FLOATING CTAs
+     ============================================================ -->
+<div class="sticky-ctas">
+  <a href="https://wa.me/?text=I%20want%20to%20join%20the%20next%20LFG%20run" target="_blank" class="sticky-btn whatsapp">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+    Join Next Run
+  </a>
+  <a href="#booking" class="sticky-btn book">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+    Book Coaching
+  </a>
+</div>
+
+<!-- ============================================================
+     NAV
+     ============================================================ -->
+<nav id="nav">
+  <img src="lfg-logo.png" alt="LFG" class="nav-logo">
+  <ul class="nav-links">
+    <li><a href="#what-lfg">What We Are</a></li>
+    <li><a href="#next-run">Next Run</a></li>
+    <li><a href="#founder">Ahmed Sam</a></li>
+    <li><a href="#coaching">Coaching</a></li>
+    <li><a href="#split" class="nav-cta">Join Now</a></li>
+  </ul>
+</nav>
+
+<!-- ============================================================
+     HERO
+     ============================================================ -->
+<section id="hero">
+  <video class="hero-video" autoplay muted loop playsinline preload="auto">
+    <source src="running video.mp4" type="video/mp4">
+  </video>
+  <div class="hero-overlay"></div>
+  <div class="hero-streak"></div>
+
+  <div class="hero-content">
+    <p class="hero-label">Dubai Running Community</p>
+    <h1 class="hero-headline">
+      Not For<br>
+      <span>Spectators</span>
+    </h1>
+    <p class="hero-sub">Show up. Put in the work. Or stay average.</p>
+    <div class="hero-actions">
+      <a href="https://wa.me/?text=I%20want%20to%20join%20the%20next%20LFG%20run" target="_blank" class="btn-primary">
+        Join the Next Run
+        <svg class="arrow-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a href="#coaching" class="btn-secondary">
+        Train With Ahmed
+        <svg class="arrow-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <div class="hero-bottom">
+    <div class="hero-timer-box">
+      <p class="hero-timer-label">Next Run In</p>
+      <div class="hero-countdown" id="hero-timer">--<span class="sep">:</span>--<span class="sep">:</span>--</div>
+      <p class="hero-when">Every Wednesday &mdash; 7:30 PM Dubai</p>
+    </div>
+  </div>
+
+  <div class="scroll-indicator">
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION: AUTHORITY
+     ============================================================ -->
+<section id="authority">
+  <img src="main group photo.jpeg" alt="LFG Dubai running club — 1000+ members weekly group run" class="authority-img" id="parallax-img">
+  <div class="authority-overlay"></div>
+  <div class="authority-content">
+    <span class="authority-number reveal">1000+</span>
+    <h2 class="authority-headline reveal delay-1">
+      Members.<br><em>One Standard.</em>
+    </h2>
+    <p class="authority-sub reveal delay-2">One of Dubai's fastest growing run communities</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION: WHAT LFG IS
+     ============================================================ -->
+<section id="what-lfg">
+  <div class="gradient-orb" style="width:600px;height:600px;background:var(--green);top:-200px;right:-200px;"></div>
+  <p class="section-tag reveal">What LFG Is</p>
+  <div class="lfg-blocks">
+    <div class="lfg-block reveal delay-1">
+      <span class="lfg-block-num">01</span>
+      <h3 class="lfg-block-title">Weekly Runs</h3>
+      <p class="lfg-block-text">Every Wednesday. 7:30 PM. No excuses, no spectators. If you show up, you run.</p>
+    </div>
+    <div class="lfg-block reveal delay-2">
+      <span class="lfg-block-num">02</span>
+      <h3 class="lfg-block-title">Community</h3>
+      <p class="lfg-block-text">1000+ members who chose discomfort over comfort. People who push. People who show up.</p>
+    </div>
+    <div class="lfg-block reveal delay-3">
+      <span class="lfg-block-num">03</span>
+      <h3 class="lfg-block-title">Performance</h3>
+      <p class="lfg-block-text">We're not here for fun runs. We're here to get faster, stronger, and relentlessly better.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION: NEXT RUN (CONVERSION)
+     ============================================================ -->
+<section id="next-run">
+  <div class="next-run-inner">
+    <div class="next-run-left">
+      <p class="next-run-tag">Happening This Week</p>
+      <h2 class="next-run-headline">
+        Dubai<br>Runs<br>Here.
+      </h2>
+      <div class="next-run-detail">
+        <span>Wednesday</span>
+        &mdash;
+        <span>7:30 PM</span>
+        &mdash;
+        Dubai, UAE
+      </div>
+    </div>
+    <div class="next-run-right">
+      <p class="run-countdown-label">Countdown to next run</p>
+      <div class="run-countdown" id="run-timer">--<span class="sep">:</span>--<span class="sep">:</span>--</div>
+      <br>
+      <a href="https://wa.me/?text=I%20want%20to%20join%20the%20next%20LFG%20run" target="_blank" class="run-join-btn">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+        I'm In &mdash; Reserve My Spot
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION: MOVEMENT / GALLERY
+     ============================================================ -->
+<section id="movement">
+  <p class="movement-tag">The Movement</p>
+
+  <!-- Row 1 -->
+  <div style="overflow:hidden;width:100%;">
+    <div class="marquee-track">
+      <!-- Doubled for seamless loop -->
+      <div class="marquee-item">
+        <img src="main group photo.jpeg" alt="LFG Group Run" loading="lazy">
+      </div>
+      <div class="marquee-item">
+        <video autoplay muted loop playsinline>
+          <source src="running video.mp4" type="video/mp4">
+        </video>
+      </div>
+      <div class="marquee-item">
+        <img src="commuinty and brand.jpeg" alt="LFG Community" loading="lazy">
+      </div>
+      <div class="marquee-item">
+        <img src="selfie in bootcamp.jpeg" alt="LFG Bootcamp" loading="lazy">
+      </div>
+      <div class="marquee-item">
+        <img src="bootcamp member.jpeg" alt="LFG Member" loading="lazy">
+      </div>
+      <div class="marquee-item">
+        <img src="ahmed sam.jpeg" alt="Ahmed Sam" loading="lazy">
+      </div>
+      <!-- Duplicate for seamless -->
+      <div class="marquee-item">
+        <img src="main group photo.jpeg" alt="LFG Group Run" loading="lazy">
+      </div>
+      <div class="marquee-item">
+        <video autoplay muted loop playsinline>
+          <source src="running video.mp4" type="video/mp4">
+        </video>
+      </div>
+      <div class="marquee-item">
+        <img src="commuinty and brand.jpeg" alt="LFG Community" loading="lazy">
+      </div>
+      <div class="marquee-item">
+        <img src="selfie in bootcamp.jpeg" alt="LFG Bootcamp" loading="lazy">
+      </div>
+      <div class="marquee-item">
+        <img src="bootcamp member.jpeg" alt="LFG Member" loading="lazy">
+      </div>
+      <div class="marquee-item">
+        <img src="ahmed sam.jpeg" alt="Ahmed Sam" loading="lazy">
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 2 (reverse) -->
+  <div style="overflow:hidden;width:100%;margin-top:4px;">
+    <div class="marquee-track" style="animation-direction:reverse;">
+      <div class="marquee-item">
+        <video autoplay muted loop playsinline>
+          <source src="video edit.mp4" type="video/mp4">
+        </video>
+      </div>
+      <div class="marquee-item">
+        <img src="bootcamp member.jpeg" alt="Bootcamp" loading="lazy">
+      </div>
+      <div class="marquee-item">
+        <img src="selfie in bootcamp.jpeg" alt="Bootcamp Selfie" loading="lazy">
+      </div>
+      <div class="marquee-item">
+        <img src="commuinty and brand.jpeg" alt="Community" loading="lazy">
+      </div>
+      <div class="marquee-item">
+        <video autoplay muted loop playsinline>
+          <source src="bootcamp video.mp4" type="video/mp4">
+        </video>
+      </div>
+      <div class="marquee-item">
+        <img src="main group photo.jpeg" alt="Group" loading="lazy">
+      </div>
+      <!-- Duplicate -->
+      <div class="marquee-item">
+        <video autoplay muted loop playsinline>
+          <source src="video edit.mp4" type="video/mp4">
+        </video>
+      </div>
+      <div class="marquee-item">
+        <img src="bootcamp member.jpeg" alt="Bootcamp" loading="lazy">
+      </div>
+      <div class="marquee-item">
+        <img src="selfie in bootcamp.jpeg" alt="Bootcamp Selfie" loading="lazy">
+      </div>
+      <div class="marquee-item">
+        <img src="commuinty and brand.jpeg" alt="Community" loading="lazy">
+      </div>
+      <div class="marquee-item">
+        <video autoplay muted loop playsinline>
+          <source src="bootcamp video.mp4" type="video/mp4">
+        </video>
+      </div>
+      <div class="marquee-item">
+        <img src="main group photo.jpeg" alt="Group" loading="lazy">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION: FOUNDER
+     ============================================================ -->
+<section id="founder">
+  <div class="founder-img-wrap reveal-left">
+    <div class="founder-img-accent"></div>
+    <div class="founder-img-accent-br"></div>
+    <img src="ahmed sam.jpeg" alt="Ahmed Sam — founder of LFG Dubai and performance coach in Dubai" class="founder-img">
+  </div>
+  <div class="founder-content reveal-right">
+    <p class="founder-eyebrow">The Founder</p>
+    <h2 class="founder-quote">
+      He Didn't Build<br>
+      LFG For<br>
+      <em>Comfort.</em>
+    </h2>
+    <p class="founder-bio">
+      Ahmed Sam built LFG for people who want more. More from themselves, more from their city, more from every Wednesday evening.
+      He's not here to motivate you. He's here to hold you to a standard you haven't met yet.
+    </p>
+    <div>
+      <p class="founder-name">Ahmed Sam</p>
+      <p class="founder-title">Founder, LFG Dubai &mdash; Performance Coach</p>
+    </div>
+    <div class="founder-stats">
+      <div class="founder-stat">
+        <div class="founder-stat-num">1000+</div>
+        <div class="founder-stat-label">Members</div>
+      </div>
+      <div class="founder-stat">
+        <div class="founder-stat-num">52</div>
+        <div class="founder-stat-label">Weeks / Year</div>
+      </div>
+      <div class="founder-stat">
+        <div class="founder-stat-num">1</div>
+        <div class="founder-stat-label">Standard</div>
+      </div>
+    </div>
+    <div style="margin-top: 40px;">
+      <a href="https://link.lfgdubai.com/widget/bookings/lfg-consultation-call" target="_blank" class="btn-secondary">
+        Train with Ahmed
+        <svg class="arrow-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION: COACHING / BOOTCAMP
+     ============================================================ -->
+<section id="coaching">
+  <div class="coaching-video-wrap">
+    <video class="coaching-video" autoplay muted loop playsinline>
+      <source src="bootcamp video.mp4" type="video/mp4">
+    </video>
+    <div class="coaching-video-overlay"></div>
+    <div class="coaching-video-text">
+      <h2 class="coaching-video-headline reveal">
+        Train<br>Like You<br><em>Mean It.</em>
+      </h2>
+    </div>
+  </div>
+
+  <div class="coaching-cards">
+    <div class="coaching-card reveal delay-1">
+      <span class="coaching-card-icon">01</span>
+      <h3 class="coaching-card-title">Private Coaching</h3>
+      <p class="coaching-card-text">One-on-one with Ahmed. Built around your gaps, your goals, and your non-negotiables.</p>
+      <a href="#booking" class="coaching-card-cta">
+        Change your life now
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+    </div>
+    <div class="coaching-card reveal delay-2">
+      <span class="coaching-card-icon">02</span>
+      <h3 class="coaching-card-title">Bootcamp</h3>
+      <p class="coaching-card-text">Group sessions that hit different. Structured intensity. No shortcuts. Real results.</p>
+      <a href="#booking" class="coaching-card-cta">
+        Change your life now
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+    </div>
+    <div class="coaching-card reveal delay-3">
+      <span class="coaching-card-icon">03</span>
+      <h3 class="coaching-card-title">Consultation</h3>
+      <p class="coaching-card-text">First step. 30 minutes. Ahmed maps out exactly where you are and what you need.</p>
+      <a href="#booking" class="coaching-card-cta">
+        Change your life now
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <!-- coaching section ends here -->
+</section>
+
+<!-- ============================================================
+     SECTION: BOOKING EMBED
+     ============================================================ -->
+<section id="booking">
+  <div class="booking-section-head reveal">
+    <p class="booking-section-tag">Book Your Session</p>
+    <h2 class="booking-section-headline">Your Next Level<br><em>Starts Here.</em></h2>
+    <p class="booking-section-sub">30 minutes with Ahmed. He maps out exactly where you are and what you need.</p>
+  </div>
+  <div class="booking-embed-wrap reveal">
+    <iframe
+      src="https://link.lfgdubai.com/widget/bookings/lfg-consultation-call?utm_source=ig&utm_medium=social&utm_content=link_in_bio"
+      class="booking-iframe"
+      title="Book a Consultation with Ahmed Sam — LFG Dubai"
+      allow="payment"
+      loading="lazy"
+      id="booking-frame">
+    </iframe>
+  </div>
+</section>
+
+<!-- ============================================================
+     SPONSOR
+     ============================================================ -->
+<section id="sponsor">
+  <span class="sponsor-label">Official Partners</span>
+  <div class="sponsor-divider"></div>
+  <a href="https://www.puma.com" target="_blank" class="sponsor-logo-link">
+    <img src="puma logo.webp" alt="PUMA" class="sponsor-logo-img">
+  </a>
+  <div class="sponsor-divider"></div>
+  <a href="https://www.tobysestatedubai.com" target="_blank" class="sponsor-logo-link">
+    <img src="tobbys estate logo.jpg" alt="Toby's Estate" class="sponsor-logo-img" style="height:22px;">
+  </a>
+</section>
+
+<!-- ============================================================
+     FINAL SECTION: SPLIT DECISION
+     ============================================================ -->
+<section id="split">
+  <!-- LEFT: Join the run -->
+  <a href="https://wa.me/?text=I%20want%20to%20join%20the%20next%20LFG%20run" target="_blank" class="split-panel left">
+    <div class="split-panel-bg">
+      <img src="main group photo.jpeg" alt="LFG Community Run">
+    </div>
+    <div class="split-panel-overlay"></div>
+    <div class="split-panel-content">
+      <p class="split-direction">Every Wednesday</p>
+      <h2 class="split-headline">
+        Join The<br>Run.
+      </h2>
+      <span class="split-cta">
+        Reserve My Spot
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </span>
+    </div>
+  </a>
+
+  <!-- RIGHT: Train with Ahmed -->
+  <a href="https://link.lfgdubai.com/widget/bookings/lfg-consultation-call" target="_blank" class="split-panel right">
+    <div class="split-panel-bg">
+      <img src="ahmed sam.jpeg" alt="Ahmed Sam — private coach and founder of LFG Dubai running club">
+    </div>
+    <div class="split-panel-overlay"></div>
+    <div class="split-panel-content">
+      <p class="split-direction">Private Coaching</p>
+      <h2 class="split-headline">
+        Train With<br>Ahmed.
+      </h2>
+      <span class="split-cta">
+        Change Your Life
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </span>
+    </div>
+  </a>
+</section>
+
+<!-- ============================================================
+     SEO SECTION 1: RUNNING CLUB IN DUBAI
+     ============================================================ -->
+<section class="seo-section" id="run-club-dubai">
+  <div class="seo-inner">
+    <div class="seo-left reveal-left">
+      <p class="seo-eyebrow">Dubai Running Community</p>
+      <h2 class="seo-heading">Running Club<br><em>in Dubai</em></h2>
+      <p class="seo-body">LFG is one of the fastest growing running clubs in Dubai, bringing together a community of over 1000+ members for weekly group runs built around consistency, energy, and performance. Every Wednesday at 7:30 PM, runners across Dubai show up to train, connect, and push their limits in a community that feels bigger than a workout. Whether you are just getting started or already serious about performance, LFG gives you a high-energy running club experience in Dubai that is built on discipline, movement, and momentum.</p>
+    </div>
+    <div class="seo-right reveal-right">
+      <ul class="seo-points" role="list">
+        <li class="seo-point">
+          <span class="seo-point-mark">01</span>
+          <span class="seo-point-text">Weekly Wednesday runs at 7:30 PM</span>
+        </li>
+        <li class="seo-point">
+          <span class="seo-point-mark">02</span>
+          <span class="seo-point-text">1000+ member running community</span>
+        </li>
+        <li class="seo-point">
+          <span class="seo-point-mark">03</span>
+          <span class="seo-point-text">Open to all levels</span>
+        </li>
+        <li class="seo-point">
+          <span class="seo-point-mark">04</span>
+          <span class="seo-point-text">Join through WhatsApp</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SEO SECTION 2: AHMED SAM COACHING
+     ============================================================ -->
+<section class="seo-section" id="coaching-dubai">
+  <div class="seo-inner">
+    <div class="seo-left reveal-left">
+      <p class="seo-eyebrow">Performance Coaching</p>
+      <h2 class="seo-heading">Private Training<br>&amp; Coaching<br><em>in Dubai</em></h2>
+      <p class="seo-body">Ahmed Sam is the founder of LFG and offers private coaching, consultation calls, and performance-driven training in Dubai for people who want structure, accountability, and real progress. His coaching is built for people who want more than generic fitness plans, whether that means improving performance, building discipline, or training with a higher standard. Through private training and the LFG bootcamp, Ahmed works with clients who want serious guidance, strong energy, and a coaching style built around results.</p>
+    </div>
+    <div class="seo-right reveal-right">
+      <ul class="seo-points" role="list">
+        <li class="seo-point">
+          <span class="seo-point-mark">01</span>
+          <span class="seo-point-text">Founder of LFG Dubai</span>
+        </li>
+        <li class="seo-point">
+          <span class="seo-point-mark">02</span>
+          <span class="seo-point-text">Private coaching and consultation</span>
+        </li>
+        <li class="seo-point">
+          <span class="seo-point-mark">03</span>
+          <span class="seo-point-text">Performance-focused training</span>
+        </li>
+        <li class="seo-point">
+          <span class="seo-point-mark">04</span>
+          <span class="seo-point-text">Bootcamp and accountability</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     FAQ SECTION
+     ============================================================ -->
+<section id="faq" aria-label="Frequently Asked Questions">
+  <div class="faq-head">
+    <h2 class="faq-title reveal-left">Frequently<br>Asked<br><em>Questions</em></h2>
+    <div class="faq-groups reveal-right">
+
+      <!-- Group 1: Joining LFG -->
+      <div class="faq-group">
+        <p class="faq-group-label">Joining LFG</p>
+        <ul class="faq-list" role="list">
+          <li class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+            <button class="faq-question" aria-expanded="false">
+              <span class="faq-q-text" itemprop="name">How do I join LFG run club in Dubai?</span>
+              <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 1v8M1 5h8"/></svg></span>
+            </button>
+            <div class="faq-answer" role="region" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+              <p class="faq-answer-inner" itemprop="text">Joining LFG is simple. You can use the WhatsApp join flow on the website to get access to the next run details and become part of the LFG running community in Dubai.</p>
+            </div>
+          </li>
+          <li class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+            <button class="faq-question" aria-expanded="false">
+              <span class="faq-q-text" itemprop="name">When does LFG run each week?</span>
+              <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 1v8M1 5h8"/></svg></span>
+            </button>
+            <div class="faq-answer" role="region" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+              <p class="faq-answer-inner" itemprop="text">LFG runs every Wednesday at 7:30 PM. The weekly run is designed to bring the community together through movement, accountability, and energy.</p>
+            </div>
+          </li>
+          <li class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+            <button class="faq-question" aria-expanded="false">
+              <span class="faq-q-text" itemprop="name">Is LFG open to beginners?</span>
+              <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 1v8M1 5h8"/></svg></span>
+            </button>
+            <div class="faq-answer" role="region" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+              <p class="faq-answer-inner" itemprop="text">Yes. LFG welcomes all levels. Whether you are just starting out or already experienced, the club is built around consistency, community, and showing up.</p>
+            </div>
+          </li>
+          <li class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+            <button class="faq-question" aria-expanded="false">
+              <span class="faq-q-text" itemprop="name">How big is the LFG community?</span>
+              <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 1v8M1 5h8"/></svg></span>
+            </button>
+            <div class="faq-answer" role="region" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+              <p class="faq-answer-inner" itemprop="text">LFG has grown into a running community of over 1000+ members in Dubai, making it one of the fastest growing run club communities in the city.</p>
+            </div>
+          </li>
+          <li class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+            <button class="faq-question" aria-expanded="false">
+              <span class="faq-q-text" itemprop="name">Why do people join LFG instead of other run clubs in Dubai?</span>
+              <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 1v8M1 5h8"/></svg></span>
+            </button>
+            <div class="faq-answer" role="region" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+              <p class="faq-answer-inner" itemprop="text">People join LFG for more than a run. The club stands out because of its energy, strong community, consistent weekly presence, and performance-driven culture.</p>
+            </div>
+          </li>
+          <li class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+            <button class="faq-question" aria-expanded="false">
+              <span class="faq-q-text" itemprop="name">What should I expect from my first LFG run?</span>
+              <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 1v8M1 5h8"/></svg></span>
+            </button>
+            <div class="faq-answer" role="region" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+              <p class="faq-answer-inner" itemprop="text">Expect a high-energy group environment, a welcoming community, and a run experience that feels organized, motivating, and built around momentum.</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Group 2: Training with Ahmed Sam -->
+      <div class="faq-group">
+        <p class="faq-group-label">Training with Ahmed Sam</p>
+        <ul class="faq-list" role="list">
+          <li class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+            <button class="faq-question" aria-expanded="false">
+              <span class="faq-q-text" itemprop="name">Who is Ahmed Sam?</span>
+              <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 1v8M1 5h8"/></svg></span>
+            </button>
+            <div class="faq-answer" role="region" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+              <p class="faq-answer-inner" itemprop="text">Ahmed Sam is the founder of LFG and a performance-focused coach in Dubai known for building a strong training culture around discipline, accountability, and real progress.</p>
+            </div>
+          </li>
+          <li class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+            <button class="faq-question" aria-expanded="false">
+              <span class="faq-q-text" itemprop="name">Does Ahmed Sam offer private training in Dubai?</span>
+              <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 1v8M1 5h8"/></svg></span>
+            </button>
+            <div class="faq-answer" role="region" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+              <p class="faq-answer-inner" itemprop="text">Yes. Ahmed Sam offers private coaching and consultation-based training in Dubai for people who want focused support, structure, and better results.</p>
+            </div>
+          </li>
+          <li class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+            <button class="faq-question" aria-expanded="false">
+              <span class="faq-q-text" itemprop="name">What is included in the consultation call?</span>
+              <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 1v8M1 5h8"/></svg></span>
+            </button>
+            <div class="faq-answer" role="region" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+              <p class="faq-answer-inner" itemprop="text">The consultation call is designed to help you understand the coaching process, your goals, and the best next step if you want to train with Ahmed Sam.</p>
+            </div>
+          </li>
+          <li class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+            <button class="faq-question" aria-expanded="false">
+              <span class="faq-q-text" itemprop="name">Is the LFG bootcamp right for beginners?</span>
+              <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 1v8M1 5h8"/></svg></span>
+            </button>
+            <div class="faq-answer" role="region" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+              <p class="faq-answer-inner" itemprop="text">The bootcamp can work for different fitness levels, depending on your goals and readiness. If you are unsure, the consultation call is the best place to start.</p>
+            </div>
+          </li>
+          <li class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+            <button class="faq-question" aria-expanded="false">
+              <span class="faq-q-text" itemprop="name">How do I book a session with Ahmed Sam?</span>
+              <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 1v8M1 5h8"/></svg></span>
+            </button>
+            <div class="faq-answer" role="region" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+              <p class="faq-answer-inner" itemprop="text">You can book a session directly through the visible consultation booking section on the website.</p>
+            </div>
+          </li>
+          <li class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+            <button class="faq-question" aria-expanded="false">
+              <span class="faq-q-text" itemprop="name">What makes Ahmed Sam different from a standard personal trainer?</span>
+              <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 1v8M1 5h8"/></svg></span>
+            </button>
+            <div class="faq-answer" role="region" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+              <p class="faq-answer-inner" itemprop="text">Ahmed Sam's coaching is built around structure, accountability, energy, and performance. It is designed for people who want a higher standard, not a generic training experience.</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     FOOTER
+     ============================================================ -->
+<footer>
+  <img src="lfg-logo.png" alt="LFG" class="footer-logo">
+  <p class="footer-copy">&copy; 2025 LFG Dubai &mdash; Lift. Focus. Grind.</p>
+  <ul class="footer-links">
+    <li><a href="https://wa.me/?text=I%20want%20to%20join%20the%20next%20LFG%20run" target="_blank">Join Us</a></li>
+    <li><a href="#coaching">Coaching</a></li>
+    <li><a href="#founder">About</a></li>
+  </ul>
+</footer>
+
+<!-- ============================================================
+     JAVASCRIPT
+     ============================================================ -->
+<script>
+// ---- NAV scroll behavior ----
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 60);
+}, { passive: true });
+
+// ---- COUNTDOWN TIMER ----
+// Next Wednesday 7:30 PM Dubai time (UTC+4)
+function getNextWednesday730Dubai() {
+  const now = new Date();
+  // Dubai is UTC+4
+  const dubaiOffset = 4 * 60; // in minutes
+  const localOffset = -now.getTimezoneOffset(); // in minutes
+  const diffMs = (dubaiOffset - localOffset) * 60 * 1000;
+  const dubaiNow = new Date(now.getTime() + diffMs);
+
+  // Day of week: 0=Sun, 3=Wed
+  const day = dubaiNow.getDay();
+  const daysUntilWed = (3 - day + 7) % 7;
+
+  const target = new Date(dubaiNow);
+  target.setDate(dubaiNow.getDate() + daysUntilWed);
+  target.setHours(19, 30, 0, 0);
+
+  // If it's Wednesday and the run hasn't started yet (or is same day after 7:30)
+  if (daysUntilWed === 0) {
+    const runTime = new Date(dubaiNow);
+    runTime.setHours(19, 30, 0, 0);
+    if (dubaiNow >= runTime) {
+      // Past this week's run, go to next Wednesday
+      target.setDate(target.getDate() + 7);
+    }
+  }
+
+  // Convert target back to local time for comparison
+  const targetLocal = new Date(target.getTime() - diffMs);
+  return targetLocal;
+}
+
+function formatCountdown(ms) {
+  if (ms <= 0) return { d:0, h:0, m:0, s:0 };
+  const totalSecs = Math.floor(ms / 1000);
+  const d = Math.floor(totalSecs / 86400);
+  const h = Math.floor((totalSecs % 86400) / 3600);
+  const m = Math.floor((totalSecs % 3600) / 60);
+  const s = totalSecs % 60;
+  return { d, h, m, s };
+}
+
+function pad(n) { return String(n).padStart(2, '0'); }
+
+function updateTimers() {
+  const target = getNextWednesday730Dubai();
+  const diff = target - new Date();
+  const { d, h, m, s } = formatCountdown(diff);
+
+  const heroStr = d > 0
+    ? `${d}<span class="sep">D</span> ${pad(h)}<span class="sep">:</span>${pad(m)}<span class="sep">:</span>${pad(s)}`
+    : `${pad(h)}<span class="sep">:</span>${pad(m)}<span class="sep">:</span>${pad(s)}`;
+
+  const heroEl = document.getElementById('hero-timer');
+  const runEl  = document.getElementById('run-timer');
+  if (heroEl) heroEl.innerHTML = heroStr;
+  if (runEl)  runEl.innerHTML  = heroStr;
+}
+
+updateTimers();
+setInterval(updateTimers, 1000);
+
+// ---- SCROLL REVEAL ----
+const revealEls = document.querySelectorAll('.reveal, .reveal-left, .reveal-right');
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+revealEls.forEach(el => observer.observe(el));
+
+// ---- PARALLAX (authority image) ----
+const parallaxImg = document.getElementById('parallax-img');
+if (parallaxImg) {
+  window.addEventListener('scroll', () => {
+    const section = document.getElementById('authority');
+    const rect = section.getBoundingClientRect();
+    const windowH = window.innerHeight;
+    if (rect.bottom > 0 && rect.top < windowH) {
+      const progress = (windowH - rect.top) / (windowH + rect.height);
+      const offset = (progress - 0.5) * 80;
+      parallaxImg.style.transform = `scale(1.1) translateY(${offset}px)`;
+    }
+  }, { passive: true });
+}
+
+// ---- CURSOR GLOW ----
+const glow = document.createElement('div');
+glow.style.cssText = `
+  position: fixed;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(153,153,102,0.04) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 9998;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.3s;
+`;
+document.body.appendChild(glow);
+
+let mouseX = 0, mouseY = 0;
+let glowX = 0, glowY = 0;
+
+window.addEventListener('mousemove', e => {
+  mouseX = e.clientX;
+  mouseY = e.clientY;
+}, { passive: true });
+
+function animateGlow() {
+  glowX += (mouseX - glowX) * 0.08;
+  glowY += (mouseY - glowY) * 0.08;
+  glow.style.left = glowX + 'px';
+  glow.style.top  = glowY + 'px';
+  requestAnimationFrame(animateGlow);
+}
+animateGlow();
+
+// ---- STICKY BOOK BUTTON — scroll to booking section ----
+document.querySelectorAll('.sticky-btn.book').forEach(btn => {
+  btn.addEventListener('click', e => {
+    e.preventDefault();
+    document.getElementById('booking').scrollIntoView({ behavior: 'smooth' });
+  });
+});
+
+// ---- MARQUEE PAUSE ON HOVER ----
+document.querySelectorAll('.marquee-track').forEach(track => {
+  track.addEventListener('mouseenter', () => track.style.animationPlayState = 'paused');
+  track.addEventListener('mouseleave', () => track.style.animationPlayState = 'running');
+});
+
+// ---- FAQ ACCORDION ----
+document.querySelectorAll('.faq-question').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const item = btn.closest('.faq-item');
+    const answer = item.querySelector('.faq-answer');
+    const isOpen = item.classList.contains('open');
+
+    // Close all
+    document.querySelectorAll('.faq-item.open').forEach(openItem => {
+      openItem.classList.remove('open');
+      openItem.querySelector('.faq-answer').style.maxHeight = '0';
+      openItem.querySelector('.faq-question').setAttribute('aria-expanded', 'false');
+    });
+
+    // Open clicked if it was closed
+    if (!isOpen) {
+      item.classList.add('open');
+      answer.style.maxHeight = answer.scrollHeight + 'px';
+      btn.setAttribute('aria-expanded', 'true');
+    }
+  });
+});
+</script>
+
+<!-- ============================================================
+     STRUCTURED DATA / JSON-LD
+     ============================================================ -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": "https://lfgdubai.com/",
+      "url": "https://lfgdubai.com/",
+      "name": "LFG Dubai | Running Club in Dubai & Coaching with Ahmed Sam",
+      "description": "Join LFG Dubai, one of the fastest growing running clubs in Dubai with 1000+ members, weekly Wednesday runs, and private coaching with Ahmed Sam.",
+      "inLanguage": "en",
+      "publisher": {
+        "@id": "https://lfgdubai.com/#organization"
+      }
+    },
+    {
+      "@type": "SportsOrganization",
+      "@id": "https://lfgdubai.com/#organization",
+      "name": "LFG Dubai",
+      "alternateName": "Lift Focus Grind",
+      "description": "LFG is one of the fastest growing running clubs in Dubai with a community of over 1000 members, meeting every Wednesday at 7:30 PM.",
+      "url": "https://lfgdubai.com/",
+      "sport": "Running",
+      "location": {
+        "@type": "Place",
+        "name": "Dubai",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Dubai",
+          "addressCountry": "AE"
+        }
+      },
+      "founder": {
+        "@id": "https://lfgdubai.com/#ahmed-sam"
+      },
+      "event": {
+        "@type": "SportsEvent",
+        "name": "LFG Weekly Group Run",
+        "description": "Weekly group run open to all levels, every Wednesday at 7:30 PM in Dubai.",
+        "eventSchedule": {
+          "@type": "Schedule",
+          "byDay": "https://schema.org/Wednesday",
+          "startTime": "19:30"
+        },
+        "location": {
+          "@type": "Place",
+          "name": "Dubai",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Dubai",
+            "addressCountry": "AE"
+          }
+        }
+      }
+    },
+    {
+      "@type": "Person",
+      "@id": "https://lfgdubai.com/#ahmed-sam",
+      "name": "Ahmed Sam",
+      "jobTitle": "Founder & Performance Coach",
+      "description": "Ahmed Sam is the founder of LFG Dubai and a performance-focused coach offering private coaching, consultation calls, and bootcamp training in Dubai.",
+      "worksFor": {
+        "@id": "https://lfgdubai.com/#organization"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Dubai",
+        "addressCountry": "AE"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How do I join LFG run club in Dubai?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Joining LFG is simple. You can use the WhatsApp join flow on the website to get access to the next run details and become part of the LFG running community in Dubai."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "When does LFG run each week?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "LFG runs every Wednesday at 7:30 PM. The weekly run is designed to bring the community together through movement, accountability, and energy."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is LFG open to beginners?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. LFG welcomes all levels. Whether you are just starting out or already experienced, the club is built around consistency, community, and showing up."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How big is the LFG community?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "LFG has grown into a running community of over 1000+ members in Dubai, making it one of the fastest growing run club communities in the city."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why do people join LFG instead of other run clubs in Dubai?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "People join LFG for more than a run. The club stands out because of its energy, strong community, consistent weekly presence, and performance-driven culture."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What should I expect from my first LFG run?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Expect a high-energy group environment, a welcoming community, and a run experience that feels organized, motivating, and built around momentum."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Who is Ahmed Sam?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Ahmed Sam is the founder of LFG and a performance-focused coach in Dubai known for building a strong training culture around discipline, accountability, and real progress."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does Ahmed Sam offer private training in Dubai?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Ahmed Sam offers private coaching and consultation-based training in Dubai for people who want focused support, structure, and better results."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is included in the consultation call?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The consultation call is designed to help you understand the coaching process, your goals, and the best next step if you want to train with Ahmed Sam."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is the LFG bootcamp right for beginners?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The bootcamp can work for different fitness levels, depending on your goals and readiness. If you are unsure, the consultation call is the best place to start."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I book a session with Ahmed Sam?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "You can book a session directly through the visible consultation booking section on the website."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What makes Ahmed Sam different from a standard personal trainer?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Ahmed Sam's coaching is built around structure, accountability, energy, and performance. It is designed for people who want a higher standard, not a generic training experience."
+          }
+        }
+      ]
+    }
+  ]
+}
+</script>
+
+</body>
+</html>
