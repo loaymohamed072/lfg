@@ -2057,15 +2057,26 @@ footer {
   color: var(--white);
   border: 1.5px solid rgba(255,255,255,0.25);
 }
+/* Dock offset spacer — invisible, creates scroll space on mobile only */
+#dock-offset {
+  display: none;
+}
+
 @media (max-width: 768px) {
   /* Hide desktop floating CTA stack entirely on mobile */
   .sticky-ctas { display: none !important; }
   .sticky-ctas-desktop { display: none; }
   .mobile-sticky-bar { display: flex; }
 
-  /* Reserve bottom space so fixed dock never covers content */
+  /* Reserve bottom space — belt AND suspenders: body padding + structural spacer */
   body {
-    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+  }
+  #dock-offset {
+    display: block;
+    height: calc(90px + env(safe-area-inset-bottom, 0px));
+    pointer-events: none;
+    flex-shrink: 0;
   }
 }
 
@@ -3566,6 +3577,9 @@ document.querySelectorAll('.faq-question').forEach(btn => {
   ]
 }
 </script>
+
+<!-- Mobile dock scroll offset — invisible structural spacer, prevents content hiding under fixed dock -->
+<div id="dock-offset" aria-hidden="true"></div>
 
 </body>
 </html>
