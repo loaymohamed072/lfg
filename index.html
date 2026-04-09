@@ -2020,25 +2020,22 @@ footer {
   left: 0;
   right: 0;
   z-index: 9999;
-  padding: 10px 12px;
-  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  padding: 12px 12px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
   background: #0A0A0A;
   border-top: 1px solid rgba(153,153,102,0.2);
   gap: 8px;
   align-items: stretch;
-  transform: translateY(100%);
-  transition: transform 0.35s cubic-bezier(0.16,1,0.3,1);
 }
-.mobile-sticky-bar.visible { transform: translateY(0); }
 .mobile-sticky-btn {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 52px;
-  padding: 16px 10px;
+  min-height: 62px;
+  padding: 18px 10px;
   font-family: var(--font-head);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -2068,13 +2065,13 @@ footer {
   .sticky-ctas-desktop { display: none; }
   .mobile-sticky-bar { display: flex; }
 
-  /* Reserve bottom space — belt AND suspenders: body padding + structural spacer */
+  /* Reserve bottom space — body padding + structural spacer match dock height */
   body {
-    padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(106px + env(safe-area-inset-bottom, 0px));
   }
   #dock-offset {
     display: block;
-    height: calc(90px + env(safe-area-inset-bottom, 0px));
+    height: calc(106px + env(safe-area-inset-bottom, 0px));
     pointer-events: none;
     flex-shrink: 0;
   }
@@ -3354,21 +3351,7 @@ document.querySelectorAll('.mobile-sticky-btn[href^="#"]').forEach(btn => {
   });
 });
 
-// ---- MOBILE STICKY BAR — show after hero ----
-const mobileStickyBar = document.getElementById('mobile-sticky-bar');
-if (mobileStickyBar) {
-  const heroSection = document.getElementById('hero');
-  const showMobileBar = () => {
-    if (!heroSection) return;
-    const heroBottom = heroSection.getBoundingClientRect().bottom;
-    if (heroBottom < 0) {
-      mobileStickyBar.classList.add('visible');
-    } else {
-      mobileStickyBar.classList.remove('visible');
-    }
-  };
-  window.addEventListener('scroll', showMobileBar, { passive: true });
-}
+// Mobile dock is always visible via CSS on mobile — no JS toggle needed
 
 // ---- MARQUEE PAUSE ON HOVER ----
 document.querySelectorAll('.marquee-track').forEach(track => {
