@@ -77,12 +77,31 @@ body::before {
 .sticky-ctas {
   position: fixed;
   right: 24px;
-  bottom: 32px;
+  bottom: calc(32px + env(safe-area-inset-bottom, 0px));
   z-index: 1000;
   display: flex;
   flex-direction: column;
   gap: 12px;
   align-items: flex-end;
+}
+
+/* Safe-area background patches — paint black into top/bottom unsafe zones */
+.safe-area-top-patch,
+.safe-area-bottom-patch {
+  position: fixed;
+  left: 0;
+  right: 0;
+  background: #0A0A0A;
+  pointer-events: none;
+  z-index: 499;
+}
+.safe-area-top-patch {
+  top: 0;
+  height: calc(env(safe-area-inset-top, 0px) + 4px);
+}
+.safe-area-bottom-patch {
+  bottom: 0;
+  height: calc(env(safe-area-inset-bottom, 0px) + 4px);
 }
 
 .sticky-btn {
@@ -158,6 +177,7 @@ nav.scrolled {
   background: rgba(10,10,10,0.92);
   backdrop-filter: blur(12px);
   padding: 14px 48px;
+  padding-top: calc(14px + env(safe-area-inset-top, 0px));
   border-bottom: 1px solid rgba(153,153,102,0.1);
 }
 
@@ -2426,6 +2446,10 @@ footer {
 </head>
 
 <body>
+
+<!-- Safe-area background patches -->
+<div class="safe-area-top-patch" aria-hidden="true"></div>
+<div class="safe-area-bottom-patch" aria-hidden="true"></div>
 
 <!-- ============================================================
      STICKY FLOATING CTAs
