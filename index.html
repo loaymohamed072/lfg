@@ -165,8 +165,10 @@ nav.scrolled {
 }
 
 .nav-logo {
-  height: 36px;
+  height: 56px;
   width: auto;
+  object-fit: contain;
+  background: none;
   opacity: 0;
   animation: logo-enter 0.8s 0.3s cubic-bezier(0.16,1,0.3,1) forwards;
 }
@@ -261,7 +263,7 @@ nav.scrolled {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(0deg, rgba(10,10,10,0.97) 0%, rgba(10,10,10,0.6) 40%, rgba(10,10,10,0.3) 70%, rgba(10,10,10,0.5) 100%);
+    linear-gradient(0deg, rgba(10,10,10,0.92) 0%, rgba(10,10,10,0.45) 40%, rgba(10,10,10,0.2) 70%, rgba(10,10,10,0.4) 100%);
   z-index: 1;
 }
 
@@ -285,7 +287,7 @@ nav.scrolled {
 .hero-content {
   position: relative;
   z-index: 3;
-  padding: 0 64px 80px;
+  padding: 0 64px 40px;
   max-width: 1400px;
 }
 
@@ -315,10 +317,11 @@ nav.scrolled {
   font-family: var(--font-head);
   font-size: clamp(72px, 11vw, 160px);
   font-weight: 900;
-  line-height: 0.88;
+  line-height: 0.95;
   text-transform: uppercase;
   letter-spacing: -0.01em;
   margin-bottom: 28px;
+  color: #ffffff;
   opacity: 0;
   animation: headline-enter 0.9s 0.7s cubic-bezier(0.16,1,0.3,1) forwards;
 }
@@ -332,10 +335,10 @@ nav.scrolled {
 .hero-headline span::after {
   content: '';
   position: absolute;
-  bottom: 4px;
+  bottom: -6px;
   left: 0;
   width: 0;
-  height: 3px;
+  height: 2px;
   background: var(--green);
   animation: underline-grow 0.6s 1.6s ease forwards;
 }
@@ -813,12 +816,13 @@ nav.scrolled {
   font-size: clamp(52px, 7vw, 100px);
   font-weight: 900;
   letter-spacing: 0.02em;
-  color: var(--black);
+  color: #ffffff;
   line-height: 1;
+  text-shadow: 0 2px 20px rgba(0,0,0,0.8);
 }
 
 .run-countdown .sep {
-  color: rgba(10,10,10,0.3);
+  color: var(--green);
   animation: blink 1s step-start infinite;
 }
 
@@ -1651,7 +1655,7 @@ footer {
   #split { grid-template-columns: 1fr; }
   #split::after { display: none; }
   .split-panel { min-height: 480px; }
-  .hero-content { padding: 0 32px 80px; }
+  .hero-content { padding: 0 32px 40px; }
   .hero-bottom { padding: 0 32px 80px; }
   nav { padding: 16px 32px; }
   #what-lfg { padding: 80px 32px; }
@@ -1667,6 +1671,7 @@ footer {
 
 @media (max-width: 768px) {
   .nav-links { display: none; }
+  .nav-logo { height: 44px; }
   .hero-headline { font-size: clamp(56px, 15vw, 100px); }
   .hero-bottom { display: none; }
   .next-run-inner { flex-direction: column; }
@@ -1945,6 +1950,474 @@ footer {
   .seo-section { padding: 56px 20px; }
   #faq { padding: 56px 20px; }
 }
+
+/* ============================================================
+   STICKY CTAs — DESKTOP/MOBILE SPLIT
+   ============================================================ */
+.sticky-ctas-desktop {
+  display: flex;
+}
+.mobile-sticky-bar {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  padding: 12px 16px;
+  background: rgba(10,10,10,0.96);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(153,153,102,0.2);
+  gap: 10px;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.16,1,0.3,1);
+}
+.mobile-sticky-bar.visible { transform: translateY(0); }
+.mobile-sticky-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 6px;
+  font-family: var(--font-head);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  text-align: center;
+  line-height: 1.2;
+}
+.mobile-sticky-primary {
+  background: var(--green);
+  color: var(--black);
+}
+.mobile-sticky-secondary {
+  background: transparent;
+  color: var(--white);
+  border: 1.5px solid rgba(255,255,255,0.25);
+}
+@media (max-width: 768px) {
+  .sticky-ctas-desktop { display: none; }
+  .mobile-sticky-bar { display: flex; }
+}
+
+/* ============================================================
+   HERO ACTIONS — DESKTOP/MOBILE
+   ============================================================ */
+.hero-actions-desktop {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .hero-actions-desktop {
+    display: none;
+  }
+}
+
+/* ============================================================
+   WHAT IS LFG — INTRO BLOCK
+   ============================================================ */
+.what-lfg-intro {
+  max-width: 860px;
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.what-lfg-headline {
+  font-family: var(--font-head);
+  font-size: clamp(40px, 5vw, 68px);
+  font-weight: 900;
+  text-transform: uppercase;
+  line-height: 0.9;
+  letter-spacing: -0.01em;
+  margin-bottom: 28px;
+  color: var(--white);
+}
+
+.what-lfg-body {
+  font-size: 16px;
+  color: rgba(255,255,255,0.55);
+  line-height: 1.75;
+  font-weight: 400;
+  max-width: 760px;
+}
+
+.lfg-block-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-head);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-top: 20px;
+  border-bottom: 1px solid rgba(153,153,102,0.3);
+  padding-bottom: 3px;
+  transition: gap 0.2s, border-color 0.2s;
+}
+.lfg-block:hover .lfg-block-cta { gap: 14px; border-color: var(--green); }
+
+/* ============================================================
+   ACTIVITY SECTIONS (RUNS / BOOTCAMPS)
+   ============================================================ */
+.activity-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 80vh;
+  position: relative;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.activity-section--dark {
+  direction: rtl;
+}
+.activity-section--dark > * { direction: ltr; }
+
+.activity-media {
+  position: relative;
+  overflow: hidden;
+  min-height: 560px;
+}
+
+.activity-bg-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 20%;
+  filter: grayscale(20%) contrast(1.1) brightness(0.6);
+  transition: transform 8s ease-in-out;
+}
+.activity-media:hover .activity-bg-img { transform: scale(1.04); }
+
+.activity-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(10,10,10,0.3) 0%, rgba(10,10,10,0.6) 100%);
+  z-index: 1;
+}
+
+.activity-heading-overlay {
+  position: absolute;
+  bottom: 48px;
+  left: 48px;
+  z-index: 2;
+}
+
+.activity-eyebrow {
+  font-family: var(--font-head);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.activity-eyebrow::before {
+  content: '';
+  width: 20px;
+  height: 1.5px;
+  background: var(--green);
+}
+
+.activity-title {
+  font-family: var(--font-head);
+  font-size: clamp(44px, 5.5vw, 80px);
+  font-weight: 900;
+  text-transform: uppercase;
+  line-height: 0.88;
+  letter-spacing: -0.02em;
+  color: var(--white);
+  text-shadow: 0 2px 20px rgba(0,0,0,0.5);
+}
+
+.activity-content {
+  background: var(--black);
+  display: flex;
+  align-items: flex-start;
+  padding: 64px 56px;
+  overflow-y: auto;
+}
+
+.activity-content-inner {
+  width: 100%;
+}
+
+.activity-schedule {
+  display: flex;
+  gap: 0;
+  margin-bottom: 48px;
+  flex-wrap: wrap;
+}
+
+.activity-slot {
+  flex: 1;
+  min-width: 180px;
+  padding: 28px 0;
+}
+
+.activity-slot-divider {
+  width: 1px;
+  background: rgba(255,255,255,0.08);
+  margin: 0 32px;
+  align-self: stretch;
+}
+
+.activity-slot-day {
+  font-family: var(--font-head);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 8px;
+}
+
+.activity-slot-time {
+  font-family: var(--font-head);
+  font-size: clamp(32px, 3.5vw, 48px);
+  font-weight: 900;
+  color: var(--white);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.activity-slot-loc {
+  font-family: var(--font-head);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.45);
+  margin-bottom: 12px;
+}
+
+.activity-slot-desc {
+  font-size: 14px;
+  color: rgba(255,255,255,0.4);
+  line-height: 1.6;
+  max-width: 220px;
+}
+
+.activity-timer-block {
+  margin-bottom: 48px;
+  padding: 28px 32px;
+  border: 1px solid rgba(153,153,102,0.25);
+  background: rgba(0,0,0,0.4);
+}
+
+.activity-timer-label {
+  font-family: var(--font-head);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 10px;
+}
+
+.activity-timer-sub {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 0.06em;
+  margin-top: 8px;
+}
+
+.activity-form-wrap {
+  border-top: 1px solid rgba(255,255,255,0.07);
+  padding-top: 40px;
+}
+
+.activity-form-label {
+  font-family: var(--font-head);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.activity-form-label::before {
+  content: '';
+  width: 20px;
+  height: 1.5px;
+  background: var(--green);
+}
+
+.activity-embed-frame {
+  border: 1px solid rgba(153,153,102,0.15);
+  position: relative;
+  overflow: hidden;
+}
+.activity-embed-frame::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: -1px;
+  width: 32px; height: 32px;
+  border-top: 2px solid var(--green);
+  border-left: 2px solid var(--green);
+  pointer-events: none;
+  z-index: 1;
+}
+.activity-embed-frame::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; right: -1px;
+  width: 32px; height: 32px;
+  border-bottom: 2px solid var(--green);
+  border-right: 2px solid var(--green);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ============================================================
+   COACHING INTRO GRID / METHODS
+   ============================================================ */
+.coaching-intro-grid {
+  position: relative;
+  z-index: 1;
+  max-width: 800px;
+}
+
+.coaching-method {
+  display: flex;
+  gap: 28px;
+  padding: 28px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  align-items: flex-start;
+}
+.coaching-method:first-of-type { border-top: 1px solid rgba(255,255,255,0.07); }
+
+.coaching-method-num {
+  font-family: var(--font-head);
+  font-size: 48px;
+  font-weight: 900;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(153,153,102,0.3);
+  line-height: 1;
+  min-width: 60px;
+  flex-shrink: 0;
+}
+
+.coaching-method-title {
+  font-family: var(--font-head);
+  font-size: clamp(22px, 2.5vw, 30px);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  margin-bottom: 10px;
+  color: var(--white);
+}
+
+.coaching-method-text {
+  font-size: 15px;
+  color: rgba(255,255,255,0.5);
+  line-height: 1.7;
+}
+
+/* ============================================================
+   TRANSFORMATION CARDS
+   ============================================================ */
+.transformations-wrap {
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+/* Transformation marquee card */
+.tcard {
+  flex-shrink: 0;
+  width: 340px;
+  height: 420px;
+  overflow: hidden;
+  position: relative;
+}
+.tcard img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  filter: contrast(1.05);
+  display: block;
+  transition: transform 0.4s ease;
+}
+.tcard:hover img { transform: scale(1.04); }
+@media (max-width: 768px) {
+  .tcard { width: 260px; height: 320px; }
+}
+
+.transformation-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+}
+
+.transformation-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.transformation-card-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px 24px;
+  background: linear-gradient(to top, rgba(10,10,10,0.85), transparent);
+}
+
+.transformation-card-label {
+  font-family: var(--font-head);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--green);
+}
+
+/* ============================================================
+   ACTIVITY SECTION RESPONSIVE
+   ============================================================ */
+@media (max-width: 1024px) {
+  .activity-section {
+    grid-template-columns: 1fr;
+  }
+  .activity-section--dark {
+    direction: ltr;
+  }
+  .activity-media { min-height: 400px; }
+  .activity-content { padding: 48px 32px; }
+  .transformation-cards { grid-template-columns: 1fr 1fr; }
+  .transformations-wrap { padding: 0 32px 60px; }
+  #coaching .coaching-header { padding: 72px 32px 48px; }
+}
+
+@media (max-width: 768px) {
+  .activity-slot-desc { max-width: 100%; }
+  .activity-slot-divider { display: none; }
+  .activity-schedule { flex-direction: column; }
+  .transformation-cards { grid-template-columns: 1fr; }
+  .transformations-wrap { padding: 0 20px 48px; }
+  #coaching .coaching-header { padding: 56px 20px 40px; }
+  #booking { padding: 20px 20px 72px !important; }
+  .coaching-intro-grid { max-width: 100%; }
+  .activity-content { padding: 40px 20px; }
+  .activity-heading-overlay { left: 24px; bottom: 32px; }
+}
 </style>
 </head>
 
@@ -1953,7 +2426,8 @@ footer {
 <!-- ============================================================
      STICKY FLOATING CTAs
      ============================================================ -->
-<div class="sticky-ctas">
+<!-- Desktop sticky CTAs -->
+<div class="sticky-ctas sticky-ctas-desktop">
   <a href="https://wa.me/?text=I%20want%20to%20join%20the%20next%20LFG%20run" target="_blank" class="sticky-btn whatsapp">
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
     Join Next Run
@@ -1964,17 +2438,30 @@ footer {
   </a>
 </div>
 
+<!-- Mobile sticky bar — shows after scrolling past hero, 3 CTAs -->
+<div class="mobile-sticky-bar" id="mobile-sticky-bar">
+  <a href="#runs" class="mobile-sticky-btn mobile-sticky-primary" id="mobile-run-btn">
+    Join the Run
+  </a>
+  <a href="#bootcamps" class="mobile-sticky-btn mobile-sticky-secondary">
+    Next Workout
+  </a>
+  <a href="#coaching" class="mobile-sticky-btn mobile-sticky-secondary" id="mobile-book-btn">
+    Coaching
+  </a>
+</div>
+
 <!-- ============================================================
      NAV
      ============================================================ -->
 <nav id="nav">
-  <img src="lfg-logo.png" alt="LFG" class="nav-logo">
+  <img src="LFG MAIN LOGO-Photoroom.png" alt="LFG" class="nav-logo">
   <ul class="nav-links">
     <li><a href="#what-lfg">What We Are</a></li>
-    <li><a href="#next-run">Next Run</a></li>
-    <li><a href="#founder">Ahmed Sam</a></li>
+    <li><a href="#runs">Runs</a></li>
+    <li><a href="#bootcamps">Bootcamps</a></li>
     <li><a href="#coaching">Coaching</a></li>
-    <li><a href="#split" class="nav-cta">Join Now</a></li>
+    <li><a href="#runs" class="nav-cta">Join Now</a></li>
   </ul>
 </nav>
 
@@ -1982,26 +2469,30 @@ footer {
      HERO
      ============================================================ -->
 <section id="hero">
-  <video class="hero-video" autoplay muted loop playsinline preload="auto">
-    <source src="running video.mp4" type="video/mp4">
+  <video class="hero-video" autoplay muted loop playsinline preload="auto" poster="main group photo.jpeg">
+    <source src="video edit.mp4" type="video/mp4">
   </video>
   <div class="hero-overlay"></div>
   <div class="hero-streak"></div>
 
   <div class="hero-content">
-    <p class="hero-label">Dubai Running Community</p>
+    <p class="hero-label">Dubai Fitness Community</p>
     <h1 class="hero-headline">
-      Not For<br>
-      <span>Spectators</span>
+      Built For<br>
+      <span>Every Level</span>
     </h1>
-    <p class="hero-sub">Show up. Put in the work. Or stay average.</p>
-    <div class="hero-actions">
-      <a href="https://wa.me/?text=I%20want%20to%20join%20the%20next%20LFG%20run" target="_blank" class="btn-primary">
-        Join the Next Run
+    <p class="hero-sub">We Take You From Zero To Performance</p>
+    <div class="hero-actions hero-actions-desktop">
+      <a href="#runs" class="btn-primary">
+        Join Our Next Run
+        <svg class="arrow-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a href="#bootcamps" class="btn-secondary">
+        Join Our Next Workout
         <svg class="arrow-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
       </a>
       <a href="#coaching" class="btn-secondary">
-        Train With Ahmed
+        Private Coaching
         <svg class="arrow-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
       </a>
     </div>
@@ -2009,9 +2500,9 @@ footer {
 
   <div class="hero-bottom">
     <div class="hero-timer-box">
-      <p class="hero-timer-label">Next Run In</p>
+      <p class="hero-timer-label">Next Session In</p>
       <div class="hero-countdown" id="hero-timer">--<span class="sep">:</span>--<span class="sep">:</span>--</div>
-      <p class="hero-when">Every Wednesday &mdash; 7:30 PM Dubai</p>
+      <p class="hero-when" id="hero-when-label">Loading next session...</p>
     </div>
   </div>
 
@@ -2029,63 +2520,147 @@ footer {
   <div class="authority-content">
     <span class="authority-number reveal">1000+</span>
     <h2 class="authority-headline reveal delay-1">
-      Members.<br><em>One Standard.</em>
+      Members.<br><em>One Mission.</em>
     </h2>
-    <p class="authority-sub reveal delay-2">One of Dubai's fastest growing run communities</p>
+    <p class="authority-sub reveal delay-2">Dubai's fastest growing fitness community — since 2019</p>
   </div>
 </section>
 
 <!-- ============================================================
-     SECTION: WHAT LFG IS
+     SECTION: WHAT IS LFG
      ============================================================ -->
 <section id="what-lfg">
   <div class="gradient-orb" style="width:600px;height:600px;background:var(--green);top:-200px;right:-200px;"></div>
-  <p class="section-tag reveal">What LFG Is</p>
-  <div class="lfg-blocks">
-    <div class="lfg-block reveal delay-1">
+  <p class="section-tag reveal">What Is LFG</p>
+  <div class="what-lfg-intro reveal delay-1">
+    <h2 class="what-lfg-headline">WHAT IS LFG</h2>
+    <p class="what-lfg-body">LFG is a Dubai-born FitSocial coaching platform where community meets performance. We bring people together through weekly runs, group training, events, and structured programs designed to take you from zero to competition. No matter your level, you will be supported, challenged, and pushed to grow inside a community that shows up and puts in the work. Powered by our partnership with PUMA Middle East and backed by certified NASM coaching, we are here to help you build your strongest body and mindset.</p>
+  </div>
+  <div class="lfg-blocks" style="margin-top: 64px;">
+    <a href="#runs" class="lfg-block reveal delay-1" style="text-decoration:none;color:inherit;cursor:pointer;">
       <span class="lfg-block-num">01</span>
-      <h3 class="lfg-block-title">Weekly Runs</h3>
-      <p class="lfg-block-text">Every Wednesday. 7:30 PM. No excuses, no spectators. If you show up, you run.</p>
-    </div>
-    <div class="lfg-block reveal delay-2">
+      <h3 class="lfg-block-title">Runs</h3>
+      <p class="lfg-block-text">Weekly runs built for every level. Wednesday evenings and Saturday mornings. Show up and move.</p>
+      <p class="lfg-block-cta">See Runs <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg></p>
+    </a>
+    <a href="#bootcamps" class="lfg-block reveal delay-2" style="text-decoration:none;color:inherit;cursor:pointer;">
       <span class="lfg-block-num">02</span>
-      <h3 class="lfg-block-title">Community</h3>
-      <p class="lfg-block-text">1000+ members who chose discomfort over comfort. People who push. People who show up.</p>
-    </div>
-    <div class="lfg-block reveal delay-3">
+      <h3 class="lfg-block-title">Bootcamps</h3>
+      <p class="lfg-block-text">Hyrox-focused group sessions every Sunday. Built for all levels. Strength, endurance, results.</p>
+      <p class="lfg-block-cta">See Bootcamps <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg></p>
+    </a>
+    <a href="#coaching" class="lfg-block reveal delay-3" style="text-decoration:none;color:inherit;cursor:pointer;">
       <span class="lfg-block-num">03</span>
-      <h3 class="lfg-block-title">Performance</h3>
-      <p class="lfg-block-text">We're not here for fun runs. We're here to get faster, stronger, and relentlessly better.</p>
+      <h3 class="lfg-block-title">Coaching</h3>
+      <p class="lfg-block-text">Private and online coaching with NASM-certified coaches. Structured, accountable, personalized.</p>
+      <p class="lfg-block-cta">See Coaching <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg></p>
+    </a>
+  </div>
+</section>
+
+<!-- ============================================================
+     SECTION: WEEKLY RUNS
+     ============================================================ -->
+<section id="runs" class="activity-section">
+  <div class="activity-media">
+    <video class="activity-bg-img" autoplay muted loop playsinline preload="none" poster="RUN GROUP PIC.jpeg" style="object-fit:cover;object-position:center;">
+      <source src="new videos to check/TOBY EVENING RUN.mp4" type="video/mp4">
+    </video>
+    <div class="activity-overlay"></div>
+    <div class="activity-heading-overlay">
+      <p class="activity-eyebrow">Every Week</p>
+      <h2 class="activity-title reveal">RUN WITH US</h2>
+    </div>
+  </div>
+  <div class="activity-content">
+    <div class="activity-content-inner">
+      <div class="activity-schedule reveal">
+        <div class="activity-slot">
+          <p class="activity-slot-day">Wednesday</p>
+          <p class="activity-slot-time">7:30 PM</p>
+          <p class="activity-slot-loc">Toby's Estate</p>
+          <p class="activity-slot-desc">All fitness levels welcome. You can run, jog or walk. No pressure, just come and stay active.</p>
+        </div>
+        <div class="activity-slot-divider"></div>
+        <div class="activity-slot">
+          <p class="activity-slot-day">Saturday</p>
+          <p class="activity-slot-time">6:30 AM</p>
+          <p class="activity-slot-loc">Kite Beach</p>
+          <p class="activity-slot-desc">Longer runs to build your endurance and stamina. All fitness levels welcome. Show up and do as much as you can.</p>
+        </div>
+      </div>
+
+      <div class="activity-timer-block reveal delay-1">
+        <p class="activity-timer-label">Next Run In</p>
+        <div class="run-countdown" id="run-timer">--<span class="sep">:</span>--<span class="sep">:</span>--</div>
+        <p class="activity-timer-sub" id="run-timer-label">Loading...</p>
+      </div>
+
+      <div class="activity-form-wrap reveal delay-2">
+        <p class="activity-form-label">Register for the next run</p>
+        <div class="activity-embed-frame" style="background:#111;padding:2px;">
+          <div style="background:#111;padding:12px 12px 0;">
+            <p style="font-family:var(--font-head);font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--green);margin-bottom:12px;">LFG Run Registration</p>
+          </div>
+          <iframe
+            src="https://lfgdubai.fillout.com/t/p3buYsaQMvus"
+            style="width:100%;border:none;min-height:460px;display:block;"
+            title="Join LFG Runs — Register"
+            loading="lazy">
+          </iframe>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
 <!-- ============================================================
-     SECTION: NEXT RUN (CONVERSION)
+     SECTION: WEEKLY BOOTCAMPS
      ============================================================ -->
-<section id="next-run">
-  <div class="next-run-inner">
-    <div class="next-run-left">
-      <p class="next-run-tag">Happening This Week</p>
-      <h2 class="next-run-headline">
-        Dubai<br>Runs<br>Here.
-      </h2>
-      <div class="next-run-detail">
-        <span>Wednesday</span>
-        &mdash;
-        <span>7:30 PM</span>
-        &mdash;
-        Dubai, UAE
-      </div>
+<section id="bootcamps" class="activity-section activity-section--dark">
+  <div class="activity-media">
+    <video class="activity-bg-img" autoplay muted loop playsinline preload="none" poster="bootcamp member.jpeg" style="object-fit:cover;object-position:center 20%;">
+      <source src="new videos to check/BOOTCAMP 4 YEAR ANNIVERSARY.mp4" type="video/mp4">
+    </video>
+    <div class="activity-overlay"></div>
+    <div class="activity-heading-overlay">
+      <p class="activity-eyebrow">Every Sunday</p>
+      <h2 class="activity-title reveal">EMPTY THE TANK</h2>
     </div>
-    <div class="next-run-right">
-      <p class="run-countdown-label">Countdown to next run</p>
-      <div class="run-countdown" id="run-timer">--<span class="sep">:</span>--<span class="sep">:</span>--</div>
-      <br>
-      <a href="https://wa.me/?text=I%20want%20to%20join%20the%20next%20LFG%20run" target="_blank" class="run-join-btn">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
-        I'm In &mdash; Reserve My Spot
-      </a>
+  </div>
+  <div class="activity-content">
+    <div class="activity-content-inner">
+      <div class="activity-schedule reveal">
+        <div class="activity-slot">
+          <p class="activity-slot-day">Sunday</p>
+          <p class="activity-slot-time">12:30 PM</p>
+          <p class="activity-slot-loc">CrossFit Alioth</p>
+          <p class="activity-slot-desc">Hyrox-focused group workout session tailored to cater for all fitness levels. Builds muscle strength and endurance.</p>
+        </div>
+      </div>
+
+      <div class="activity-form-wrap reveal delay-1">
+        <p class="activity-form-label">Join the next bootcamp</p>
+        <div class="activity-embed-frame" style="background:#111;padding:2px;">
+          <div style="background:#111;padding:12px 12px 0;">
+            <p style="font-family:var(--font-head);font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--green);margin-bottom:12px;">LFG Bootcamp Registration</p>
+          </div>
+          <iframe
+            src="https://meetntrain.com/community/lfgdubai"
+            style="width:100%;border:none;min-height:500px;display:block;"
+            title="LFG Bootcamp — MeetnTrain"
+            loading="lazy"
+            onerror="this.style.display='none';document.getElementById('meetntrain-fallback').style.display='flex';">
+          </iframe>
+          <div id="meetntrain-fallback" style="display:none;padding:40px 32px;flex-direction:column;align-items:flex-start;gap:20px;">
+            <p style="font-size:15px;color:rgba(255,255,255,0.55);line-height:1.7;">Register for the next Sunday bootcamp at CrossFit Alioth. All fitness levels welcome.</p>
+            <a href="https://meetntrain.com/community/lfgdubai" target="_blank" rel="noopener" class="btn-primary" style="display:inline-flex;align-items:center;gap:10px;">
+              Register on MeetnTrain
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -2096,102 +2671,73 @@ footer {
 <section id="movement">
   <p class="movement-tag">The Movement</p>
 
-  <!-- Row 1 -->
+  <!-- Row 1 — mix of images + new videos (mp4 only) -->
   <div style="overflow:hidden;width:100%;">
     <div class="marquee-track">
-      <!-- Doubled for seamless loop -->
       <div class="marquee-item">
-        <img src="main group photo.jpeg" alt="LFG Group Run" loading="lazy">
-      </div>
-      <div class="marquee-item">
-        <video autoplay muted loop playsinline>
-          <source src="running video.mp4" type="video/mp4">
+        <video autoplay muted loop playsinline preload="none" style="width:100%;height:100%;object-fit:cover;">
+          <source src="new videos to check/TOBY MORNING RUN .mp4" type="video/mp4">
         </video>
       </div>
+      <div class="marquee-item"><img src="main group photo.jpeg" alt="LFG Group Run" loading="lazy"></div>
       <div class="marquee-item">
-        <img src="commuinty and brand.jpeg" alt="LFG Community" loading="lazy">
-      </div>
-      <div class="marquee-item">
-        <img src="selfie in bootcamp.jpeg" alt="LFG Bootcamp" loading="lazy">
-      </div>
-      <div class="marquee-item">
-        <img src="bootcamp member.jpeg" alt="LFG Member" loading="lazy">
-      </div>
-      <div class="marquee-item">
-        <img src="ahmed sam.jpeg" alt="Ahmed Sam" loading="lazy">
-      </div>
-      <!-- Duplicate for seamless -->
-      <div class="marquee-item">
-        <img src="main group photo.jpeg" alt="LFG Group Run" loading="lazy">
-      </div>
-      <div class="marquee-item">
-        <video autoplay muted loop playsinline>
-          <source src="running video.mp4" type="video/mp4">
+        <video autoplay muted loop playsinline preload="none" style="width:100%;height:100%;object-fit:cover;">
+          <source src="new videos to check/PADEL.mp4" type="video/mp4">
         </video>
       </div>
+      <div class="marquee-item"><img src="new videos to check/RUN GROUP PIC.jpeg" alt="LFG Run" loading="lazy"></div>
       <div class="marquee-item">
-        <img src="commuinty and brand.jpeg" alt="LFG Community" loading="lazy">
+        <video autoplay muted loop playsinline preload="none" style="width:100%;height:100%;object-fit:cover;">
+          <source src="new videos to check/TOBY EVENING RUN.mp4" type="video/mp4">
+        </video>
       </div>
+      <div class="marquee-item"><img src="commuinty and brand.jpeg" alt="LFG Community" loading="lazy"></div>
+      <!-- Duplicate for seamless loop -->
       <div class="marquee-item">
-        <img src="selfie in bootcamp.jpeg" alt="LFG Bootcamp" loading="lazy">
+        <video autoplay muted loop playsinline preload="none" style="width:100%;height:100%;object-fit:cover;">
+          <source src="new videos to check/TOBY MORNING RUN .mp4" type="video/mp4">
+        </video>
       </div>
+      <div class="marquee-item"><img src="main group photo.jpeg" alt="LFG Group Run" loading="lazy"></div>
       <div class="marquee-item">
-        <img src="bootcamp member.jpeg" alt="LFG Member" loading="lazy">
+        <video autoplay muted loop playsinline preload="none" style="width:100%;height:100%;object-fit:cover;">
+          <source src="new videos to check/PADEL.mp4" type="video/mp4">
+        </video>
       </div>
+      <div class="marquee-item"><img src="new videos to check/RUN GROUP PIC.jpeg" alt="LFG Run" loading="lazy"></div>
       <div class="marquee-item">
-        <img src="ahmed sam.jpeg" alt="Ahmed Sam" loading="lazy">
+        <video autoplay muted loop playsinline preload="none" style="width:100%;height:100%;object-fit:cover;">
+          <source src="new videos to check/TOBY EVENING RUN.mp4" type="video/mp4">
+        </video>
       </div>
+      <div class="marquee-item"><img src="commuinty and brand.jpeg" alt="LFG Community" loading="lazy"></div>
     </div>
   </div>
 
-  <!-- Row 2 (reverse) -->
+  <!-- Row 2 (reverse) — bootcamp + ahmed + group -->
   <div style="overflow:hidden;width:100%;margin-top:4px;">
     <div class="marquee-track" style="animation-direction:reverse;">
       <div class="marquee-item">
-        <video autoplay muted loop playsinline>
-          <source src="video edit.mp4" type="video/mp4">
+        <video autoplay muted loop playsinline preload="none" style="width:100%;height:100%;object-fit:cover;">
+          <source src="new videos to check/BOOTCAMP 4 YEAR ANNIVERSARY.mp4" type="video/mp4">
         </video>
       </div>
-      <div class="marquee-item">
-        <img src="bootcamp member.jpeg" alt="Bootcamp" loading="lazy">
-      </div>
-      <div class="marquee-item">
-        <img src="selfie in bootcamp.jpeg" alt="Bootcamp Selfie" loading="lazy">
-      </div>
-      <div class="marquee-item">
-        <img src="commuinty and brand.jpeg" alt="Community" loading="lazy">
-      </div>
-      <div class="marquee-item">
-        <video autoplay muted loop playsinline>
-          <source src="bootcamp video.mp4" type="video/mp4">
-        </video>
-      </div>
-      <div class="marquee-item">
-        <img src="main group photo.jpeg" alt="Group" loading="lazy">
-      </div>
+      <div class="marquee-item"><img src="bootcamp member.jpeg" alt="Bootcamp" loading="lazy"></div>
+      <div class="marquee-item"><img src="selfie in bootcamp.jpeg" alt="Bootcamp Selfie" loading="lazy"></div>
+      <div class="marquee-item"><img src="ahmed sam.jpeg" alt="Ahmed Sam" loading="lazy"></div>
+      <div class="marquee-item"><img src="main group photo.jpeg" alt="Group" loading="lazy"></div>
+      <div class="marquee-item"><img src="commuinty and brand.jpeg" alt="Community" loading="lazy"></div>
       <!-- Duplicate -->
       <div class="marquee-item">
-        <video autoplay muted loop playsinline>
-          <source src="video edit.mp4" type="video/mp4">
+        <video autoplay muted loop playsinline preload="none" style="width:100%;height:100%;object-fit:cover;">
+          <source src="new videos to check/BOOTCAMP 4 YEAR ANNIVERSARY.mp4" type="video/mp4">
         </video>
       </div>
-      <div class="marquee-item">
-        <img src="bootcamp member.jpeg" alt="Bootcamp" loading="lazy">
-      </div>
-      <div class="marquee-item">
-        <img src="selfie in bootcamp.jpeg" alt="Bootcamp Selfie" loading="lazy">
-      </div>
-      <div class="marquee-item">
-        <img src="commuinty and brand.jpeg" alt="Community" loading="lazy">
-      </div>
-      <div class="marquee-item">
-        <video autoplay muted loop playsinline>
-          <source src="bootcamp video.mp4" type="video/mp4">
-        </video>
-      </div>
-      <div class="marquee-item">
-        <img src="main group photo.jpeg" alt="Group" loading="lazy">
-      </div>
+      <div class="marquee-item"><img src="bootcamp member.jpeg" alt="Bootcamp" loading="lazy"></div>
+      <div class="marquee-item"><img src="selfie in bootcamp.jpeg" alt="Bootcamp Selfie" loading="lazy"></div>
+      <div class="marquee-item"><img src="ahmed sam.jpeg" alt="Ahmed Sam" loading="lazy"></div>
+      <div class="marquee-item"><img src="main group photo.jpeg" alt="Group" loading="lazy"></div>
+      <div class="marquee-item"><img src="commuinty and brand.jpeg" alt="Community" loading="lazy"></div>
     </div>
   </div>
 </section>
@@ -2208,17 +2754,18 @@ footer {
   <div class="founder-content reveal-right">
     <p class="founder-eyebrow">The Founder</p>
     <h2 class="founder-quote">
-      He Didn't Build<br>
-      LFG For<br>
-      <em>Comfort.</em>
+      Built For Those<br>
+      Who Want<br>
+      <em>More.</em>
     </h2>
     <p class="founder-bio">
-      Ahmed Sam built LFG for people who want more. More from themselves, more from their city, more from every Wednesday evening.
-      He's not here to motivate you. He's here to hold you to a standard you haven't met yet.
+      Ahmed Sam is the founder of LFG, a community built for those who want more from themselves.
+      From first workouts to competition, he helps people build strength, discipline, and a mindset that carries beyond fitness.
+      LFG is proudly partnered with PUMA Middle East, supporting a growing community across Dubai.
     </p>
     <div>
       <p class="founder-name">Ahmed Sam</p>
-      <p class="founder-title">Founder, LFG Dubai &mdash; Performance Coach</p>
+      <p class="founder-title">Founder, LFG Dubai &mdash; NASM Certified Coach</p>
     </div>
     <div class="founder-stats">
       <div class="founder-stat">
@@ -2226,16 +2773,16 @@ footer {
         <div class="founder-stat-label">Members</div>
       </div>
       <div class="founder-stat">
-        <div class="founder-stat-num">52</div>
-        <div class="founder-stat-label">Weeks / Year</div>
+        <div class="founder-stat-num">2019</div>
+        <div class="founder-stat-label">Since</div>
       </div>
       <div class="founder-stat">
         <div class="founder-stat-num">1</div>
-        <div class="founder-stat-label">Standard</div>
+        <div class="founder-stat-label">Mission</div>
       </div>
     </div>
     <div style="margin-top: 40px;">
-      <a href="https://link.lfgdubai.com/widget/bookings/lfg-consultation-call" target="_blank" class="btn-secondary">
+      <a href="#coaching" class="btn-secondary">
         Train with Ahmed
         <svg class="arrow-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
       </a>
@@ -2244,72 +2791,107 @@ footer {
 </section>
 
 <!-- ============================================================
-     SECTION: COACHING / BOOTCAMP
+     SECTION: LFG COACHING
      ============================================================ -->
-<section id="coaching">
-  <div class="coaching-video-wrap">
-    <video class="coaching-video" autoplay muted loop playsinline>
-      <source src="bootcamp video.mp4" type="video/mp4">
-    </video>
-    <div class="coaching-video-overlay"></div>
-    <div class="coaching-video-text">
-      <h2 class="coaching-video-headline reveal">
-        Train<br>Like You<br><em>Mean It.</em>
-      </h2>
+<section id="coaching" style="padding: 0; background: #080808; border-top: 1px solid rgba(255,255,255,0.06);">
+
+  <!-- Coaching intro header -->
+  <div class="coaching-header reveal" style="padding: 100px 64px 60px; position:relative; overflow:hidden;">
+    <div class="gradient-orb" style="width:500px;height:500px;background:var(--green);top:-200px;left:-100px;"></div>
+    <p class="section-tag" style="position:relative;z-index:1;">LFG Coaching</p>
+    <h2 style="font-family:var(--font-head);font-size:clamp(48px,7vw,100px);font-weight:900;text-transform:uppercase;line-height:0.88;letter-spacing:-0.02em;margin-bottom:40px;position:relative;z-index:1;">
+      OUR<br><span style="color:var(--green);">TRANSFORMATIONS</span>
+    </h2>
+    <div class="coaching-intro-grid">
+      <div class="coaching-intro-copy">
+        <p style="font-size:15px;color:rgba(255,255,255,0.5);line-height:1.75;margin-bottom:32px;">Train privately with our NASM-certified coaches in 2 ways:</p>
+        <div class="coaching-method">
+          <span class="coaching-method-num">01</span>
+          <div>
+            <h3 class="coaching-method-title">Online Coaching</h3>
+            <p class="coaching-method-text">Built to deliver real results using structured training, nutritional frameworks, proven protocols, and accountability to keep you on track through our LFG Coaching App.</p>
+          </div>
+        </div>
+        <div class="coaching-method">
+          <span class="coaching-method-num">02</span>
+          <div>
+            <h3 class="coaching-method-title">In-Person Coaching</h3>
+            <p class="coaching-method-text">Built around your goals, your struggles, and your non-negotiables. Every session is personalized to your level, your schedule, and your lifestyle, ensuring you train with purpose and progress with clarity. This is for those who want hands-on guidance, real-time feedback, and maximum results.</p>
+          </div>
+        </div>
+        <div style="margin-top:40px;padding:28px;border:1px solid rgba(153,153,102,0.2);background:rgba(153,153,102,0.04);">
+          <p style="font-family:var(--font-head);font-size:13px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--green);margin-bottom:12px;">How to Apply</p>
+          <p style="font-size:15px;color:rgba(255,255,255,0.55);line-height:1.7;">Fill out the form and book your 30-minute roadmapping session. We will understand your goals, identify what is holding you back, and map out exactly how to get you from where you are to where you want to be.</p>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="coaching-cards">
-    <div class="coaching-card reveal delay-1">
-      <span class="coaching-card-icon">01</span>
-      <h3 class="coaching-card-title">Private Coaching</h3>
-      <p class="coaching-card-text">One-on-one with Ahmed. Built around your gaps, your goals, and your non-negotiables.</p>
-      <a href="#booking" class="coaching-card-cta">
-        Change your life now
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-      </a>
+  <!-- Transformation cards — real testimonial images -->
+  <!-- Transformation marquee carousel — correct path: Coaching testimonials/Coaching testimonials/ -->
+  <div class="transformations-wrap" style="padding: 0 0 80px;">
+    <div style="padding: 0 64px; margin-bottom: 40px;">
+      <p class="section-tag reveal">Member Transformations</p>
     </div>
-    <div class="coaching-card reveal delay-2">
-      <span class="coaching-card-icon">02</span>
-      <h3 class="coaching-card-title">Bootcamp</h3>
-      <p class="coaching-card-text">Group sessions that hit different. Structured intensity. No shortcuts. Real results.</p>
-      <a href="#booking" class="coaching-card-cta">
-        Change your life now
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-      </a>
+    <!-- Row 1 -->
+    <div style="overflow:hidden;width:100%;margin-bottom:3px;">
+      <div class="marquee-track" style="gap:3px;">
+        <div class="tcard"><img src="Coaching testimonials/Coaching testimonials/204aabdd-7893-4665-8b54-9f49fa4237fe.jpg" alt="LFG transformation" loading="lazy"></div>
+        <div class="tcard"><img src="Coaching testimonials/Coaching testimonials/207e9988-6938-4ac1-8f89-6067f8b5db25.jpg" alt="LFG transformation" loading="lazy"></div>
+        <div class="tcard"><img src="Coaching testimonials/Coaching testimonials/21f75354-2ce2-45ec-8225-97fa3940f729.jpg" alt="LFG transformation" loading="lazy"></div>
+        <div class="tcard"><img src="Coaching testimonials/Coaching testimonials/2af8b676-4ed4-4936-875d-64a5877b4124.jpg" alt="LFG transformation" loading="lazy"></div>
+        <div class="tcard"><img src="Coaching testimonials/Coaching testimonials/2ed256f3-5352-4497-ad5e-801b37ea9538.jpg" alt="LFG transformation" loading="lazy"></div>
+        <div class="tcard"><img src="Coaching testimonials/Coaching testimonials/32ecb6a6-97c6-4b0d-a962-5f6c47f8881c.jpg" alt="LFG transformation" loading="lazy"></div>
+        <div class="tcard"><img src="Coaching testimonials/Coaching testimonials/388dc420-07cf-4fb0-b4cc-3cf6c7a7ed2b.jpg" alt="LFG transformation" loading="lazy"></div>
+        <!-- duplicate -->
+        <div class="tcard"><img src="Coaching testimonials/Coaching testimonials/204aabdd-7893-4665-8b54-9f49fa4237fe.jpg" alt="LFG transformation" loading="lazy"></div>
+        <div class="tcard"><img src="Coaching testimonials/Coaching testimonials/207e9988-6938-4ac1-8f89-6067f8b5db25.jpg" alt="LFG transformation" loading="lazy"></div>
+        <div class="tcard"><img src="Coaching testimonials/Coaching testimonials/21f75354-2ce2-45ec-8225-97fa3940f729.jpg" alt="LFG transformation" loading="lazy"></div>
+        <div class="tcard"><img src="Coaching testimonials/Coaching testimonials/2af8b676-4ed4-4936-875d-64a5877b4124.jpg" alt="LFG transformation" loading="lazy"></div>
+        <div class="tcard"><img src="Coaching testimonials/Coaching testimonials/2ed256f3-5352-4497-ad5e-801b37ea9538.jpg" alt="LFG transformation" loading="lazy"></div>
+        <div class="tcard"><img src="Coaching testimonials/Coaching testimonials/32ecb6a6-97c6-4b0d-a962-5f6c47f8881c.jpg" alt="LFG transformation" loading="lazy"></div>
+        <div class="tcard"><img src="Coaching testimonials/Coaching testimonials/388dc420-07cf-4fb0-b4cc-3cf6c7a7ed2b.jpg" alt="LFG transformation" loading="lazy"></div>
+      </div>
     </div>
-    <div class="coaching-card reveal delay-3">
-      <span class="coaching-card-icon">03</span>
-      <h3 class="coaching-card-title">Consultation</h3>
-      <p class="coaching-card-text">First step. 30 minutes. Ahmed maps out exactly where you are and what you need.</p>
-      <a href="#booking" class="coaching-card-cta">
-        Change your life now
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-      </a>
+    <!-- Row 2 reverse -->
+    <div style="overflow:hidden;width:100%;">
+      <div class="marquee-track" style="gap:3px;animation-direction:reverse;">
+        <div class="tcard"><img src="Coaching testimonials/Coaching testimonials/4d6c5f20-333b-467a-80eb-f88d10392b83.jpg" alt="LFG transformation" loading="lazy"></div>
+        <div class="tcard"><img src="Coaching testimonials/Coaching testimonials/68af884f-e3aa-4704-8ff8-93ba446d2c61.jpg" alt="LFG transformation" loading="lazy"></div>
+        <div class="tcard"><img src="Coaching testimonials/Coaching testimonials/70e6aa9c-8a0c-4e9d-a2ca-b96ceaad235f.jpg" alt="LFG transformation" loading="lazy"></div>
+        <div class="tcard"><img src="Coaching testimonials/Coaching testimonials/86808a3a-5ecb-45d5-aa77-1352db7fc148.jpg" alt="LFG transformation" loading="lazy"></div>
+        <div class="tcard"><img src="Coaching testimonials/Coaching testimonials/90b2e0cd-fef0-42ca-803e-5696807ae313.jpg" alt="LFG transformation" loading="lazy"></div>
+        <div class="tcard"><img src="Coaching testimonials/Coaching testimonials/9e73e344-b80e-490b-a787-c5c69d3599fb.jpg" alt="LFG transformation" loading="lazy"></div>
+        <div class="tcard"><img src="Coaching testimonials/Coaching testimonials/cc3b135f-6745-46d1-913d-abd0a2b67812.jpg" alt="LFG transformation" loading="lazy"></div>
+        <!-- duplicate -->
+        <div class="tcard"><img src="Coaching testimonials/Coaching testimonials/4d6c5f20-333b-467a-80eb-f88d10392b83.jpg" alt="LFG transformation" loading="lazy"></div>
+        <div class="tcard"><img src="Coaching testimonials/Coaching testimonials/68af884f-e3aa-4704-8ff8-93ba446d2c61.jpg" alt="LFG transformation" loading="lazy"></div>
+        <div class="tcard"><img src="Coaching testimonials/Coaching testimonials/70e6aa9c-8a0c-4e9d-a2ca-b96ceaad235f.jpg" alt="LFG transformation" loading="lazy"></div>
+        <div class="tcard"><img src="Coaching testimonials/Coaching testimonials/86808a3a-5ecb-45d5-aa77-1352db7fc148.jpg" alt="LFG transformation" loading="lazy"></div>
+        <div class="tcard"><img src="Coaching testimonials/Coaching testimonials/90b2e0cd-fef0-42ca-803e-5696807ae313.jpg" alt="LFG transformation" loading="lazy"></div>
+        <div class="tcard"><img src="Coaching testimonials/Coaching testimonials/9e73e344-b80e-490b-a787-c5c69d3599fb.jpg" alt="LFG transformation" loading="lazy"></div>
+        <div class="tcard"><img src="Coaching testimonials/Coaching testimonials/cc3b135f-6745-46d1-913d-abd0a2b67812.jpg" alt="LFG transformation" loading="lazy"></div>
+      </div>
     </div>
   </div>
 
-  <!-- coaching section ends here -->
-</section>
-
-<!-- ============================================================
-     SECTION: BOOKING EMBED
-     ============================================================ -->
-<section id="booking">
-  <div class="booking-section-head reveal">
-    <p class="booking-section-tag">Book Your Session</p>
-    <h2 class="booking-section-headline">Your Next Level<br><em>Starts Here.</em></h2>
-    <p class="booking-section-sub">30 minutes with Ahmed. He maps out exactly where you are and what you need.</p>
-  </div>
-  <div class="booking-embed-wrap reveal">
-    <iframe
-      src="https://link.lfgdubai.com/widget/bookings/lfg-consultation-call?utm_source=ig&utm_medium=social&utm_content=link_in_bio"
-      class="booking-iframe"
-      title="Book a Consultation with Ahmed Sam — LFG Dubai"
-      allow="payment"
-      loading="lazy"
-      id="booking-frame">
-    </iframe>
+  <!-- Booking embed — preserved -->
+  <div id="booking" style="padding: 20px 64px 100px; border-top: 1px solid rgba(255,255,255,0.06);">
+    <div class="booking-section-head reveal">
+      <p class="booking-section-tag">Book Your Session</p>
+      <h2 class="booking-section-headline">Train With<br><em>Ahmed.</em></h2>
+      <p class="booking-section-sub">30 minutes. He maps out exactly where you are and what you need to get there.</p>
+    </div>
+    <div class="booking-embed-wrap reveal">
+      <iframe
+        src="https://link.lfgdubai.com/widget/bookings/lfg-consultation-call?utm_source=ig&utm_medium=social&utm_content=link_in_bio"
+        class="booking-iframe"
+        title="Book a Consultation with Ahmed Sam — LFG Dubai"
+        allow="payment"
+        loading="lazy"
+        id="booking-frame">
+      </iframe>
+    </div>
   </div>
 </section>
 
@@ -2428,7 +3010,7 @@ footer {
         </li>
         <li class="seo-point">
           <span class="seo-point-mark">04</span>
-          <span class="seo-point-text">Bootcamp and accountability</span>
+          <span class="seo-point-text">Personalized and accountable</span>
         </li>
       </ul>
     </div>
@@ -2449,7 +3031,7 @@ footer {
         <ul class="faq-list" role="list">
           <li class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
             <button class="faq-question" aria-expanded="false">
-              <span class="faq-q-text" itemprop="name">How do I join LFG run club in Dubai?</span>
+              <span class="faq-q-text" itemprop="name">How do I join LFG Runs?</span>
               <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 1v8M1 5h8"/></svg></span>
             </button>
             <div class="faq-answer" role="region" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
@@ -2462,43 +3044,25 @@ footer {
               <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 1v8M1 5h8"/></svg></span>
             </button>
             <div class="faq-answer" role="region" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-              <p class="faq-answer-inner" itemprop="text">LFG runs every Wednesday at 7:30 PM. The weekly run is designed to bring the community together through movement, accountability, and energy.</p>
+              <p class="faq-answer-inner" itemprop="text">LFG runs every Wednesday at 7:30 PM and every Saturday at 6:30 AM. The weekly run is designed to bring the community together through movement, accountability, and energy.</p>
             </div>
           </li>
           <li class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
             <button class="faq-question" aria-expanded="false">
-              <span class="faq-q-text" itemprop="name">Is LFG open to beginners?</span>
+              <span class="faq-q-text" itemprop="name">Why do people join LFG Runs instead of run clubs in Dubai?</span>
               <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 1v8M1 5h8"/></svg></span>
             </button>
             <div class="faq-answer" role="region" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-              <p class="faq-answer-inner" itemprop="text">Yes. LFG welcomes all levels. Whether you are just starting out or already experienced, the club is built around consistency, community, and showing up.</p>
+              <p class="faq-answer-inner" itemprop="text">People join LFG for more than a run. The club stands out because of its authentic energy, strong community, consistent weekly presence, and performance-driven culture. We are founded by people who grew up in Dubai and know how to empower individuals to push past their limits together.</p>
             </div>
           </li>
           <li class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
             <button class="faq-question" aria-expanded="false">
-              <span class="faq-q-text" itemprop="name">How big is the LFG community?</span>
+              <span class="faq-q-text" itemprop="name">Are LFG Bootcamps beginner-friendly?</span>
               <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 1v8M1 5h8"/></svg></span>
             </button>
             <div class="faq-answer" role="region" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-              <p class="faq-answer-inner" itemprop="text">LFG has grown into a running community of over 1000+ members in Dubai, making it one of the fastest growing run club communities in the city.</p>
-            </div>
-          </li>
-          <li class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
-            <button class="faq-question" aria-expanded="false">
-              <span class="faq-q-text" itemprop="name">Why do people join LFG instead of other run clubs in Dubai?</span>
-              <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 1v8M1 5h8"/></svg></span>
-            </button>
-            <div class="faq-answer" role="region" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-              <p class="faq-answer-inner" itemprop="text">People join LFG for more than a run. The club stands out because of its energy, strong community, consistent weekly presence, and performance-driven culture.</p>
-            </div>
-          </li>
-          <li class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
-            <button class="faq-question" aria-expanded="false">
-              <span class="faq-q-text" itemprop="name">What should I expect from my first LFG run?</span>
-              <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 1v8M1 5h8"/></svg></span>
-            </button>
-            <div class="faq-answer" role="region" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-              <p class="faq-answer-inner" itemprop="text">Expect a high-energy group environment, a welcoming community, and a run experience that feels organized, motivating, and built around momentum.</p>
+              <p class="faq-answer-inner" itemprop="text">The bootcamp workouts are built to cater for all fitness levels. If you are unsure, the consultation call is the best place to start.</p>
             </div>
           </li>
         </ul>
@@ -2510,11 +3074,20 @@ footer {
         <ul class="faq-list" role="list">
           <li class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
             <button class="faq-question" aria-expanded="false">
-              <span class="faq-q-text" itemprop="name">Who is Ahmed Sam?</span>
+              <span class="faq-q-text" itemprop="name">What is included in the consultation call?</span>
               <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 1v8M1 5h8"/></svg></span>
             </button>
             <div class="faq-answer" role="region" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-              <p class="faq-answer-inner" itemprop="text">Ahmed Sam is the founder of LFG and a performance-focused coach in Dubai known for building a strong training culture around discipline, accountability, and real progress.</p>
+              <p class="faq-answer-inner" itemprop="text">The consultation call is designed to help you understand the coaching process, your goals, and the best next step if you want to train with Ahmed Sam and his coaching team.</p>
+            </div>
+          </li>
+          <li class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+            <button class="faq-question" aria-expanded="false">
+              <span class="faq-q-text" itemprop="name">What makes Ahmed Sam different from a standard personal trainer?</span>
+              <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 1v8M1 5h8"/></svg></span>
+            </button>
+            <div class="faq-answer" role="region" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+              <p class="faq-answer-inner" itemprop="text">Ahmed Sam's coaching is built around structure, accountability, energy, and performance. It is designed for people who want a higher standard and a personalized program, not a generic training experience.</p>
             </div>
           </li>
           <li class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
@@ -2524,42 +3097,6 @@ footer {
             </button>
             <div class="faq-answer" role="region" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
               <p class="faq-answer-inner" itemprop="text">Yes. Ahmed Sam offers private coaching and consultation-based training in Dubai for people who want focused support, structure, and better results.</p>
-            </div>
-          </li>
-          <li class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
-            <button class="faq-question" aria-expanded="false">
-              <span class="faq-q-text" itemprop="name">What is included in the consultation call?</span>
-              <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 1v8M1 5h8"/></svg></span>
-            </button>
-            <div class="faq-answer" role="region" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-              <p class="faq-answer-inner" itemprop="text">The consultation call is designed to help you understand the coaching process, your goals, and the best next step if you want to train with Ahmed Sam.</p>
-            </div>
-          </li>
-          <li class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
-            <button class="faq-question" aria-expanded="false">
-              <span class="faq-q-text" itemprop="name">Is the LFG bootcamp right for beginners?</span>
-              <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 1v8M1 5h8"/></svg></span>
-            </button>
-            <div class="faq-answer" role="region" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-              <p class="faq-answer-inner" itemprop="text">The bootcamp can work for different fitness levels, depending on your goals and readiness. If you are unsure, the consultation call is the best place to start.</p>
-            </div>
-          </li>
-          <li class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
-            <button class="faq-question" aria-expanded="false">
-              <span class="faq-q-text" itemprop="name">How do I book a session with Ahmed Sam?</span>
-              <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 1v8M1 5h8"/></svg></span>
-            </button>
-            <div class="faq-answer" role="region" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-              <p class="faq-answer-inner" itemprop="text">You can book a session directly through the visible consultation booking section on the website.</p>
-            </div>
-          </li>
-          <li class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
-            <button class="faq-question" aria-expanded="false">
-              <span class="faq-q-text" itemprop="name">What makes Ahmed Sam different from a standard personal trainer?</span>
-              <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 1v8M1 5h8"/></svg></span>
-            </button>
-            <div class="faq-answer" role="region" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-              <p class="faq-answer-inner" itemprop="text">Ahmed Sam's coaching is built around structure, accountability, energy, and performance. It is designed for people who want a higher standard, not a generic training experience.</p>
             </div>
           </li>
         </ul>
@@ -2573,7 +3110,7 @@ footer {
      FOOTER
      ============================================================ -->
 <footer>
-  <img src="lfg-logo.png" alt="LFG" class="footer-logo">
+  <img src="LFG MAIN LOGO-Photoroom.png" alt="LFG" class="footer-logo" style="object-fit:contain;background:none;">
   <p class="footer-copy">&copy; 2025 LFG Dubai &mdash; Lift. Focus. Grind.</p>
   <ul class="footer-links">
     <li><a href="https://wa.me/?text=I%20want%20to%20join%20the%20next%20LFG%20run" target="_blank">Join Us</a></li>
@@ -2592,37 +3129,39 @@ window.addEventListener('scroll', () => {
   nav.classList.toggle('scrolled', window.scrollY > 60);
 }, { passive: true });
 
-// ---- COUNTDOWN TIMER ----
-// Next Wednesday 7:30 PM Dubai time (UTC+4)
-function getNextWednesday730Dubai() {
+// ---- COUNTDOWN TIMER — next run (Wed 7:30 PM or Sat 6:30 AM Dubai) ----
+function getNextRunDubai() {
   const now = new Date();
-  // Dubai is UTC+4
-  const dubaiOffset = 4 * 60; // in minutes
-  const localOffset = -now.getTimezoneOffset(); // in minutes
+  const dubaiOffset = 4 * 60;
+  const localOffset = -now.getTimezoneOffset();
   const diffMs = (dubaiOffset - localOffset) * 60 * 1000;
   const dubaiNow = new Date(now.getTime() + diffMs);
 
-  // Day of week: 0=Sun, 3=Wed
-  const day = dubaiNow.getDay();
-  const daysUntilWed = (3 - day + 7) % 7;
+  // Run schedule: Wed=3 at 19:30, Sat=6 at 06:30
+  const sessions = [
+    { day: 3, hour: 19, min: 30, label: 'Wednesday — Toby\'s Estate, 7:30 PM' },
+    { day: 6, hour: 6,  min: 30, label: 'Saturday — Kite Beach, 6:30 AM' }
+  ];
 
-  const target = new Date(dubaiNow);
-  target.setDate(dubaiNow.getDate() + daysUntilWed);
-  target.setHours(19, 30, 0, 0);
+  let closest = null;
+  let closestMs = Infinity;
 
-  // If it's Wednesday and the run hasn't started yet (or is same day after 7:30)
-  if (daysUntilWed === 0) {
-    const runTime = new Date(dubaiNow);
-    runTime.setHours(19, 30, 0, 0);
-    if (dubaiNow >= runTime) {
-      // Past this week's run, go to next Wednesday
-      target.setDate(target.getDate() + 7);
+  sessions.forEach(s => {
+    const daysUntil = (s.day - dubaiNow.getDay() + 7) % 7;
+    const candidate = new Date(dubaiNow);
+    candidate.setDate(dubaiNow.getDate() + daysUntil);
+    candidate.setHours(s.hour, s.min, 0, 0);
+    // If same day but already past, push 7 days
+    if (daysUntil === 0) {
+      const check = new Date(dubaiNow);
+      check.setHours(s.hour, s.min, 0, 0);
+      if (dubaiNow >= check) candidate.setDate(candidate.getDate() + 7);
     }
-  }
+    const ms = candidate - dubaiNow;
+    if (ms < closestMs) { closestMs = ms; closest = { ms, label: s.label }; }
+  });
 
-  // Convert target back to local time for comparison
-  const targetLocal = new Date(target.getTime() - diffMs);
-  return targetLocal;
+  return { targetLocal: new Date(now.getTime() + closest.ms), label: closest.label };
 }
 
 function formatCountdown(ms) {
@@ -2638,18 +3177,23 @@ function formatCountdown(ms) {
 function pad(n) { return String(n).padStart(2, '0'); }
 
 function updateTimers() {
-  const target = getNextWednesday730Dubai();
-  const diff = target - new Date();
+  const { targetLocal, label } = getNextRunDubai();
+  const diff = targetLocal - new Date();
   const { d, h, m, s } = formatCountdown(diff);
 
-  const heroStr = d > 0
+  const str = d > 0
     ? `${d}<span class="sep">D</span> ${pad(h)}<span class="sep">:</span>${pad(m)}<span class="sep">:</span>${pad(s)}`
     : `${pad(h)}<span class="sep">:</span>${pad(m)}<span class="sep">:</span>${pad(s)}`;
 
-  const heroEl = document.getElementById('hero-timer');
-  const runEl  = document.getElementById('run-timer');
-  if (heroEl) heroEl.innerHTML = heroStr;
-  if (runEl)  runEl.innerHTML  = heroStr;
+  const heroEl   = document.getElementById('hero-timer');
+  const runEl    = document.getElementById('run-timer');
+  const heroWhen = document.getElementById('hero-when-label');
+  const runLabel = document.getElementById('run-timer-label');
+
+  if (heroEl)   heroEl.innerHTML = str;
+  if (runEl)    runEl.innerHTML  = str;
+  if (heroWhen) heroWhen.textContent = 'Next: ' + label;
+  if (runLabel) runLabel.textContent = 'Next: ' + label;
 }
 
 updateTimers();
@@ -2722,6 +3266,30 @@ document.querySelectorAll('.sticky-btn.book').forEach(btn => {
     document.getElementById('booking').scrollIntoView({ behavior: 'smooth' });
   });
 });
+
+// ---- MOBILE STICKY BAR — smooth scroll for anchor buttons ----
+document.querySelectorAll('.mobile-sticky-btn[href^="#"]').forEach(btn => {
+  btn.addEventListener('click', e => {
+    const target = document.querySelector(btn.getAttribute('href'));
+    if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth' }); }
+  });
+});
+
+// ---- MOBILE STICKY BAR — show after hero ----
+const mobileStickyBar = document.getElementById('mobile-sticky-bar');
+if (mobileStickyBar) {
+  const heroSection = document.getElementById('hero');
+  const showMobileBar = () => {
+    if (!heroSection) return;
+    const heroBottom = heroSection.getBoundingClientRect().bottom;
+    if (heroBottom < 0) {
+      mobileStickyBar.classList.add('visible');
+    } else {
+      mobileStickyBar.classList.remove('visible');
+    }
+  };
+  window.addEventListener('scroll', showMobileBar, { passive: true });
+}
 
 // ---- MARQUEE PAUSE ON HOVER ----
 document.querySelectorAll('.marquee-track').forEach(track => {
