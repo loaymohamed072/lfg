@@ -1634,6 +1634,165 @@ footer {
 }
 
 /* ============================================================
+   BOOTCAMP BOOKING MODULE
+   ============================================================ */
+.bootcamp-booking {
+  margin-top: 32px;
+}
+.bootcamp-booking-eyebrow {
+  font-family: var(--font-head);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 8px;
+}
+.bootcamp-booking-title {
+  font-family: var(--font-head);
+  font-size: clamp(18px, 3.5vw, 26px);
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--white);
+  margin-bottom: 8px;
+  line-height: 1.1;
+}
+.bootcamp-booking-sub {
+  font-size: 14px;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.65;
+  margin-bottom: 20px;
+  max-width: 340px;
+}
+.bootcamp-session-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 22px;
+}
+.bootcamp-session-meta span {
+  font-family: var(--font-head);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.55);
+}
+.bootcamp-session-meta .bsm-dot {
+  color: var(--green);
+  opacity: 0.7;
+}
+.bootcamp-dates {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.bootcamp-date-card {
+  flex: 1 1 calc(25% - 8px);
+  min-width: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 14px 8px;
+  background: rgba(255,255,255,0.04);
+  border: 1.5px solid rgba(255,255,255,0.1);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.15s, box-shadow 0.2s;
+  font-family: inherit;
+  text-align: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.bootcamp-date-card:hover {
+  border-color: rgba(153,153,102,0.5);
+  background: rgba(153,153,102,0.07);
+  transform: translateY(-2px);
+}
+.bootcamp-date-card.active {
+  border-color: var(--green);
+  background: rgba(153,153,102,0.13);
+  box-shadow: 0 0 18px rgba(153,153,102,0.18);
+}
+.bdc-day {
+  font-family: var(--font-head);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--green);
+}
+.bdc-date {
+  font-family: var(--font-head);
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--white);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.bdc-time {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: rgba(255,255,255,0.38);
+}
+.bootcamp-book-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 17px 28px;
+  font-family: var(--font-head);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  background: var(--green);
+  color: var(--black);
+  border: none;
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.15s;
+  box-shadow: 0 0 24px rgba(153,153,102,0.2);
+  margin-bottom: 12px;
+  position: relative;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+.bootcamp-book-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.14), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.4s;
+}
+.bootcamp-book-btn:hover::before { transform: translateX(100%); }
+.bootcamp-book-btn:hover {
+  box-shadow: 0 0 44px rgba(153,153,102,0.38);
+  transform: translateY(-1px);
+}
+.bootcamp-book-note {
+  font-size: 11px;
+  color: rgba(255,255,255,0.28);
+  letter-spacing: 0.04em;
+  text-align: center;
+  line-height: 1.5;
+}
+@media (max-width: 480px) {
+  .bootcamp-date-card {
+    flex: 1 1 calc(50% - 8px);
+    padding: 16px 10px;
+  }
+  .bdc-date { font-size: 13px; }
+}
+
+/* ============================================================
    MOVING GRADIENT BG ACCENT
    ============================================================ */
 .gradient-orb {
@@ -2715,27 +2874,47 @@ footer {
         </div>
       </div>
 
-      <div class="activity-form-wrap reveal delay-1">
-        <p class="activity-form-label">Join the next bootcamp</p>
-        <div class="activity-embed-frame" style="background:#111;padding:2px;">
-          <div style="background:#111;padding:12px 12px 0;">
-            <p style="font-family:var(--font-head);font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--green);margin-bottom:12px;">LFG Bootcamp Registration</p>
-          </div>
-          <iframe
-            src="https://meetntrain.com/community/lfgdubai"
-            style="width:100%;border:none;min-height:500px;display:block;"
-            title="LFG Bootcamp — MeetnTrain"
-            loading="lazy"
-            onerror="this.style.display='none';document.getElementById('meetntrain-fallback').style.display='flex';">
-          </iframe>
-          <div id="meetntrain-fallback" style="display:none;padding:40px 32px;flex-direction:column;align-items:flex-start;gap:20px;">
-            <p style="font-size:15px;color:rgba(255,255,255,0.55);line-height:1.7;">Register for the next Sunday bootcamp at CrossFit Alioth. All fitness levels welcome.</p>
-            <a href="https://meetntrain.com/community/lfgdubai" target="_blank" rel="noopener" class="btn-primary" style="display:inline-flex;align-items:center;gap:10px;">
-              Register on MeetnTrain
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-            </a>
-          </div>
+      <div class="bootcamp-booking reveal delay-1">
+        <p class="bootcamp-booking-eyebrow">Reserve Your Spot</p>
+        <h3 class="bootcamp-booking-title">Book Your Next Bootcamp</h3>
+        <p class="bootcamp-booking-sub">Choose your next Sunday session and reserve your spot through Meet &amp; Train.</p>
+
+        <div class="bootcamp-session-meta">
+          <span>Every Sunday</span>
+          <span class="bsm-dot">·</span>
+          <span>12:30 PM</span>
+          <span class="bsm-dot">·</span>
+          <span>CrossFit Alioth</span>
         </div>
+
+        <div class="bootcamp-dates" id="bootcamp-dates">
+          <button class="bootcamp-date-card active" type="button">
+            <span class="bdc-day">SUN</span>
+            <span class="bdc-date">APR 12</span>
+            <span class="bdc-time">12:30 PM</span>
+          </button>
+          <button class="bootcamp-date-card" type="button">
+            <span class="bdc-day">SUN</span>
+            <span class="bdc-date">APR 19</span>
+            <span class="bdc-time">12:30 PM</span>
+          </button>
+          <button class="bootcamp-date-card" type="button">
+            <span class="bdc-day">SUN</span>
+            <span class="bdc-date">APR 26</span>
+            <span class="bdc-time">12:30 PM</span>
+          </button>
+          <button class="bootcamp-date-card" type="button">
+            <span class="bdc-day">SUN</span>
+            <span class="bdc-date">MAY 3</span>
+            <span class="bdc-time">12:30 PM</span>
+          </button>
+        </div>
+
+        <a href="https://meetntrain.com/event/lfg-bootcamp-fk84" target="_blank" rel="noopener" class="bootcamp-book-btn">
+          Book Now
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+        </a>
+        <p class="bootcamp-book-note">You'll complete your reservation through Meet &amp; Train.</p>
       </div>
     </div>
   </div>
@@ -3352,6 +3531,14 @@ document.querySelectorAll('.mobile-sticky-btn[href^="#"]').forEach(btn => {
 });
 
 // Mobile dock is always visible via CSS on mobile — no JS toggle needed
+
+// ---- BOOTCAMP DATE SELECTOR ----
+document.querySelectorAll('#bootcamp-dates .bootcamp-date-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('#bootcamp-dates .bootcamp-date-card').forEach(c => c.classList.remove('active'));
+    card.classList.add('active');
+  });
+});
 
 // ---- MARQUEE PAUSE ON HOVER ----
 document.querySelectorAll('.marquee-track').forEach(track => {
