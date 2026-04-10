@@ -2888,22 +2888,22 @@ footer {
         </div>
 
         <div class="bootcamp-dates" id="bootcamp-dates">
-          <button class="bootcamp-date-card active" type="button">
+          <button class="bootcamp-date-card active" type="button" data-url="https://meetntrain.com/event/lfg-bootcamp-fk84">
             <span class="bdc-day">SUN</span>
             <span class="bdc-date">APR 12</span>
             <span class="bdc-time">12:30 PM</span>
           </button>
-          <button class="bootcamp-date-card" type="button">
+          <button class="bootcamp-date-card" type="button" data-url="https://meetntrain.com/event/lfg-bootcamp-u77k">
             <span class="bdc-day">SUN</span>
             <span class="bdc-date">APR 19</span>
             <span class="bdc-time">12:30 PM</span>
           </button>
-          <button class="bootcamp-date-card" type="button">
+          <button class="bootcamp-date-card" type="button" data-url="https://meetntrain.com/event/lfg-bootcamp-v5ys">
             <span class="bdc-day">SUN</span>
             <span class="bdc-date">APR 26</span>
             <span class="bdc-time">12:30 PM</span>
           </button>
-          <button class="bootcamp-date-card" type="button">
+          <button class="bootcamp-date-card" type="button" data-url="https://meetntrain.com/event/lfg-bootcamp-lucl">
             <span class="bdc-day">SUN</span>
             <span class="bdc-date">MAY 3</span>
             <span class="bdc-time">12:30 PM</span>
@@ -3533,10 +3533,14 @@ document.querySelectorAll('.mobile-sticky-btn[href^="#"]').forEach(btn => {
 // Mobile dock is always visible via CSS on mobile — no JS toggle needed
 
 // ---- BOOTCAMP DATE SELECTOR ----
+const bootcampBookBtn = document.querySelector('.bootcamp-book-btn');
 document.querySelectorAll('#bootcamp-dates .bootcamp-date-card').forEach(card => {
   card.addEventListener('click', () => {
     document.querySelectorAll('#bootcamp-dates .bootcamp-date-card').forEach(c => c.classList.remove('active'));
     card.classList.add('active');
+    if (bootcampBookBtn && card.dataset.url) {
+      bootcampBookBtn.href = card.dataset.url;
+    }
   });
 });
 
