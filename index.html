@@ -2704,7 +2704,7 @@ footer {
      HERO
      ============================================================ -->
 <section id="hero">
-  <video class="hero-video" autoplay muted loop playsinline preload="auto" poster="main group photo.jpeg">
+  <video class="hero-video" autoplay muted loop playsinline preload="none" poster="main group photo.jpeg">
     <source src="First hero video_c.mp4" type="video/mp4">
   </video>
   <div class="hero-overlay"></div>
@@ -2947,24 +2947,12 @@ footer {
         </video>
       </div>
       <div class="marquee-item"><img src="commuinty and brand.jpeg" alt="LFG Community" loading="lazy"></div>
-      <!-- Duplicate for seamless loop -->
-      <div class="marquee-item">
-        <video autoplay muted loop playsinline preload="none" style="width:100%;height:100%;object-fit:cover;">
-          <source src="new videos to check/TOBY MORNING RUN_c.mp4" type="video/mp4">
-        </video>
-      </div>
+      <!-- Duplicate for seamless loop — images only to avoid double video load -->
+      <div class="marquee-item"><img src="new videos to check/RUN GROUP PIC.jpeg" alt="LFG Morning Run" loading="lazy" style="width:100%;height:100%;object-fit:cover;"></div>
       <div class="marquee-item"><img src="main group photo.jpeg" alt="LFG Group Run" loading="lazy"></div>
-      <div class="marquee-item">
-        <video autoplay muted loop playsinline preload="none" style="width:100%;height:100%;object-fit:cover;">
-          <source src="new videos to check/PADEL_c.mp4" type="video/mp4">
-        </video>
-      </div>
+      <div class="marquee-item"><img src="commuinty and brand.jpeg" alt="LFG Padel" loading="lazy" style="width:100%;height:100%;object-fit:cover;"></div>
       <div class="marquee-item"><img src="new videos to check/RUN GROUP PIC.jpeg" alt="LFG Run" loading="lazy"></div>
-      <div class="marquee-item">
-        <video autoplay muted loop playsinline preload="none" style="width:100%;height:100%;object-fit:cover;">
-          <source src="new videos to check/TOBY EVENING RUN_c.mp4" type="video/mp4">
-        </video>
-      </div>
+      <div class="marquee-item"><img src="bootcamp member.jpeg" alt="LFG Evening Run" loading="lazy" style="width:100%;height:100%;object-fit:cover;"></div>
       <div class="marquee-item"><img src="commuinty and brand.jpeg" alt="LFG Community" loading="lazy"></div>
     </div>
   </div>
@@ -2982,17 +2970,13 @@ footer {
       <div class="marquee-item"><img src="ahmed sam.jpeg" alt="Ahmed Sam" loading="lazy"></div>
       <div class="marquee-item"><img src="main group photo.jpeg" alt="Group" loading="lazy"></div>
       <div class="marquee-item"><img src="commuinty and brand.jpeg" alt="Community" loading="lazy"></div>
-      <!-- Duplicate -->
-      <div class="marquee-item">
-        <video autoplay muted loop playsinline preload="none" style="width:100%;height:100%;object-fit:cover;">
-          <source src="new videos to check/BOOTCAMP 4 YEAR ANNIVERSARY_c.mp4" type="video/mp4">
-        </video>
-      </div>
+      <!-- Duplicate — image-only to avoid double video load -->
+      <div class="marquee-item"><img src="selfie in bootcamp.jpeg" alt="Bootcamp" loading="lazy" style="width:100%;height:100%;object-fit:cover;"></div>
       <div class="marquee-item"><img src="bootcamp member.jpeg" alt="Bootcamp" loading="lazy"></div>
-      <div class="marquee-item"><img src="selfie in bootcamp.jpeg" alt="Bootcamp Selfie" loading="lazy"></div>
+      <div class="marquee-item"><img src="commuinty and brand.jpeg" alt="Bootcamp Selfie" loading="lazy"></div>
       <div class="marquee-item"><img src="ahmed sam.jpeg" alt="Ahmed Sam" loading="lazy"></div>
       <div class="marquee-item"><img src="main group photo.jpeg" alt="Group" loading="lazy"></div>
-      <div class="marquee-item"><img src="commuinty and brand.jpeg" alt="Community" loading="lazy"></div>
+      <div class="marquee-item"><img src="new videos to check/RUN GROUP PIC.jpeg" alt="Community" loading="lazy"></div>
     </div>
   </div>
 </section>
@@ -3548,6 +3532,26 @@ document.querySelectorAll('#bootcamp-dates .bootcamp-date-card').forEach(card =>
 document.querySelectorAll('.marquee-track').forEach(track => {
   track.addEventListener('mouseenter', () => track.style.animationPlayState = 'paused');
   track.addEventListener('mouseleave', () => track.style.animationPlayState = 'running');
+});
+
+// ---- LAZY VIDEO PLAY — only play videos when in viewport ----
+const videoObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const video = entry.target;
+    if (entry.isIntersecting) {
+      if (video.paused) video.play().catch(() => {});
+    } else {
+      if (!video.paused) video.pause();
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('video[autoplay]').forEach(video => {
+  // Let hero play immediately (above fold), defer all others
+  if (!video.classList.contains('hero-video')) {
+    video.removeAttribute('autoplay');
+    videoObserver.observe(video);
+  }
 });
 
 // ---- FAQ ACCORDION ----
