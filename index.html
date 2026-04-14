@@ -31,6 +31,7 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 100px;
   width: 100%;
   max-width: 100%;
   overflow-x: clip;
@@ -120,12 +121,12 @@ body::before {
 .sticky-btn:hover::before { transform: translateX(100%); }
 .sticky-btn:hover { transform: translateY(-2px); }
 
-.sticky-btn.whatsapp {
+.sticky-btn.run {
   background: var(--green);
   color: var(--black);
   box-shadow: 0 0 20px var(--green-glow);
 }
-.sticky-btn.whatsapp:hover {
+.sticky-btn.run:hover {
   box-shadow: 0 0 40px var(--green-glow), 0 0 80px rgba(153,153,102,0.2);
 }
 
@@ -2663,8 +2664,8 @@ footer {
      ============================================================ -->
 <!-- Desktop sticky CTAs -->
 <div class="sticky-ctas sticky-ctas-desktop">
-  <a href="https://wa.me/?text=I%20want%20to%20join%20the%20next%20LFG%20run" target="_blank" class="sticky-btn whatsapp">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+  <a href="#runs" class="sticky-btn run">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
     Join Next Run
   </a>
   <a href="#booking" class="sticky-btn book">
@@ -2675,7 +2676,7 @@ footer {
 
 <!-- Mobile sticky bar — shows after scrolling past hero, 3 CTAs -->
 <div class="mobile-sticky-bar" id="mobile-sticky-bar">
-  <a href="#runs" class="mobile-sticky-btn mobile-sticky-primary" id="mobile-run-btn">
+  <a href="#register-form" class="mobile-sticky-btn mobile-sticky-primary" id="mobile-run-btn">
     Join the Run
   </a>
   <a href="#bootcamps" class="mobile-sticky-btn mobile-sticky-secondary">
@@ -2696,7 +2697,7 @@ footer {
     <li><a href="#runs">Runs</a></li>
     <li><a href="#bootcamps">Bootcamps</a></li>
     <li><a href="#coaching">Coaching</a></li>
-    <li><a href="#runs" class="nav-cta">Join Now</a></li>
+    <li><a href="#register-form" class="nav-cta">Join Now</a></li>
   </ul>
 </nav>
 
@@ -2718,7 +2719,7 @@ footer {
     </h1>
     <p class="hero-sub">We Take You From Zero To Performance</p>
     <div class="hero-actions hero-actions-desktop">
-      <a href="#runs" class="btn-primary">
+      <a href="#register-form" class="btn-primary">
         Join Our Next Run
         <svg class="arrow-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
       </a>
@@ -2831,7 +2832,7 @@ footer {
         <p class="activity-timer-sub" id="run-timer-label">Loading...</p>
       </div>
 
-      <div class="activity-form-wrap reveal delay-2">
+      <div id="register-form" class="activity-form-wrap reveal delay-2">
         <p class="activity-form-label">Register for the next run</p>
         <div class="activity-embed-frame" style="background:#111;padding:2px;">
           <div style="background:#111;padding:12px 12px 0;">
@@ -3154,7 +3155,7 @@ footer {
      ============================================================ -->
 <section id="split">
   <!-- LEFT: Join the run -->
-  <a href="#runs" class="split-panel left">
+  <a href="#register-form" class="split-panel left">
     <div class="split-panel-bg">
       <img src="main group photo.jpeg" alt="LFG Community Run">
     </div>
@@ -3497,6 +3498,14 @@ function animateGlow() {
   requestAnimationFrame(animateGlow);
 }
 animateGlow();
+
+// ---- STICKY RUN BUTTON — scroll directly to registration form ----
+document.querySelectorAll('.sticky-btn.run').forEach(btn => {
+  btn.addEventListener('click', e => {
+    e.preventDefault();
+    document.getElementById('register-form').scrollIntoView({ behavior: 'smooth' });
+  });
+});
 
 // ---- STICKY BOOK BUTTON — scroll to booking section ----
 document.querySelectorAll('.sticky-btn.book').forEach(btn => {
