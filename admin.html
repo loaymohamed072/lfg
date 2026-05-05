@@ -222,7 +222,7 @@
     const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlrcG5ucWtvcWdtd3V3ZHJmbWJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5ODg0MDAsImV4cCI6MjA5MTU2NDQwMH0.dOow-n6Tyf_RInlClFjXSUcTM8_RIg9WL7vzVtI53iU';
 
     const { createClient } = supabase;
-    const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+    const sb = createClient(SUPABASE_URL, SUPABASE_ANON, { db: { schema: 'api' } });
 
     const loginPanel  = document.getElementById('login-panel');
     const editPanel   = document.getElementById('edit-panel');
