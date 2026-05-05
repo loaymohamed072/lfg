@@ -3371,15 +3371,43 @@ window.addEventListener('scroll', () => {
   nav.classList.toggle('scrolled', window.scrollY > 60);
 }, { passive: true });
 
-// ---- COUNTDOWN TIMER — next run (Wed 7:30 PM or Sat 6:30 AM Dubai) ----
+// ---- SUPABASE — live event config ----
+const _SB_URL  = 'https://ykpnnqkoqgmwuwdrfmbe.supabase.co';
+const _SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlrcG5ucWtvcWdtd3V3ZHJmbWJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5ODg0MDAsImV4cCI6MjA5MTU2NDQwMH0.dOow-n6Tyf_RInlClFjXSUcTM8_RIg9WL7vzVtI53iU';
+let _eventOverride = null;
+
+async function fetchEventConfig() {
+  try {
+    const r = await fetch(
+      `${_SB_URL}/rest/v1/lfg_event_config?id=eq.1&select=location,event_datetime`,
+      { headers: { apikey: _SB_ANON, Authorization: `Bearer ${_SB_ANON}` } }
+    );
+    const rows = await r.json();
+    if (rows[0]) {
+      _eventOverride = {
+        target:   new Date(rows[0].event_datetime),
+        location: rows[0].location
+      };
+    }
+  } catch (_) {}
+  updateTimers();
+}
+
+// ---- COUNTDOWN TIMER — next run ----
 function getNextRunDubai() {
+  if (_eventOverride) {
+    const day  = _eventOverride.target.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'Asia/Dubai' });
+    const time = _eventOverride.target.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Dubai' });
+    return { targetLocal: _eventOverride.target, label: `${day} — ${_eventOverride.location}, ${time}` };
+  }
+
   const now = new Date();
   const dubaiOffset = 4 * 60;
   const localOffset = -now.getTimezoneOffset();
   const diffMs = (dubaiOffset - localOffset) * 60 * 1000;
   const dubaiNow = new Date(now.getTime() + diffMs);
 
-  // Run schedule: Wed=3 at 19:30, Sat=6 at 06:30
+  // Fallback schedule: Wed=3 at 19:30, Sat=6 at 06:30
   const sessions = [
     { day: 3, hour: 19, min: 30, label: 'Wednesday — Dubai Autodrome, 7:30 PM' },
     { day: 6, hour: 6,  min: 30, label: 'Saturday — Kite Beach, 6:30 AM' }
@@ -3438,7 +3466,7 @@ function updateTimers() {
   if (runLabel) runLabel.textContent = 'Next: ' + label;
 }
 
-updateTimers();
+fetchEventConfig();
 setInterval(updateTimers, 1000);
 
 // ---- SCROLL REVEAL ----

@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LFG Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0d0d0d;
+      color: #fff;
+      font-family: 'Barlow', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .panel {
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .hidden { display: none !important; }
+
+    .logo {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800;
+      font-size: 2rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .logo span { color: #e63329; }
+
+    .subtitle {
+      font-size: 0.85rem;
+      color: #666;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 40px;
+    }
+
+    h2 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+      color: #ccc;
+    }
+
+    label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 8px;
+    }
+
+    input[type="email"],
+    input[type="password"],
+    input[type="text"],
+    input[type="datetime-local"] {
+      width: 100%;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 6px;
+      color: #fff;
+      font-family: 'Barlow', sans-serif;
+      font-size: 1rem;
+      padding: 12px 14px;
+      margin-bottom: 20px;
+      outline: none;
+      transition: border-color 0.2s;
+      color-scheme: dark;
+    }
+
+    input:focus { border-color: #e63329; }
+
+    button[type="submit"] {
+      width: 100%;
+      background: #e63329;
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      cursor: pointer;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      padding: 14px;
+      text-transform: uppercase;
+      transition: background 0.2s, transform 0.1s;
+      margin-top: 4px;
+    }
+
+    button[type="submit"]:hover { background: #c0251b; }
+    button[type="submit"]:active { transform: scale(0.98); }
+
+    button[type="submit"]:disabled {
+      background: #444;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-logout {
+      background: none;
+      border: 1px solid #2a2a2a;
+      border-radius: 6px;
+      color: #666;
+      cursor: pointer;
+      font-family: 'Barlow', sans-serif;
+      font-size: 0.85rem;
+      margin-top: 20px;
+      padding: 10px 16px;
+      transition: border-color 0.2s, color 0.2s;
+      width: 100%;
+    }
+
+    .btn-logout:hover { border-color: #555; color: #aaa; }
+
+    .msg-error {
+      color: #e63329;
+      font-size: 0.85rem;
+      margin-top: -12px;
+      margin-bottom: 16px;
+      min-height: 20px;
+    }
+
+    .msg-success {
+      color: #4caf50;
+      font-size: 0.85rem;
+      margin-top: 12px;
+      min-height: 20px;
+      text-align: center;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #1e1e1e;
+      margin: 28px 0;
+    }
+
+    .current-info {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 6px;
+      padding: 14px 16px;
+      margin-bottom: 28px;
+      font-size: 0.88rem;
+      color: #aaa;
+      line-height: 1.6;
+    }
+
+    .current-info strong { color: #fff; }
+
+    .note {
+      font-size: 0.75rem;
+      color: #555;
+      margin-top: -14px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN PANEL -->
+  <div id="login-panel" class="panel">
+    <div class="logo">LFG <span>//</span> Admin</div>
+    <p class="subtitle">Club Owner Portal</p>
+
+    <h2>Sign In</h2>
+    <form id="login-form">
+      <label for="email">Email</label>
+      <input type="email" id="email" autocomplete="email" placeholder="you@example.com" required>
+
+      <label for="password">Password</label>
+      <input type="password" id="password" autocomplete="current-password" placeholder="••••••••" required>
+
+      <p id="login-error" class="msg-error"></p>
+
+      <button type="submit" id="login-btn">Log In</button>
+    </form>
+  </div>
+
+  <!-- EDIT PANEL -->
+  <div id="edit-panel" class="panel hidden">
+    <div class="logo">LFG <span>//</span> Admin</div>
+    <p class="subtitle">Club Owner Portal</p>
+
+    <h2>Next Run Details</h2>
+
+    <div id="current-info" class="current-info">Loading current details...</div>
+
+    <form id="edit-form">
+      <label for="location">Location</label>
+      <input type="text" id="location" placeholder="e.g. Dubai Autodrome" required>
+
+      <label for="event_datetime">Date &amp; Time</label>
+      <input type="datetime-local" id="event_datetime" required>
+      <p class="note">Enter Dubai time (UTC+4)</p>
+
+      <button type="submit" id="save-btn">Save Changes</button>
+      <p id="save-msg" class="msg-success"></p>
+    </form>
+
+    <hr class="divider">
+    <button class="btn-logout" id="logout-btn">Log Out</button>
+  </div>
+
+  <script>
+    const SUPABASE_URL  = 'https://ykpnnqkoqgmwuwdrfmbe.supabase.co';
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlrcG5ucWtvcWdtd3V3ZHJmbWJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5ODg0MDAsImV4cCI6MjA5MTU2NDQwMH0.dOow-n6Tyf_RInlClFjXSUcTM8_RIg9WL7vzVtI53iU';
+
+    const { createClient } = supabase;
+    const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+    const loginPanel  = document.getElementById('login-panel');
+    const editPanel   = document.getElementById('edit-panel');
+    const loginError  = document.getElementById('login-error');
+    const saveMsg     = document.getElementById('save-msg');
+    const currentInfo = document.getElementById('current-info');
+
+    // Convert ISO string → Dubai datetime-local string (YYYY-MM-DDTHH:MM)
+    function toDatetimeLocal(iso) {
+      const dt = new Date(iso);
+      const dubaiMs = dt.getTime() + 4 * 60 * 60 * 1000;
+      return new Date(dubaiMs).toISOString().slice(0, 16);
+    }
+
+    // Format a nice readable label from ISO string
+    function formatLabel(iso, location) {
+      const dt = new Date(iso);
+      const day  = dt.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'Asia/Dubai' });
+      const date = dt.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Dubai' });
+      const time = dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Dubai' });
+      return `<strong>${location}</strong><br>${day}, ${date}<br>${time} (Dubai Time)`;
+    }
+
+    async function loadConfig() {
+      const { data, error } = await sb
+        .from('lfg_event_config')
+        .select('location, event_datetime')
+        .eq('id', 1)
+        .single();
+
+      if (data) {
+        currentInfo.innerHTML = 'Current: ' + formatLabel(data.event_datetime, data.location);
+        document.getElementById('location').value = data.location;
+        document.getElementById('event_datetime').value = toDatetimeLocal(data.event_datetime);
+      } else {
+        currentInfo.textContent = 'No event set yet.';
+      }
+    }
+
+    function showEditPanel() {
+      loginPanel.classList.add('hidden');
+      editPanel.classList.remove('hidden');
+      loadConfig();
+    }
+
+    function showLoginPanel() {
+      editPanel.classList.add('hidden');
+      loginPanel.classList.remove('hidden');
+    }
+
+    // Check if already logged in
+    sb.auth.getSession().then(({ data: { session } }) => {
+      if (session) showEditPanel();
+    });
+
+    // Auth state listener
+    sb.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN')  showEditPanel();
+      if (event === 'SIGNED_OUT') showLoginPanel();
+    });
+
+    // Login
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('login-btn');
+      btn.disabled = true;
+      btn.textContent = 'Signing in...';
+      loginError.textContent = '';
+
+      const email    = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        loginError.textContent = error.message;
+        btn.disabled = false;
+        btn.textContent = 'Log In';
+      }
+    });
+
+    // Save changes
+    document.getElementById('edit-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('save-btn');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+      saveMsg.textContent = '';
+
+      const location = document.getElementById('location').value.trim();
+      const rawDt    = document.getElementById('event_datetime').value; // "YYYY-MM-DDTHH:MM"
+      // Interpret as Dubai time (UTC+4)
+      const event_datetime = new Date(rawDt + ':00+04:00').toISOString();
+
+      const { error } = await sb
+        .from('lfg_event_config')
+        .upsert({ id: 1, location, event_datetime }, { onConflict: 'id' });
+
+      if (error) {
+        saveMsg.style.color = '#e63329';
+        saveMsg.textContent = 'Error: ' + error.message;
+      } else {
+        saveMsg.style.color = '#4caf50';
+        saveMsg.textContent = 'Saved! The website will update automatically.';
+        currentInfo.innerHTML = 'Current: ' + formatLabel(event_datetime, location);
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Save Changes';
+    });
+
+    // Logout
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      sb.auth.signOut();
+    });
+  </script>
+</body>
+</html>
