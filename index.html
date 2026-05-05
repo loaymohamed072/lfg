@@ -2814,9 +2814,9 @@ footer {
     <div class="activity-content-inner">
       <div class="activity-schedule reveal">
         <div class="activity-slot">
-          <p class="activity-slot-day">Wednesday</p>
-          <p class="activity-slot-time">7:30 PM</p>
-          <p class="activity-slot-loc">Dubai Autodrome</p>
+          <p class="activity-slot-day" id="run-slot-day">Wednesday</p>
+          <p class="activity-slot-time" id="run-slot-time">7:30 PM</p>
+          <p class="activity-slot-loc" id="run-slot-loc">Dubai Autodrome</p>
           <p class="activity-slot-desc">All fitness levels welcome. You can run, jog or walk. No pressure, just come and stay active.</p>
         </div>
         <div class="activity-slot-divider"></div>
@@ -3388,6 +3388,17 @@ async function fetchEventConfig() {
         target:   new Date(rows[0].event_datetime),
         location: rows[0].location
       };
+      const day  = _eventOverride.target.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'Asia/Dubai' });
+      const time = _eventOverride.target.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Dubai' });
+      const els = {
+        'run-slot-day':  day,
+        'run-slot-time': time,
+        'run-slot-loc':  rows[0].location
+      };
+      Object.entries(els).forEach(([id, val]) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+      });
     }
   } catch (_) {}
   updateTimers();
