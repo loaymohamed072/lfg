@@ -216,8 +216,9 @@
       <label for="bootcamp_location">Location</label>
       <input type="text" id="bootcamp_location" placeholder="e.g. CrossFit Alioth" required>
 
-      <label for="bootcamp_time">Time</label>
-      <input type="text" id="bootcamp_time" placeholder="e.g. 12:30 PM" required>
+      <label for="bootcamp_datetime">Date &amp; Time</label>
+      <input type="datetime-local" id="bootcamp_datetime" required>
+      <p class="note">Enter Dubai time (UTC+4)</p>
 
       <button type="submit" id="save-btn">Save All Changes</button>
       <p id="save-msg" class="msg-success"></p>
@@ -261,7 +262,7 @@
     async function loadConfig() {
       const { data, error } = await sb
         .from('lfg_event_config')
-        .select('location, event_datetime, bootcamp_location, bootcamp_time')
+        .select('location, event_datetime, bootcamp_location, bootcamp_datetime')
         .eq('id', 1)
         .single();
 
@@ -270,9 +271,9 @@
         document.getElementById('location').value = data.location;
         document.getElementById('event_datetime').value = toDatetimeLocal(data.event_datetime);
 
-        bootcampInfo.innerHTML = 'Current: <strong>' + data.bootcamp_location + '</strong><br>Sunday, ' + data.bootcamp_time;
+        bootcampInfo.innerHTML = 'Current: ' + formatLabel(data.bootcamp_datetime, data.bootcamp_location);
         document.getElementById('bootcamp_location').value = data.bootcamp_location;
-        document.getElementById('bootcamp_time').value = data.bootcamp_time;
+        document.getElementById('bootcamp_datetime').value = toDatetimeLocal(data.bootcamp_datetime);
       } else {
         currentInfo.textContent = 'No event set yet.';
       }
@@ -332,11 +333,12 @@
       const rawDt              = document.getElementById('event_datetime').value;
       const event_datetime     = new Date(rawDt + ':00+04:00').toISOString();
       const bootcamp_location  = document.getElementById('bootcamp_location').value.trim();
-      const bootcamp_time      = document.getElementById('bootcamp_time').value.trim();
+      const rawBcDt            = document.getElementById('bootcamp_datetime').value;
+      const bootcamp_datetime  = new Date(rawBcDt + ':00+04:00').toISOString();
 
       const { error } = await sb
         .from('lfg_event_config')
-        .upsert({ id: 1, location, event_datetime, bootcamp_location, bootcamp_time }, { onConflict: 'id' });
+        .upsert({ id: 1, location, event_datetime, bootcamp_location, bootcamp_datetime }, { onConflict: 'id' });
 
       if (error) {
         saveMsg.style.color = '#e63329';
@@ -345,7 +347,7 @@
         saveMsg.style.color = '#4caf50';
         saveMsg.textContent = 'Saved! The website will update automatically.';
         currentInfo.innerHTML  = 'Current: ' + formatLabel(event_datetime, location);
-        bootcampInfo.innerHTML = 'Current: <strong>' + bootcamp_location + '</strong><br>Sunday, ' + bootcamp_time;
+        bootcampInfo.innerHTML = 'Current: ' + formatLabel(bootcamp_datetime, bootcamp_location);
       }
 
       btn.disabled = false;

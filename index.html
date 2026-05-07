@@ -3379,7 +3379,7 @@ let _eventOverride = null;
 async function fetchEventConfig() {
   try {
     const r = await fetch(
-      `${_SB_URL}/rest/v1/lfg_event_config?id=eq.1&select=location,event_datetime,bootcamp_location,bootcamp_time`,
+      `${_SB_URL}/rest/v1/lfg_event_config?id=eq.1&select=location,event_datetime,bootcamp_location,bootcamp_datetime`,
       { headers: { apikey: _SB_ANON, Authorization: `Bearer ${_SB_ANON}` } }
     );
     const rows = await r.json();
@@ -3390,13 +3390,17 @@ async function fetchEventConfig() {
       };
       const day  = _eventOverride.target.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'Asia/Dubai' });
       const time = _eventOverride.target.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Dubai' });
+
+      const bcDate = rows[0].bootcamp_datetime ? new Date(rows[0].bootcamp_datetime) : null;
+      const bcTime = bcDate ? bcDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Dubai' }) : null;
+
       const els = {
         'run-slot-day':       day,
         'run-slot-time':      time,
         'run-slot-loc':       rows[0].location,
-        'bootcamp-slot-time': rows[0].bootcamp_time,
+        'bootcamp-slot-time': bcTime,
         'bootcamp-slot-loc':  rows[0].bootcamp_location,
-        'bootcamp-meta-time': rows[0].bootcamp_time,
+        'bootcamp-meta-time': bcTime,
         'bootcamp-meta-loc':  rows[0].bootcamp_location
       };
       Object.entries(els).forEach(([id, val]) => {
