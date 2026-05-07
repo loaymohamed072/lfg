@@ -2871,8 +2871,8 @@ footer {
       <div class="activity-schedule reveal">
         <div class="activity-slot">
           <p class="activity-slot-day">Sunday</p>
-          <p class="activity-slot-time">12:30 PM</p>
-          <p class="activity-slot-loc">CrossFit Alioth</p>
+          <p class="activity-slot-time" id="bootcamp-slot-time">12:30 PM</p>
+          <p class="activity-slot-loc" id="bootcamp-slot-loc">CrossFit Alioth</p>
           <p class="activity-slot-desc">Hyrox-focused group workout session tailored to cater for all fitness levels. Builds muscle strength and endurance.</p>
         </div>
       </div>
@@ -2885,9 +2885,9 @@ footer {
         <div class="bootcamp-session-meta">
           <span>Every Sunday</span>
           <span class="bsm-dot">·</span>
-          <span>12:30 PM</span>
+          <span id="bootcamp-meta-time">12:30 PM</span>
           <span class="bsm-dot">·</span>
-          <span>CrossFit Alioth</span>
+          <span id="bootcamp-meta-loc">CrossFit Alioth</span>
         </div>
 
         <div class="bootcamp-dates" id="bootcamp-dates">
@@ -3379,7 +3379,7 @@ let _eventOverride = null;
 async function fetchEventConfig() {
   try {
     const r = await fetch(
-      `${_SB_URL}/rest/v1/lfg_event_config?id=eq.1&select=location,event_datetime`,
+      `${_SB_URL}/rest/v1/lfg_event_config?id=eq.1&select=location,event_datetime,bootcamp_location,bootcamp_time`,
       { headers: { apikey: _SB_ANON, Authorization: `Bearer ${_SB_ANON}` } }
     );
     const rows = await r.json();
@@ -3391,13 +3391,17 @@ async function fetchEventConfig() {
       const day  = _eventOverride.target.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'Asia/Dubai' });
       const time = _eventOverride.target.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Dubai' });
       const els = {
-        'run-slot-day':  day,
-        'run-slot-time': time,
-        'run-slot-loc':  rows[0].location
+        'run-slot-day':       day,
+        'run-slot-time':      time,
+        'run-slot-loc':       rows[0].location,
+        'bootcamp-slot-time': rows[0].bootcamp_time,
+        'bootcamp-slot-loc':  rows[0].bootcamp_location,
+        'bootcamp-meta-time': rows[0].bootcamp_time,
+        'bootcamp-meta-loc':  rows[0].bootcamp_location
       };
       Object.entries(els).forEach(([id, val]) => {
         const el = document.getElementById(id);
-        if (el) el.textContent = val;
+        if (el && val != null) el.textContent = val;
       });
     }
   } catch (_) {}

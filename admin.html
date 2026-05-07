@@ -197,11 +197,10 @@
     <div class="logo">LFG <span>//</span> Admin</div>
     <p class="subtitle">Club Owner Portal</p>
 
-    <h2>Next Run Details</h2>
-
-    <div id="current-info" class="current-info">Loading current details...</div>
-
     <form id="edit-form">
+      <h2>Next Run</h2>
+      <div id="current-info" class="current-info">Loading...</div>
+
       <label for="location">Location</label>
       <input type="text" id="location" placeholder="e.g. Dubai Autodrome" required>
 
@@ -209,7 +208,18 @@
       <input type="datetime-local" id="event_datetime" required>
       <p class="note">Enter Dubai time (UTC+4)</p>
 
-      <button type="submit" id="save-btn">Save Changes</button>
+      <hr class="divider">
+
+      <h2>Bootcamp (Every Sunday)</h2>
+      <div id="bootcamp-info" class="current-info">Loading...</div>
+
+      <label for="bootcamp_location">Location</label>
+      <input type="text" id="bootcamp_location" placeholder="e.g. CrossFit Alioth" required>
+
+      <label for="bootcamp_time">Time</label>
+      <input type="text" id="bootcamp_time" placeholder="e.g. 12:30 PM" required>
+
+      <button type="submit" id="save-btn">Save All Changes</button>
       <p id="save-msg" class="msg-success"></p>
     </form>
 
@@ -246,10 +256,12 @@
       return `<strong>${location}</strong><br>${day}, ${date}<br>${time} (Dubai Time)`;
     }
 
+    const bootcampInfo = document.getElementById('bootcamp-info');
+
     async function loadConfig() {
       const { data, error } = await sb
         .from('lfg_event_config')
-        .select('location, event_datetime')
+        .select('location, event_datetime, bootcamp_location, bootcamp_time')
         .eq('id', 1)
         .single();
 
@@ -257,6 +269,10 @@
         currentInfo.innerHTML = 'Current: ' + formatLabel(data.event_datetime, data.location);
         document.getElementById('location').value = data.location;
         document.getElementById('event_datetime').value = toDatetimeLocal(data.event_datetime);
+
+        bootcampInfo.innerHTML = 'Current: <strong>' + data.bootcamp_location + '</strong><br>Sunday, ' + data.bootcamp_time;
+        document.getElementById('bootcamp_location').value = data.bootcamp_location;
+        document.getElementById('bootcamp_time').value = data.bootcamp_time;
       } else {
         currentInfo.textContent = 'No event set yet.';
       }
@@ -312,14 +328,15 @@
       btn.textContent = 'Saving...';
       saveMsg.textContent = '';
 
-      const location = document.getElementById('location').value.trim();
-      const rawDt    = document.getElementById('event_datetime').value; // "YYYY-MM-DDTHH:MM"
-      // Interpret as Dubai time (UTC+4)
-      const event_datetime = new Date(rawDt + ':00+04:00').toISOString();
+      const location          = document.getElementById('location').value.trim();
+      const rawDt              = document.getElementById('event_datetime').value;
+      const event_datetime     = new Date(rawDt + ':00+04:00').toISOString();
+      const bootcamp_location  = document.getElementById('bootcamp_location').value.trim();
+      const bootcamp_time      = document.getElementById('bootcamp_time').value.trim();
 
       const { error } = await sb
         .from('lfg_event_config')
-        .upsert({ id: 1, location, event_datetime }, { onConflict: 'id' });
+        .upsert({ id: 1, location, event_datetime, bootcamp_location, bootcamp_time }, { onConflict: 'id' });
 
       if (error) {
         saveMsg.style.color = '#e63329';
@@ -327,11 +344,12 @@
       } else {
         saveMsg.style.color = '#4caf50';
         saveMsg.textContent = 'Saved! The website will update automatically.';
-        currentInfo.innerHTML = 'Current: ' + formatLabel(event_datetime, location);
+        currentInfo.innerHTML  = 'Current: ' + formatLabel(event_datetime, location);
+        bootcampInfo.innerHTML = 'Current: <strong>' + bootcamp_location + '</strong><br>Sunday, ' + bootcamp_time;
       }
 
       btn.disabled = false;
-      btn.textContent = 'Save Changes';
+      btn.textContent = 'Save All Changes';
     });
 
     // Logout
