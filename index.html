@@ -3376,6 +3376,16 @@ const _SB_URL  = 'https://ykpnnqkoqgmwuwdrfmbe.supabase.co';
 const _SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlrcG5ucWtvcWdtd3V3ZHJmbWJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5ODg0MDAsImV4cCI6MjA5MTU2NDQwMH0.dOow-n6Tyf_RInlClFjXSUcTM8_RIg9WL7vzVtI53iU';
 let _eventOverrides = [];
 
+function _advanceIfPast(iso) {
+  if (!iso) return null;
+  let dt = new Date(iso);
+  const now = new Date();
+  while (dt < now) {
+    dt = new Date(dt.getTime() + 7 * 86400000);
+  }
+  return dt;
+}
+
 async function fetchEventConfig() {
   try {
     const r = await fetch(
@@ -3385,13 +3395,13 @@ async function fetchEventConfig() {
     const rows = await r.json();
     if (rows[0]) {
       const row = rows[0];
-      _eventOverrides = [{ target: new Date(row.event_datetime), location: row.location }];
+      const wedTarget = _advanceIfPast(row.event_datetime);
+      _eventOverrides = [{ target: wedTarget, location: row.location }];
 
-      const wedTarget = new Date(row.event_datetime);
       const wedDay    = wedTarget.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'Asia/Dubai' });
       const wedTime   = wedTarget.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Dubai' });
 
-      const bcDate = row.bootcamp_datetime ? new Date(row.bootcamp_datetime) : null;
+      const bcDate = _advanceIfPast(row.bootcamp_datetime);
       const bcTime = bcDate ? bcDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Dubai' }) : null;
 
       // Saturday — toggle hides/shows entire slot
@@ -3400,7 +3410,7 @@ async function fetchEventConfig() {
       if (row.saturday_enabled) {
         if (satDivider) satDivider.style.display = '';
         if (satSlot)    satSlot.style.display    = '';
-        const satTarget = new Date(row.saturday_datetime);
+        const satTarget = _advanceIfPast(row.saturday_datetime);
         _eventOverrides.push({ target: satTarget, location: row.saturday_location });
         const satDay  = satTarget.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'Asia/Dubai' });
         const satTime = satTarget.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Dubai' });

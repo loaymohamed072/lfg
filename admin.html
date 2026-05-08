@@ -328,6 +328,17 @@
     const saveMsg     = document.getElementById('save-msg');
     const currentInfo = document.getElementById('current-info');
 
+    // Roll forward by 7 days until the date is in the future
+    function advanceIfPast(iso) {
+      if (!iso) return null;
+      let dt = new Date(iso);
+      const now = new Date();
+      while (dt < now) {
+        dt = new Date(dt.getTime() + 7 * 86400000);
+      }
+      return dt.toISOString();
+    }
+
     // Convert ISO string → Dubai datetime-local string (YYYY-MM-DDTHH:MM)
     function toDatetimeLocal(iso) {
       const dt = new Date(iso);
@@ -363,20 +374,24 @@
         .single();
 
       if (data) {
-        currentInfo.innerHTML = 'Current: ' + formatLabel(data.event_datetime, data.location);
-        document.getElementById('location').value = data.location;
-        document.getElementById('event_datetime').value = toDatetimeLocal(data.event_datetime);
+        const wedIso = advanceIfPast(data.event_datetime);
+        const bcIso  = advanceIfPast(data.bootcamp_datetime);
+        const satIso = advanceIfPast(data.saturday_datetime);
 
-        bootcampInfo.innerHTML = 'Current: ' + formatLabel(data.bootcamp_datetime, data.bootcamp_location);
+        currentInfo.innerHTML = 'Current: ' + formatLabel(wedIso, data.location);
+        document.getElementById('location').value = data.location;
+        document.getElementById('event_datetime').value = toDatetimeLocal(wedIso);
+
+        bootcampInfo.innerHTML = 'Current: ' + formatLabel(bcIso, data.bootcamp_location);
         document.getElementById('bootcamp_location').value = data.bootcamp_location;
-        document.getElementById('bootcamp_datetime').value = toDatetimeLocal(data.bootcamp_datetime);
+        document.getElementById('bootcamp_datetime').value = toDatetimeLocal(bcIso);
 
         saturdayToggle.checked = !!data.saturday_enabled;
         saturdayInfo.innerHTML = data.saturday_enabled
-          ? 'Current: ' + formatLabel(data.saturday_datetime, data.saturday_location)
+          ? 'Current: ' + formatLabel(satIso, data.saturday_location)
           : 'Currently <strong>hidden</strong> from the website.';
         document.getElementById('saturday_location').value = data.saturday_location || '';
-        document.getElementById('saturday_datetime').value = data.saturday_datetime ? toDatetimeLocal(data.saturday_datetime) : '';
+        document.getElementById('saturday_datetime').value = satIso ? toDatetimeLocal(satIso) : '';
         syncSaturdayState();
       } else {
         currentInfo.textContent = 'No event set yet.';
