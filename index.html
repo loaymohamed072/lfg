@@ -2819,11 +2819,11 @@ footer {
           <p class="activity-slot-loc" id="run-slot-loc">Dubai Autodrome</p>
           <p class="activity-slot-desc">All fitness levels welcome. You can run, jog or walk. No pressure, just come and stay active.</p>
         </div>
-        <div class="activity-slot-divider"></div>
-        <div class="activity-slot">
-          <p class="activity-slot-day">Saturday</p>
-          <p class="activity-slot-time">6:30 AM</p>
-          <p class="activity-slot-loc">Kite Beach</p>
+        <div class="activity-slot-divider" id="sat-divider"></div>
+        <div class="activity-slot" id="sat-slot">
+          <p class="activity-slot-day" id="sat-slot-day">Saturday</p>
+          <p class="activity-slot-time" id="sat-slot-time">6:30 AM</p>
+          <p class="activity-slot-loc" id="sat-slot-loc">Kite Beach</p>
           <p class="activity-slot-desc">Longer runs to build your endurance and stamina. All fitness levels welcome. Show up and do as much as you can.</p>
         </div>
       </div>
@@ -3374,34 +3374,54 @@ window.addEventListener('scroll', () => {
 // ---- SUPABASE — live event config ----
 const _SB_URL  = 'https://ykpnnqkoqgmwuwdrfmbe.supabase.co';
 const _SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlrcG5ucWtvcWdtd3V3ZHJmbWJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5ODg0MDAsImV4cCI6MjA5MTU2NDQwMH0.dOow-n6Tyf_RInlClFjXSUcTM8_RIg9WL7vzVtI53iU';
-let _eventOverride = null;
+let _eventOverrides = [];
 
 async function fetchEventConfig() {
   try {
     const r = await fetch(
-      `${_SB_URL}/rest/v1/lfg_event_config?id=eq.1&select=location,event_datetime,bootcamp_location,bootcamp_datetime`,
+      `${_SB_URL}/rest/v1/lfg_event_config?id=eq.1&select=location,event_datetime,bootcamp_location,bootcamp_datetime,saturday_location,saturday_datetime,saturday_enabled`,
       { headers: { apikey: _SB_ANON, Authorization: `Bearer ${_SB_ANON}` } }
     );
     const rows = await r.json();
     if (rows[0]) {
-      _eventOverride = {
-        target:   new Date(rows[0].event_datetime),
-        location: rows[0].location
-      };
-      const day  = _eventOverride.target.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'Asia/Dubai' });
-      const time = _eventOverride.target.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Dubai' });
+      const row = rows[0];
+      _eventOverrides = [{ target: new Date(row.event_datetime), location: row.location }];
 
-      const bcDate = rows[0].bootcamp_datetime ? new Date(rows[0].bootcamp_datetime) : null;
+      const wedTarget = new Date(row.event_datetime);
+      const wedDay    = wedTarget.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'Asia/Dubai' });
+      const wedTime   = wedTarget.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Dubai' });
+
+      const bcDate = row.bootcamp_datetime ? new Date(row.bootcamp_datetime) : null;
       const bcTime = bcDate ? bcDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Dubai' }) : null;
 
+      // Saturday — toggle hides/shows entire slot
+      const satDivider = document.getElementById('sat-divider');
+      const satSlot    = document.getElementById('sat-slot');
+      if (row.saturday_enabled) {
+        if (satDivider) satDivider.style.display = '';
+        if (satSlot)    satSlot.style.display    = '';
+        const satTarget = new Date(row.saturday_datetime);
+        _eventOverrides.push({ target: satTarget, location: row.saturday_location });
+        const satDay  = satTarget.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'Asia/Dubai' });
+        const satTime = satTarget.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Dubai' });
+        const satEls = { 'sat-slot-day': satDay, 'sat-slot-time': satTime, 'sat-slot-loc': row.saturday_location };
+        Object.entries(satEls).forEach(([id, val]) => {
+          const el = document.getElementById(id);
+          if (el && val != null) el.textContent = val;
+        });
+      } else {
+        if (satDivider) satDivider.style.display = 'none';
+        if (satSlot)    satSlot.style.display    = 'none';
+      }
+
       const els = {
-        'run-slot-day':       day,
-        'run-slot-time':      time,
-        'run-slot-loc':       rows[0].location,
+        'run-slot-day':       wedDay,
+        'run-slot-time':      wedTime,
+        'run-slot-loc':       row.location,
         'bootcamp-slot-time': bcTime,
-        'bootcamp-slot-loc':  rows[0].bootcamp_location,
+        'bootcamp-slot-loc':  row.bootcamp_location,
         'bootcamp-meta-time': bcTime,
-        'bootcamp-meta-loc':  rows[0].bootcamp_location
+        'bootcamp-meta-loc':  row.bootcamp_location
       };
       Object.entries(els).forEach(([id, val]) => {
         const el = document.getElementById(id);
@@ -3414,10 +3434,14 @@ async function fetchEventConfig() {
 
 // ---- COUNTDOWN TIMER — next run ----
 function getNextRunDubai() {
-  if (_eventOverride) {
-    const day  = _eventOverride.target.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'Asia/Dubai' });
-    const time = _eventOverride.target.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Dubai' });
-    return { targetLocal: _eventOverride.target, label: `${day} — ${_eventOverride.location}, ${time}` };
+  if (_eventOverrides.length > 0) {
+    const now = new Date();
+    const future = _eventOverrides.filter(e => e.target > now);
+    const pool = future.length > 0 ? future : _eventOverrides;
+    const closest = pool.reduce((a, b) => Math.abs(a.target - now) < Math.abs(b.target - now) ? a : b);
+    const day  = closest.target.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'Asia/Dubai' });
+    const time = closest.target.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Dubai' });
+    return { targetLocal: closest.target, label: `${day} — ${closest.location}, ${time}` };
   }
 
   const now = new Date();

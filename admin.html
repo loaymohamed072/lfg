@@ -169,6 +169,67 @@
       margin-top: -14px;
       margin-bottom: 20px;
     }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 6px;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+    }
+
+    .toggle-row .toggle-label {
+      font-size: 0.85rem;
+      color: #ccc;
+      letter-spacing: 0.05em;
+    }
+
+    .toggle-row .toggle-label small {
+      display: block;
+      color: #666;
+      font-size: 0.72rem;
+      margin-top: 2px;
+    }
+
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 46px;
+      height: 26px;
+      flex-shrink: 0;
+    }
+
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: #333;
+      border-radius: 26px;
+      transition: background 0.2s;
+    }
+
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      height: 20px;
+      width: 20px;
+      left: 3px;
+      bottom: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+
+    .toggle-switch input:checked + .toggle-slider { background: #e63329; }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+    .saturday-fields.disabled { opacity: 0.4; pointer-events: none; }
   </style>
 </head>
 <body>
@@ -207,6 +268,32 @@
       <label for="event_datetime">Date &amp; Time</label>
       <input type="datetime-local" id="event_datetime" required>
       <p class="note">Enter Dubai time (UTC+4)</p>
+
+      <hr class="divider">
+
+      <h2>Saturday Run</h2>
+
+      <div class="toggle-row">
+        <div class="toggle-label">
+          Show on website
+          <small>Toggle off to hide the Saturday run entirely</small>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="saturday_enabled">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div id="saturday-fields" class="saturday-fields">
+        <div id="saturday-info" class="current-info">Loading...</div>
+
+        <label for="saturday_location">Location</label>
+        <input type="text" id="saturday_location" placeholder="e.g. Kite Beach">
+
+        <label for="saturday_datetime">Date &amp; Time</label>
+        <input type="datetime-local" id="saturday_datetime">
+        <p class="note">Enter Dubai time (UTC+4)</p>
+      </div>
 
       <hr class="divider">
 
@@ -257,12 +344,21 @@
       return `<strong>${location}</strong><br>${day}, ${date}<br>${time} (Dubai Time)`;
     }
 
-    const bootcampInfo = document.getElementById('bootcamp-info');
+    const bootcampInfo  = document.getElementById('bootcamp-info');
+    const saturdayInfo  = document.getElementById('saturday-info');
+    const saturdayToggle  = document.getElementById('saturday_enabled');
+    const saturdayFields  = document.getElementById('saturday-fields');
+
+    function syncSaturdayState() {
+      if (saturdayToggle.checked) saturdayFields.classList.remove('disabled');
+      else                        saturdayFields.classList.add('disabled');
+    }
+    saturdayToggle.addEventListener('change', syncSaturdayState);
 
     async function loadConfig() {
       const { data, error } = await sb
         .from('lfg_event_config')
-        .select('location, event_datetime, bootcamp_location, bootcamp_datetime')
+        .select('location, event_datetime, bootcamp_location, bootcamp_datetime, saturday_location, saturday_datetime, saturday_enabled')
         .eq('id', 1)
         .single();
 
@@ -274,6 +370,14 @@
         bootcampInfo.innerHTML = 'Current: ' + formatLabel(data.bootcamp_datetime, data.bootcamp_location);
         document.getElementById('bootcamp_location').value = data.bootcamp_location;
         document.getElementById('bootcamp_datetime').value = toDatetimeLocal(data.bootcamp_datetime);
+
+        saturdayToggle.checked = !!data.saturday_enabled;
+        saturdayInfo.innerHTML = data.saturday_enabled
+          ? 'Current: ' + formatLabel(data.saturday_datetime, data.saturday_location)
+          : 'Currently <strong>hidden</strong> from the website.';
+        document.getElementById('saturday_location').value = data.saturday_location || '';
+        document.getElementById('saturday_datetime').value = data.saturday_datetime ? toDatetimeLocal(data.saturday_datetime) : '';
+        syncSaturdayState();
       } else {
         currentInfo.textContent = 'No event set yet.';
       }
@@ -336,9 +440,16 @@
       const rawBcDt            = document.getElementById('bootcamp_datetime').value;
       const bootcamp_datetime  = new Date(rawBcDt + ':00+04:00').toISOString();
 
+      const saturday_enabled   = saturdayToggle.checked;
+      const saturday_location  = document.getElementById('saturday_location').value.trim();
+      const rawSatDt           = document.getElementById('saturday_datetime').value;
+      const payload = { id: 1, location, event_datetime, bootcamp_location, bootcamp_datetime, saturday_enabled };
+      if (saturday_location) payload.saturday_location = saturday_location;
+      if (rawSatDt)          payload.saturday_datetime = new Date(rawSatDt + ':00+04:00').toISOString();
+
       const { error } = await sb
         .from('lfg_event_config')
-        .upsert({ id: 1, location, event_datetime, bootcamp_location, bootcamp_datetime }, { onConflict: 'id' });
+        .upsert(payload, { onConflict: 'id' });
 
       if (error) {
         saveMsg.style.color = '#e63329';
@@ -348,6 +459,9 @@
         saveMsg.textContent = 'Saved! The website will update automatically.';
         currentInfo.innerHTML  = 'Current: ' + formatLabel(event_datetime, location);
         bootcampInfo.innerHTML = 'Current: ' + formatLabel(bootcamp_datetime, bootcamp_location);
+        saturdayInfo.innerHTML = saturday_enabled && payload.saturday_datetime
+          ? 'Current: ' + formatLabel(payload.saturday_datetime, payload.saturday_location || saturday_location)
+          : 'Currently <strong>hidden</strong> from the website.';
       }
 
       btn.disabled = false;
