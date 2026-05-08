@@ -230,6 +230,126 @@
     .toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
 
     .saturday-fields.disabled { opacity: 0.4; pointer-events: none; }
+
+    /* ---- Stats panel ---- */
+    .stats-section { margin-bottom: 28px; }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .kpi-card {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 6px;
+      padding: 14px 16px;
+    }
+
+    .kpi-value {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.9rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1;
+    }
+
+    .kpi-sub { font-size: 0.7rem; color: #888; margin-top: 2px; }
+
+    .kpi-label {
+      font-size: 0.68rem;
+      color: #777;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-top: 8px;
+    }
+
+    .panel-block {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 6px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+    }
+
+    .panel-block-title {
+      font-size: 0.7rem;
+      color: #888;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .bar-chart {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 6px;
+      height: 130px;
+    }
+
+    .bar-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      height: 100%;
+      gap: 4px;
+    }
+
+    .bar-val { font-size: 0.7rem; color: #aaa; }
+
+    .bar {
+      width: 75%;
+      background: linear-gradient(180deg, #e63329 0%, #8a1812 100%);
+      border-radius: 3px 3px 0 0;
+      min-height: 2px;
+      transition: height 0.4s;
+    }
+
+    .bar-label { font-size: 0.62rem; color: #666; letter-spacing: 0.05em; }
+
+    .referrer-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #222;
+      font-size: 0.85rem;
+    }
+
+    .referrer-row:last-child { border-bottom: none; }
+    .referrer-host { color: #ccc; word-break: break-all; padding-right: 12px; }
+    .referrer-count { color: #e63329; font-weight: 700; flex-shrink: 0; }
+
+    .stats-empty { color: #666; font-size: 0.78rem; font-style: italic; }
+
+    .stats-refresh {
+      background: none;
+      border: 1px solid #2a2a2a;
+      border-radius: 4px;
+      color: #777;
+      cursor: pointer;
+      font-size: 0.7rem;
+      padding: 4px 10px;
+      margin-left: 8px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .stats-refresh:hover { color: #ccc; border-color: #444; }
+
+    .stats-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .stats-header h2 { margin-bottom: 0; }
   </style>
 </head>
 <body>
@@ -257,6 +377,46 @@
   <div id="edit-panel" class="panel hidden">
     <div class="logo">LFG <span>//</span> Admin</div>
     <p class="subtitle">Club Owner Portal</p>
+
+    <div class="stats-section">
+      <div class="stats-header">
+        <h2>Stats</h2>
+        <button type="button" class="stats-refresh" id="stats-refresh">Refresh</button>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-value" id="stat-total">—</div>
+          <div class="kpi-label">All-time visits</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-value" id="stat-today">—</div>
+          <div class="kpi-sub"><span id="stat-unique-today">—</span> unique</div>
+          <div class="kpi-label">Today</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-value" id="stat-week">—</div>
+          <div class="kpi-sub"><span id="stat-unique-week">—</span> unique</div>
+          <div class="kpi-label">Last 7 days</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-value" id="stat-mobile-pct">—</div>
+          <div class="kpi-label">Mobile (7d)</div>
+        </div>
+      </div>
+
+      <div class="panel-block">
+        <p class="panel-block-title">Visits — Last 7 days</p>
+        <div class="bar-chart" id="bar-chart"></div>
+      </div>
+
+      <div class="panel-block">
+        <p class="panel-block-title">Top referrers</p>
+        <div id="top-referrers"></div>
+      </div>
+    </div>
+
+    <hr class="divider">
 
     <form id="edit-form">
       <h2>Wednesday Run</h2>
@@ -398,10 +558,60 @@
       }
     }
 
+    function shortenUrl(url) {
+      if (!url) return '(direct)';
+      try { return new URL(url).hostname.replace(/^www\./, ''); }
+      catch (_) { return url; }
+    }
+
+    async function loadStats() {
+      const { data, error } = await sb.rpc('lfg_get_stats');
+      if (error || !data) return;
+
+      const setText = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = (val ?? 0).toLocaleString();
+      };
+
+      setText('stat-total',         data.total);
+      setText('stat-today',         data.today);
+      setText('stat-week',          data.week);
+      setText('stat-unique-today',  data.unique_today);
+      setText('stat-unique-week',   data.unique_week);
+      const pctEl = document.getElementById('stat-mobile-pct');
+      if (pctEl) pctEl.textContent = (data.mobile_pct ?? 0) + '%';
+
+      const days = data.last_7_days || [];
+      const max = Math.max(1, ...days.map(d => d.count));
+      const maxBarPx = 80;
+      const chartEl = document.getElementById('bar-chart');
+      chartEl.innerHTML = days.map(d => `
+        <div class="bar-col">
+          <span class="bar-val">${d.count}</span>
+          <div class="bar" style="height:${Math.max(2, (d.count / max) * maxBarPx)}px"></div>
+          <span class="bar-label">${d.label}</span>
+        </div>
+      `).join('');
+
+      const refs = data.top_referrers || [];
+      const refsEl = document.getElementById('top-referrers');
+      refsEl.innerHTML = refs.length === 0
+        ? '<p class="stats-empty">No external referrers yet — most visits are direct.</p>'
+        : refs.map(r => `
+            <div class="referrer-row">
+              <span class="referrer-host">${shortenUrl(r.referrer)}</span>
+              <span class="referrer-count">${r.count}</span>
+            </div>
+          `).join('');
+    }
+
+    document.getElementById('stats-refresh').addEventListener('click', loadStats);
+
     function showEditPanel() {
       loginPanel.classList.add('hidden');
       editPanel.classList.remove('hidden');
       loadConfig();
+      loadStats();
     }
 
     function showLoginPanel() {
