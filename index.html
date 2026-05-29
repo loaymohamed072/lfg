@@ -3392,6 +3392,7 @@ const _SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
         apikey: _SB_ANON,
         Authorization: `Bearer ${_SB_ANON}`,
         'Content-Type': 'application/json',
+        'Content-Profile': 'api',
         Prefer: 'return=minimal'
       },
       body: JSON.stringify({
@@ -3421,7 +3422,7 @@ async function fetchEventConfig() {
   try {
     const r = await fetch(
       `${_SB_URL}/rest/v1/lfg_event_config?id=eq.1&select=location,event_datetime,bootcamp_location,bootcamp_datetime,saturday_location,saturday_datetime,saturday_enabled`,
-      { headers: { apikey: _SB_ANON, Authorization: `Bearer ${_SB_ANON}` } }
+      { headers: { apikey: _SB_ANON, Authorization: `Bearer ${_SB_ANON}`, 'Accept-Profile': 'api' } }
     );
     const rows = await r.json();
     if (rows[0]) {
