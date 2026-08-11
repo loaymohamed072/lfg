@@ -1,6 +1,32 @@
 {
   "cleanUrls": true,
+  "regions": ["hnd1"],
+  "redirects": [
+    { "source": "/coaching", "destination": "/#coaching", "permanent": false }
+  ],
+  "crons": [
+    { "path": "/api/admin/send-roster", "schedule": "0 8 * * 6" },
+    { "path": "/api/admin/push-dispatch", "schedule": "* * * * *" }
+  ],
   "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=(), payment=(self \"https://checkout.stripe.com\" \"https://js.stripe.com\"), interest-cohort=()" },
+        { "key": "Content-Security-Policy", "value": "frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self'" },
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" }
+      ]
+    },
+    {
+      "source": "/(.*)\\.html",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }]
+    },
+    {
+      "source": "/(account|login|admin|checkin|register|bootcamp|shop|auth|padel|track)",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }]
+    },
     {
       "source": "/(.+\\.mp4)",
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
@@ -54,12 +80,16 @@
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
     },
     {
-      "source": "/(.+\\.js)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }]
+      "source": "/sw.js",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
     },
     {
-      "source": "/(.+\\.css)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }]
+      "source": "/app-assets/(.+\\.js)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }]
+    },
+    {
+      "source": "/app-assets/(.+\\.css)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }]
     }
   ]
 }
