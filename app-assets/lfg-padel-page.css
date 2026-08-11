@@ -1,0 +1,949 @@
+/* ============================================================
+   LFG PADEL TUESDAYS — page styles
+   Contract: PADEL-DESIGN.md. House system (Barlow/Barlow Condensed,
+   ink ground) + LFG's own accent: olive. The court-blue layer that
+   shipped in the first preview was derived from the SPORT, not from
+   the brand, and is gone — blue has never appeared in LFG's identity.
+   Palette derived + contrast-verified via color-master (see ledger):
+   CTA ink-on-#B3B38A 9.17:1 / APCA 61 · kicker #C9C9A8 11.69:1 /
+   APCA 72 · #999966 carries fills and hairlines, never small text.
+   The ball's optic yellow is a PHOTOGRAPH of a real object, not a
+   token: it appears on the ball and nowhere else on the page.
+   ============================================================ */
+
+:root {
+  --pd-ink: #0A0A0A;
+  --pd-graphite: #131313;
+  --pd-graphite-2: #181818;
+  --pd-line: rgba(255, 255, 255, 0.08);
+  --pd-line-strong: rgba(255, 255, 255, 0.15);
+  --pd-white: #FFFFFF;
+  --pd-dim: rgba(255, 255, 255, 0.62);
+  --pd-dim-2: rgba(255, 255, 255, 0.4);
+  /* LFG olive — the house accent, in three steps by contrast job. */
+  --pd-olive: #999966;        /* fills, hairlines, marks (never small text) */
+  --pd-olive-deep: #3A3A26;
+  --pd-olive-glow: rgba(153, 153, 102, 0.22);
+  --pd-olive-cta: #B3B38A;    /* CTA fill — ink label 9.17:1, APCA 61 */
+  --pd-olive-text: #C9C9A8;   /* text-safe olive on ink, 11.69:1, APCA 72 */
+  --pd-olive-soft: rgba(153, 153, 102, 0.12);
+  --pd-radius: 4px;
+  --pd-font-head: 'Barlow Condensed', sans-serif;
+  --pd-font-body: 'Barlow', sans-serif;
+  --pd-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --pd-ease-wipe: cubic-bezier(0.76, 0, 0.24, 1);
+  --pd-ease-settle: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+html.pd-page { background: var(--pd-ink); scroll-behavior: smooth; }
+.pd-page body {
+  margin: 0;
+  background: var(--pd-ink);
+  color: var(--pd-white);
+  font-family: var(--pd-font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+.pd-page * { box-sizing: border-box; }
+.pd-page img { max-width: 100%; }
+/* Anchors that wrap only an image (the logo) otherwise inherit the UA's
+   default link blue — the one blue left on the page after the correction.
+   :where() keeps this at zero specificity so it can never outrank .pd-btn. */
+.pd-page :where(a) { color: inherit; }
+
+/* ---------- grain: one shared overlay, above grounds, below content.
+   Explicit size: an SVG left to its intrinsic default renders a 300x150
+   patch instead of covering the viewport. */
+.pd-grain {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0.05;
+}
+
+/* ---------- nav (house pattern) */
+.pd-nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px;
+  background: linear-gradient(to bottom, rgba(10,10,10,0.9), rgba(10,10,10,0));
+  transition: background 0.3s var(--pd-ease);
+}
+/* Scrolled: solid ink so the logo never floats over body copy. */
+.pd-nav.scrolled {
+  background: rgba(10, 10, 10, 0.94);
+  border-bottom: 1px solid var(--pd-line);
+}
+.pd-nav-logo { height: 40px; width: auto; display: block; }
+.pd-nav-links { display: flex; align-items: center; gap: 26px; list-style: none; margin: 0; padding: 0; }
+.pd-nav-links a {
+  position: relative;
+  color: var(--pd-dim);
+  text-decoration: none;
+  font-family: var(--pd-font-head);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: color 0.25s var(--pd-ease);
+}
+/* Tracksmith move (carried): low-opacity pseudo underline that wakes on hover */
+.pd-nav-links a::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 100%;
+  bottom: -4px;
+  height: 1px;
+  background: var(--pd-olive);
+  opacity: 0.3;
+  transition: right 0.3s var(--pd-ease-wipe), opacity 0.3s;
+}
+.pd-nav-links a:hover { color: var(--pd-white); }
+.pd-nav-links a:hover::after { right: 0; opacity: 0.9; }
+.pd-nav-cta {
+  color: var(--pd-ink) !important;
+  background: var(--pd-olive-cta);
+  padding: 8px 16px;
+  border-radius: var(--pd-radius);
+}
+.pd-nav-cta::after { display: none; }
+.pd-nav-cta:hover { filter: brightness(1.06); }
+
+/* ============================================================
+   HERO — court poster. SVG court lines + blue glow ground,
+   monumental condensed type, the match ball resting on the baseline.
+   ============================================================ */
+.pd-hero {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  /* Layered ground: night-court glow architecture, never a bare hex */
+  background:
+    radial-gradient(1100px 520px at 78% 12%, var(--pd-olive-glow), transparent 65%),
+    radial-gradient(900px 600px at 8% 95%, rgba(58, 58, 38, 0.55), transparent 60%),
+    linear-gradient(180deg, #0E0E0B 0%, var(--pd-ink) 70%);
+}
+.pd-hero-court {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.5;
+  pointer-events: none;
+}
+.pd-hero-inner {
+  position: relative;
+  z-index: 4;
+  width: min(1160px, 92vw);
+  margin: 0 auto;
+  padding: 120px 0 140px;
+}
+.pd-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 12px; /* eyebrow hugs the H1 */
+  font-family: var(--pd-font-head);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--pd-olive-text);
+}
+.pd-eyebrow::before {
+  content: "";
+  width: 34px; height: 1px;
+  background: var(--pd-olive);
+  opacity: 0.7;
+}
+.pd-h1 {
+  margin: 0;
+  font-family: var(--pd-font-head);
+  font-weight: 700;
+  font-size: clamp(64px, 11.5vw, 150px);
+  line-height: 0.92;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  max-width: 11ch;
+}
+.pd-h1 .pd-line { display: block; overflow: hidden; }
+.pd-h1 .pd-line > span {
+  display: block;
+  transform: translateY(110%);
+  animation: pd-line-up 0.9s var(--pd-ease) forwards;
+}
+.pd-h1 .pd-line:nth-child(2) > span { animation-delay: 0.12s; }
+.pd-h1 .pd-line:nth-child(3) > span { animation-delay: 0.24s; }
+.pd-h1 .pd-accent { color: var(--pd-olive-text); }
+@keyframes pd-line-up { to { transform: translateY(0); } }
+
+.pd-deck {
+  margin: 28px 0 0; /* scaled H1→deck gap */
+  max-width: 50ch;
+  font-size: 19px;
+  color: var(--pd-dim);
+}
+.pd-hero-ctas { margin-top: 32px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+
+.pd-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 30px;
+  border: 0;
+  border-radius: var(--pd-radius);
+  background: var(--pd-olive-cta);
+  color: var(--pd-ink);
+  font-family: var(--pd-font-head);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.25s var(--pd-ease-settle), box-shadow 0.25s var(--pd-ease), filter 0.2s;
+  box-shadow: 0 10px 30px -12px rgba(153, 153, 102, 0.42);
+}
+.pd-btn:hover { transform: translateY(-2px); filter: brightness(1.05); }
+.pd-btn:active { transform: translateY(0) scale(0.98); }
+.pd-btn-ghost {
+  background: transparent;
+  color: var(--pd-white);
+  border: 1px solid var(--pd-line-strong);
+  box-shadow: none;
+}
+.pd-btn-ghost:hover { border-color: var(--pd-olive-text); color: var(--pd-olive-text); }
+
+/* Tracksmith move (carried): 1px-tracked uppercase meta chips */
+.pd-hero-meta {
+  margin-top: 44px;
+  display: flex;
+  gap: 26px;
+  flex-wrap: wrap;
+}
+.pd-meta-chip { border-left: 1px solid var(--pd-line-strong); padding-left: 14px; }
+.pd-meta-chip .k {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--pd-dim-2);
+  margin-bottom: 6px;
+}
+.pd-meta-chip .v {
+  font-family: var(--pd-font-head);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* ============================================================
+   THE MATCH BALL — the living object. A real photographed ball
+   (higgsfield, cut out, brand-graded) rather than a CSS sphere,
+   because a gradient circle reads flat the moment it moves.
+
+   Three nested transforms, each owning one thing, so they never
+   fight: .pd-ball translates and scales in page space · .pd-ball-core
+   squashes on the world-vertical axis at the contact point · the
+   <img> spins. Squash before rotate matters — rotating first would
+   tilt the squash axis and the ball would deform sideways in mid-air.
+   The floor shadow is a SIBLING, not a child: a shadow stays on the
+   ground while the ball rises, and JS drives it from the ball's height.
+   ============================================================ */
+.pd-ball {
+  position: fixed;
+  top: 0; left: 0;
+  width: 132px;
+  height: 132px;
+  /* Above grounds and grain, BELOW section content (z-4): the ball passes
+     behind text and cards instead of occluding footer links or headlines. */
+  z-index: 3;
+  pointer-events: none;
+  will-change: transform;
+}
+.pd-ball-core {
+  width: 100%;
+  height: 100%;
+  /* squash originates at the bottom of the ball: the contact point */
+  transform-origin: 50% 100%;
+  will-change: transform;
+}
+.pd-ball-core img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* the felt already carries its own form; this only seats it in the dark */
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.55));
+  will-change: transform;
+}
+/* A drop-shadow filter re-rasterises the ball on every frame it rotates, which
+   a phone GPU pays for in dropped frames. The floor shadow below already does
+   the seating work, so narrow screens drop the filter. */
+@media (max-width: 760px) {
+  .pd-ball-core img { filter: none; }
+}
+.pd-ball-shadow {
+  position: fixed;
+  top: 0; left: 0;
+  width: 132px;
+  height: 26px;
+  z-index: 3;
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.62), rgba(0,0,0,0) 70%);
+  will-change: transform, opacity;
+  opacity: 0;
+}
+
+/* Reduced motion: the ball parks in the hero, nothing travels. */
+@media (prefers-reduced-motion: reduce) {
+  /* Parked in the hero, not stranded at the document's top-left corner:
+     with the driver off, nothing else would ever position it. */
+  .pd-ball { position: absolute; top: 58vh; left: auto; right: 7vw; }
+  .pd-ball-shadow { display: none; }
+  .pd-h1 .pd-line > span { animation: none; transform: none; }
+  .pd-reveal { opacity: 1 !important; transform: none !important; }
+  html.pd-page { scroll-behavior: auto; }
+}
+
+/* ============================================================
+   SECTIONS — shared shell + seams
+   ============================================================ */
+.pd-section {
+  position: relative;
+  padding: 96px 0;
+}
+.pd-shell { width: min(1160px, 92vw); margin: 0 auto; position: relative; z-index: 4; }
+/* court baseline seam */
+.pd-seam {
+  position: relative;
+  height: 1px;
+  background: var(--pd-line);
+}
+.pd-seam::after {
+  /* the service-T tick where the ball bounces */
+  content: "";
+  position: absolute;
+  left: 50%; top: 0;
+  width: 1px; height: 26px;
+  background: var(--pd-line-strong);
+}
+.pd-h2 {
+  margin: 0 0 14px;
+  font-family: var(--pd-font-head);
+  font-weight: 700;
+  font-size: clamp(38px, 5vw, 64px);
+  line-height: 1.0;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+.pd-kicker {
+  display: block;
+  margin-bottom: 12px;
+  font-family: var(--pd-font-head);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--pd-olive-text);
+}
+.pd-sub { color: var(--pd-dim); max-width: 62ch; margin: 0; }
+
+/* reveal choreography — hidden state only exists once JS has arrived
+   (html.pd-js), so content never depends on a script to be readable. */
+html.pd-js .pd-reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.7s var(--pd-ease), transform 0.7s var(--pd-ease);
+}
+html.pd-js .pd-reveal.in { opacity: 1; transform: none; }
+
+/* ============================================================
+   BOOKING STRIP — this Tuesday
+   Ground: the conversion band sits on court material too — baseline
+   glow left + faint service hairlines, never flat ink.
+   ============================================================ */
+#book {
+  background:
+    radial-gradient(560px 380px at 6% 20%, rgba(153, 153, 102, 0.10), transparent 60%),
+    linear-gradient(to bottom, transparent 0, transparent calc(100% - 1px), rgba(255, 255, 255, 0.06) 100%),
+    repeating-linear-gradient(0deg, transparent 0 64px, rgba(255, 255, 255, 0.02) 64px 65px),
+    var(--pd-ink);
+}
+.pd-book {
+  background:
+    linear-gradient(120deg, rgba(58, 58, 38, 0.42), rgba(10, 10, 10, 0) 55%),
+    var(--pd-graphite);
+  border: 1px solid var(--pd-line);
+  border-radius: var(--pd-radius);
+  padding: 34px 36px;
+  display: grid;
+  grid-template-columns: 1.4fr auto;
+  gap: 28px;
+  align-items: center;
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.7);
+}
+.pd-book-date {
+  font-family: var(--pd-font-head);
+  font-weight: 700;
+  font-size: clamp(30px, 4vw, 46px);
+  text-transform: uppercase;
+  line-height: 1;
+}
+.pd-book-date small {
+  display: block;
+  margin-top: 8px;
+  font-family: var(--pd-font-body);
+  font-weight: 400;
+  font-size: 15px;
+  text-transform: none;
+  color: var(--pd-dim);
+}
+.pd-book-meta { display: flex; gap: 22px; margin-top: 18px; flex-wrap: wrap; }
+.pd-book-right { text-align: right; display: flex; flex-direction: column; gap: 14px; align-items: flex-end; }
+.pd-price {
+  font-family: var(--pd-font-head);
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1;
+}
+.pd-price small { font-size: 16px; font-weight: 500; color: var(--pd-dim); margin-left: 6px; }
+.pd-spots {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--pd-dim);
+}
+
+/* ============================================================
+   FORMAT — 3 steps with numeral rail (asymmetric)
+   Ground: the court keeps going — side-court glow on the left rail
+   plus a vertical service line running behind the numerals.
+   ============================================================ */
+#format {
+  background:
+    radial-gradient(640px 460px at 0% 42%, rgba(153, 153, 102, 0.11), transparent 62%),
+    var(--pd-ink);
+}
+#format .pd-shell::before {
+  content: "";
+  position: absolute;
+  top: -20px; bottom: -20px;
+  left: 68px;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, var(--pd-line-strong) 12%, var(--pd-line-strong) 88%, transparent);
+  pointer-events: none;
+}
+.pd-steps { margin-top: 56px; display: grid; gap: 0; }
+.pd-step {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 26px;
+  padding: 34px 0;
+  border-top: 1px solid var(--pd-line);
+  align-items: start;
+}
+.pd-step-num {
+  font-family: var(--pd-font-head);
+  font-weight: 700;
+  font-size: 84px;
+  line-height: 0.8;
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--pd-olive);
+}
+.pd-step h3 {
+  margin: 0 0 8px;
+  font-family: var(--pd-font-head);
+  font-size: 28px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+}
+.pd-step p { margin: 0; color: var(--pd-dim); max-width: 58ch; }
+
+/* ============================================================
+   INCLUDED — the fee, itemised
+   ============================================================ */
+.pd-included {
+  background:
+    radial-gradient(700px 340px at 90% 0%, rgba(153, 153, 102, 0.12), transparent 60%),
+    var(--pd-ink);
+}
+.pd-included-grid {
+  margin-top: 48px;
+  display: grid;
+  /* asymmetric: the lead cell (court hire — the thing the fee actually buys)
+     carries more width; the row is a rhythm, not four equal boxes */
+  grid-template-columns: 1.6fr 1fr 1fr 1fr;
+  gap: 1px;
+  background: var(--pd-line);
+  border: 1px solid var(--pd-line);
+  border-radius: var(--pd-radius);
+  overflow: hidden;
+}
+.pd-inc-lead {
+  background:
+    linear-gradient(135deg, rgba(153, 153, 102, 0.10), rgba(19, 19, 19, 0) 60%),
+    var(--pd-graphite);
+}
+.pd-inc-lead .ic { width: 46px; height: 34px; }
+.pd-inc {
+  background: var(--pd-graphite);
+  padding: 26px 24px 30px;
+  transition: background 0.3s var(--pd-ease), transform 0.3s var(--pd-ease);
+}
+.pd-inc:hover { background: var(--pd-graphite-2); transform: translateY(-3px); }
+.pd-inc .ic {
+  width: 34px; height: 34px;
+  margin-bottom: 16px;
+  /* court blue, not yellow: the accent keeps its two jobs (ball, CTA) */
+  color: var(--pd-olive-text);
+}
+.pd-inc h3 {
+  margin: 0 0 6px;
+  font-family: var(--pd-font-head);
+  font-size: 21px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.pd-inc p { margin: 0; font-size: 14.5px; color: var(--pd-dim); }
+
+/* ============================================================
+   FAQ
+   Ground: net-line pattern drifting off the right edge + a low
+   court glow, so the section sits on court material, not bare ink.
+   ============================================================ */
+#faq {
+  background:
+    radial-gradient(700px 420px at 100% 70%, rgba(58, 58, 38, 0.36), transparent 62%),
+    repeating-linear-gradient(90deg, transparent 0 46px, rgba(255, 255, 255, 0.025) 46px 47px),
+    var(--pd-ink);
+}
+.pd-faq-list { margin-top: 44px; border-top: 1px solid var(--pd-line); }
+.pd-faq-item { border-bottom: 1px solid var(--pd-line); }
+.pd-faq-item summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 22px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  font-family: var(--pd-font-head);
+  font-size: 21px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  transition: color 0.25s;
+}
+.pd-faq-item summary::-webkit-details-marker { display: none; }
+.pd-faq-item summary:hover { color: var(--pd-olive-text); }
+.pd-faq-item summary .x {
+  flex: none;
+  font-size: 24px;
+  color: var(--pd-dim-2);
+  transition: transform 0.3s var(--pd-ease), color 0.3s;
+}
+.pd-faq-item summary:hover .x,
+.pd-faq-item[open] summary .x { color: var(--pd-white); }
+.pd-faq-item[open] summary .x { transform: rotate(45deg); }
+.pd-faq-item p { margin: 0 0 24px; color: var(--pd-dim); max-width: 66ch; }
+
+/* ============================================================
+   CLOSING COURT — the CTA band. The court re-drawn, ball lands here.
+   ============================================================ */
+.pd-close {
+  position: relative;
+  overflow: hidden;
+  padding: 130px 0 150px;
+  background:
+    radial-gradient(900px 480px at 50% 110%, rgba(153, 153, 102, 0.24), transparent 65%),
+    var(--pd-ink);
+  text-align: center;
+}
+.pd-close-court {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  opacity: 0.4;
+  pointer-events: none;
+}
+.pd-close .pd-h2 { font-size: clamp(44px, 6.5vw, 84px); }
+.pd-close .pd-sub { margin: 18px auto 0; }
+.pd-close .pd-btn { margin-top: 36px; }
+.pd-close-alt { margin-top: 20px; font-size: 14px; color: var(--pd-dim-2); }
+.pd-close-alt a { color: var(--pd-dim); position: relative; text-decoration: none; }
+.pd-close-alt a::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -2px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.3;
+}
+.pd-close-alt a:hover { color: var(--pd-olive-text); }
+
+/* landing zone for the ball: inside the closing court's service box,
+   well clear of the footer link row */
+.pd-land {
+  position: absolute;
+  bottom: 190px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 84px;
+  height: 10px;
+}
+
+/* ---------- footer strap */
+.pd-footer {
+  border-top: 1px solid var(--pd-line);
+  padding: 30px 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--pd-dim-2);
+}
+.pd-footer a { color: var(--pd-dim); text-decoration: none; }
+.pd-footer a:hover { color: var(--pd-olive-text); }
+
+/* ---------- preview drawer (checkout placeholder) */
+.pd-drawer-scrim {
+  position: fixed; inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 60;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.pd-drawer {
+  position: fixed;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -46%) scale(0.97);
+  width: min(460px, 92vw);
+  background: var(--pd-graphite);
+  border: 1px solid var(--pd-line-strong);
+  border-radius: 6px;
+  padding: 34px;
+  z-index: 61;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s var(--pd-ease), transform 0.3s var(--pd-ease);
+}
+.pd-drawer.open, .pd-drawer-scrim.open { opacity: 1; pointer-events: auto; }
+.pd-drawer.open { transform: translate(-50%, -50%) scale(1); }
+.pd-drawer h3 {
+  margin: 0 0 10px;
+  font-family: var(--pd-font-head);
+  font-size: 26px;
+  text-transform: uppercase;
+}
+.pd-drawer p { color: var(--pd-dim); font-size: 15px; }
+.pd-drawer .pd-btn { width: 100%; justify-content: center; margin-top: 18px; }
+.pd-drawer-close {
+  position: absolute;
+  top: 12px; right: 16px;
+  background: none; border: 0;
+  color: var(--pd-dim);
+  font-size: 26px;
+  cursor: pointer;
+}
+.pd-drawer-close:hover { color: var(--pd-white); }
+
+/* ---------- live booking steps inside the drawer.
+   Same restraint as the page: ink grounds, hairline borders, olive
+   only where it already has a job (kicker, focus, selection). */
+.pd-drawer { max-height: min(86vh, 720px); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+/* Stripe's embedded checkout needs more room than the copy steps. */
+.pd-drawer.pd-wide { width: min(560px, 94vw); }
+.pd-drawer [hidden] { display: none !important; }
+.pd-dstep .pd-kicker { margin-bottom: 6px; }
+
+.pd-input {
+  width: 100%;
+  min-height: 52px;
+  padding: 14px 16px;
+  margin: 4px 0 4px;
+  font-family: var(--pd-font-body);
+  font-size: 16px; /* ≥16px: no iOS zoom-on-focus */
+  color: var(--pd-white);
+  background: var(--pd-ink);
+  border: 1px solid var(--pd-line-strong);
+  border-radius: var(--pd-radius);
+  transition: border-color 0.25s var(--pd-ease);
+}
+.pd-input:focus { outline: none; border-color: var(--pd-olive); }
+.pd-input::placeholder { color: var(--pd-dim-2); }
+.pd-btn[disabled] { opacity: 0.6; cursor: default; transform: none; }
+
+.pd-derror {
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: #E6B0A8;
+  background: rgba(122, 46, 38, 0.14);
+  border: 1px solid rgba(230, 176, 168, 0.3);
+  border-radius: var(--pd-radius);
+}
+
+/* quiz: one question, chip answers, tap advances */
+.pd-qtop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.pd-qback {
+  min-width: 44px;
+  min-height: 44px;
+  background: none;
+  border: 1px solid var(--pd-line-strong);
+  border-radius: var(--pd-radius);
+  color: var(--pd-dim);
+  font-size: 18px;
+  cursor: pointer;
+  transition: color 0.25s, border-color 0.25s;
+}
+.pd-qback:hover { color: var(--pd-white); border-color: var(--pd-olive); }
+.pd-qprogress {
+  font-family: var(--pd-font-head);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pd-olive-text);
+}
+.pd-qintro { margin: 0 0 16px; font-size: 14.5px; }
+.pd-qchips { display: grid; gap: 10px; }
+.pd-qchip {
+  min-height: 52px;
+  padding: 12px 18px;
+  text-align: left;
+  font-family: var(--pd-font-head);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--pd-white);
+  background: var(--pd-ink);
+  border: 1px solid var(--pd-line-strong);
+  border-radius: var(--pd-radius);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.2s var(--pd-ease-settle);
+}
+.pd-qchip:hover { border-color: var(--pd-olive); background: var(--pd-graphite-2); }
+.pd-qchip:active { transform: scale(0.98); }
+.pd-qchip.sel { border-color: var(--pd-olive-cta); color: var(--pd-olive-text); }
+
+/* pay */
+.pd-paysummary {
+  margin: 0 0 16px;
+  font-family: var(--pd-font-head);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--pd-white);
+}
+.pd-paypolicy {
+  margin: -6px 0 16px;
+  color: var(--pd-dim);
+  font-size: 13.5px;
+  line-height: 1.55;
+  padding: 10px 12px;
+  border: 1px solid var(--pd-line);
+  border-radius: 10px;
+}
+.pd-paymount { min-height: 56px; }
+.pd-payload { margin: 0; color: var(--pd-dim); font-size: 14.5px; }
+/* busy state: hairline ring, olive arc, interpolated entrance; static under reduced motion */
+.pd-payload-busy {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: pd-payin 0.45s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+.pd-payload-busy::before {
+  content: "";
+  flex: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 2px solid var(--pd-line);
+  border-top-color: var(--pd-olive-cta);
+  animation: pd-payspin 0.8s linear infinite;
+}
+@keyframes pd-payspin { to { transform: rotate(360deg); } }
+@keyframes pd-payin { from { opacity: 0; transform: translateY(4px); } }
+@media (prefers-reduced-motion: reduce) {
+  .pd-payload-busy { animation: none; }
+  .pd-payload-busy::before { animation: none; }
+}
+
+/* text links inside the drawer: the .pd-close-alt pattern */
+.pd-dfoot { margin: 16px 0 0; font-size: 14px; color: var(--pd-dim-2); }
+.pd-dfoot a { color: var(--pd-dim); position: relative; text-decoration: none; }
+.pd-dfoot a::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -2px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.3;
+}
+.pd-dfoot a:hover { color: var(--pd-olive-text); }
+
+/* success */
+.pd-dsuccess h3 { color: var(--pd-olive-text); }
+.pd-success-where {
+  font-family: var(--pd-font-head);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--pd-white);
+  margin: 0 0 12px;
+}
+
+/* sold-out line under the booking-strip CTA */
+.pd-book-walink { margin: 8px 0 0; font-size: 13px; color: var(--pd-dim-2); }
+.pd-book-walink a { color: var(--pd-dim); text-decoration: none; border-bottom: 1px solid rgba(255, 255, 255, 0.25); padding-bottom: 1px; }
+.pd-book-walink a:hover { color: var(--pd-olive-text); }
+
+/* ============================================================
+   MOBILE (390 transform per PADEL-DESIGN.md)
+   ============================================================ */
+@media (max-width: 760px) {
+  .pd-nav { padding: 12px 18px; }
+  .pd-nav-links { gap: 16px; }
+  .pd-nav-links li.pd-hide-m { display: none; }
+  .pd-section { padding: 56px 0; }
+  .pd-hero-inner { padding: 110px 0 120px; }
+  .pd-deck { font-size: 17px; }
+  .pd-hero-meta { gap: 18px; margin-top: 36px; }
+  /* Smaller on small screens; the driver handles yielding to copy. */
+  .pd-ball { width: 78px; height: 78px; }
+  .pd-ball-shadow { width: 78px; height: 16px; }
+  .pd-hero-ctas .pd-btn { width: 100%; justify-content: center; }
+  #format .pd-shell::before { left: 30px; }
+  .pd-book { grid-template-columns: 1fr; padding: 26px 22px; }
+  .pd-book-right { text-align: left; align-items: flex-start; }
+  .pd-book-right .pd-btn { width: 100%; justify-content: center; }
+  .pd-step { grid-template-columns: 64px 1fr; gap: 18px; padding: 26px 0; }
+  .pd-step-num { font-size: 48px; }
+  .pd-included-grid { grid-template-columns: 1fr 1fr; }
+  .pd-close { padding: 90px 0 120px; }
+  .pd-land { bottom: 70px; }
+}
+@media (max-width: 430px) {
+  .pd-included-grid { grid-template-columns: 1fr; }
+  .pd-drawer { padding: 28px 22px; }
+}
+
+/* ============ Real-footage proof band (#real) ============
+   The one photographic element on the page. Proof, not signature: the ball
+   keeps the hero. Portrait frame anchored off-center with an offset olive
+   plate for depth (no shadows in this system); tier-2 grade (desat + contrast
+   + edge scrim) seats the footage into the ink ground. Reduced motion shows
+   the poster; playback pauses off-screen (JS). */
+.pd-real-grid{display:grid;grid-template-columns:minmax(0,420px) 1fr;gap:clamp(32px,6vw,88px);align-items:center}
+.pd-real-frame{position:relative;margin:0;justify-self:start;margin-inline-start:clamp(0px,4vw,56px)}
+.pd-real-frame::before{content:"";position:absolute;inset:16px -16px -16px 16px;background:var(--pd-olive-soft);border:1px solid var(--pd-line);z-index:0}
+.pd-real-video{position:relative;z-index:1;display:block;width:100%;height:auto;aspect-ratio:9/16;object-fit:cover;border:1px solid var(--pd-line-strong);border-radius:var(--pd-radius);filter:saturate(.85) contrast(1.06) brightness(.92)}
+.pd-real-frame::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;border-radius:var(--pd-radius);background:linear-gradient(180deg,rgba(10,10,10,.28) 0%,transparent 18%,transparent 78%,rgba(10,10,10,.42) 100%)}
+.pd-real-copy .pd-sub{max-width:34ch}
+@media (max-width:760px){
+  .pd-real-grid{grid-template-columns:1fr;gap:28px}
+  .pd-real-frame{width:min(72vw,340px);margin-inline-start:clamp(8px,6vw,32px)}
+}
+@media (prefers-reduced-motion:reduce){
+  .pd-real-video{filter:saturate(.85) contrast(1.06) brightness(.92)}
+}
+
+/* Honeypot: off-screen rather than display:none, which some bots skip. */
+.pd-hp{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none}
+
+/* Secondary line under the email field: the account path, deliberately quieter
+   than Continue so guest-first stays the fast lane. */
+.pd-dalt{margin-top:14px;font-size:13px;line-height:1.5;color:color-mix(in srgb, var(--pd-white) 55%, transparent)}
+.pd-dalt a{color:var(--pd-olive-text);text-decoration:underline;text-underline-offset:3px}
+
+/* ============================================================
+   BOARD — the padel table. Numbers a player can argue about,
+   so the rank and the points carry the weight and the name sits
+   between them. Same hairline rhythm as .pd-step, one row per
+   player, no cards.
+   ============================================================ */
+.pd-board-list { margin-top: 48px; list-style: none; padding: 0; }
+.pd-board-row {
+  display: grid;
+  grid-template-columns: 84px 1fr auto;
+  gap: 20px;
+  align-items: baseline;
+  padding: 22px 0;
+  border-top: 1px solid var(--pd-line);
+}
+.pd-board-row:last-child { border-bottom: 1px solid var(--pd-line); }
+.pd-board-rank {
+  font-family: var(--pd-font-head);
+  font-weight: 700;
+  font-size: 52px;
+  line-height: 0.8;
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--pd-olive);
+}
+/* The podium is filled, not outlined: first three read at a glance. */
+.pd-board-row[data-podium] .pd-board-rank {
+  color: var(--pd-olive-text);
+  -webkit-text-stroke: 0;
+}
+.pd-board-name {
+  font-size: 19px;
+  font-weight: 600;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.pd-board-nights {
+  display: block;
+  margin-top: 4px;
+  font-size: 13px;
+  color: color-mix(in srgb, var(--pd-white) 50%, transparent);
+}
+.pd-board-pts {
+  font-family: var(--pd-font-head);
+  font-weight: 700;
+  font-size: 30px;
+  white-space: nowrap;
+  color: var(--pd-olive-text);
+}
+.pd-board-pts small {
+  display: block;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--pd-white) 45%, transparent);
+}
+.pd-board-note {
+  margin-top: 26px;
+  font-size: 14px;
+  color: color-mix(in srgb, var(--pd-white) 55%, transparent);
+}
+@media (max-width: 720px) {
+  .pd-board-row { grid-template-columns: 52px 1fr auto; gap: 14px; padding: 18px 0; }
+  .pd-board-rank { font-size: 34px; }
+  .pd-board-pts { font-size: 24px; }
+  .pd-board-name { font-size: 17px; }
+}

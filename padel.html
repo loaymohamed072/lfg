@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en" class="pd-page">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Padel Nights · King of the Court · LFG Dubai</title>
+<meta name="description" content="LFG's weekly padel night in Dubai. King of the Court: four courts, 15-minute rounds, win and move up. All levels matched into fair games. Court, balls and matchmaking covered. Book your spot.">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://lfgdubai.com/padel">
+<script type="application/ld+json" id="pdSchema">
+{
+  "@context": "https://schema.org",
+  "@type": "SportsEvent",
+  "name": "LFG Padel Nights (Dubai)",
+  "description": "LFG Dubai's weekly padel night. King of the Court rounds, all levels matched, court and balls included.",
+  "sport": "Padel",
+  "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+  "eventStatus": "https://schema.org/EventScheduled",
+  "eventSchedule": {
+    "@type": "Schedule",
+    "byDay": "https://schema.org/Monday",
+    "startTime": "20:30",
+    "duration": "PT2H"
+  },
+  "location": {
+    "@type": "Place",
+    "name": "Dubai (court announced weekly)",
+    "address": { "@type": "PostalAddress", "addressLocality": "Dubai", "addressCountry": "AE" }
+  },
+  "organizer": { "@type": "SportsOrganization", "name": "LFG Dubai", "url": "https://lfgdubai.com/" },
+  "offers": {
+    "@type": "Offer",
+    "price": "99",
+    "priceCurrency": "AED",
+    "availability": "https://schema.org/InStock",
+    "url": "https://lfgdubai.com/padel"
+  }
+}
+</script>
+<meta property="og:title" content="Padel Nights · LFG Dubai">
+<meta property="og:description" content="King of the Court, every week. Win and move up. Court, balls and matchmaking covered.">
+<meta property="og:image" content="/og-image.jpg">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/png" href="/lfg-logo.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#0A0A0A">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/app-assets/lfg-padel-page.css?v=11">
+</head>
+<body>
+
+<!-- grain overlay (feTurbulence, generative — no raster asset) -->
+<svg class="pd-grain" aria-hidden="true">
+  <filter id="pdNoise"><feTurbulence type="fractalNoise" baseFrequency="0.72" numOctaves="2" stitchTiles="stitch"/></filter>
+  <rect width="100%" height="100%" filter="url(#pdNoise)"/>
+</svg>
+
+<!-- THE MATCH BALL — travels the page (see lfg-padel-page.js) -->
+<!-- The shadow is its own element: it stays on the floor while the ball flies. -->
+<div class="pd-ball-shadow" id="pdBallShadow" aria-hidden="true"></div>
+<div class="pd-ball" id="pdBall" aria-hidden="true">
+  <div class="pd-ball-core" id="pdBallCore">
+    <img src="/app-assets/padel-ball-640.webp" srcset="/app-assets/padel-ball-320.webp 320w, /app-assets/padel-ball-640.webp 640w"
+         sizes="(max-width: 760px) 92px, 132px" width="640" height="640" alt="" decoding="async">
+  </div>
+</div>
+
+<nav class="pd-nav">
+  <a href="/" aria-label="Back to LFG home">
+    <img src="/LFG MAIN LOGO-Photoroom.png" alt="LFG" class="pd-nav-logo">
+  </a>
+  <ul class="pd-nav-links">
+    <li class="pd-hide-m"><a href="#format">Format</a></li>
+    <li class="pd-hide-m"><a href="#included">What you get</a></li>
+    <li class="pd-hide-m"><a href="#faq">FAQ</a></li>
+    <li class="pd-hide-m"><a href="/bootcamp">Bootcamp</a></li>
+    <li><a href="#book" class="pd-nav-cta" data-book>Book</a></li>
+  </ul>
+</nav>
+
+<!-- ============================================================
+     HERO — the court poster
+     ============================================================ -->
+<header class="pd-hero">
+  <!-- court-line ground: baseline, service boxes, the net -->
+  <svg class="pd-hero-court" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <g stroke="rgba(255,255,255,0.09)" stroke-width="2" fill="none">
+      <rect x="180" y="240" width="1080" height="560"/>
+      <line x1="180" y1="520" x2="1260" y2="520"/>
+      <line x1="720" y1="240" x2="720" y2="800" stroke-dasharray="10 14" stroke="rgba(255,255,255,0.13)" stroke-width="3"/>
+      <line x1="450" y1="240" x2="450" y2="520"/>
+      <line x1="990" y1="520" x2="990" y2="800"/>
+    </g>
+    <!-- the right service box carries more weight: the type owns the left,
+         the court owns the right -->
+    <g stroke="rgba(255,255,255,0.16)" stroke-width="2" fill="none">
+      <rect x="990" y="520" width="270" height="280"/>
+      <line x1="1125" y1="520" x2="1125" y2="800"/>
+    </g>
+    <g stroke="rgba(153,153,102,0.55)" stroke-width="6" fill="none">
+      <line x1="180" y1="800" x2="1260" y2="800"/>
+    </g>
+    <g stroke="rgba(153,153,102,0.32)" stroke-width="3" fill="none">
+      <line x1="1260" y1="240" x2="1260" y2="800"/>
+    </g>
+  </svg>
+
+  <div class="pd-hero-inner">
+    <p class="pd-eyebrow">LFG Dubai · Weekly padel night</p>
+    <h1 class="pd-h1">
+      <span class="pd-line"><span id="pdHeroDay">Monday</span></span>
+      <span class="pd-line"><span>nights are</span></span>
+      <span class="pd-line"><span>for <em class="pd-accent" style="font-style:normal">padel.</em></span></span>
+    </h1>
+    <p class="pd-deck">One night a week, the LFG crew swaps running shoes for rackets. King of the Court rounds, levels get matched, and nobody sits out for long. Book your spot, show up, play.</p>
+    <div class="pd-hero-ctas">
+      <a href="#book" class="pd-btn" data-book id="pdBookCta">Book My Monday Spot</a>
+      <a href="#format" class="pd-btn pd-btn-ghost">How it works</a>
+    </div>
+    <div class="pd-hero-meta" data-ball-stop data-ball-side="right" data-ball-scale="1.7">
+      <div class="pd-meta-chip"><span class="k">When</span><span class="v" id="pdMetaWhen">Mondays · 8:30 PM</span></div>
+      <div class="pd-meta-chip"><span class="k">Where</span><span class="v" id="pdMetaWhere">Dubai · court drops weekly</span></div>
+      <div class="pd-meta-chip"><span class="k">Level</span><span class="v">All levels, matched</span></div>
+    </div>
+  </div>
+</header>
+
+<div class="pd-seam" aria-hidden="true"></div>
+
+<!-- ============================================================
+     BOOK — this week
+     ============================================================ -->
+<section class="pd-section" id="book">
+  <div class="pd-shell">
+    <span class="pd-kicker pd-reveal">This week</span>
+    <h2 class="pd-h2 pd-reveal">The next one</h2>
+    <div class="pd-book pd-reveal" data-delay="120" data-ball-stop data-ball-side="left">
+      <div>
+        <div class="pd-book-date"><span id="pdDate">Monday</span><small>Courts and match groups drop before the night.</small></div>
+        <div class="pd-book-meta">
+          <div class="pd-meta-chip"><span class="k">Start</span><span class="v" id="pdStartTime">8:00 PM</span></div>
+          <div class="pd-meta-chip"><span class="k">Play time</span><span class="v" id="pdPlayTime">2 hours</span></div>
+          <div class="pd-meta-chip"><span class="k">Spots</span><span class="v" id="pdCapChip">16 per night</span></div>
+        </div>
+      </div>
+      <div class="pd-book-right">
+        <div>
+          <div class="pd-price">99<small>AED</small></div>
+          <div class="pd-spots">Spots go first-come</div>
+        </div>
+        <button type="button" class="pd-btn" data-book>Book My Monday Spot</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="pd-seam" aria-hidden="true"></div>
+
+<!-- ============================================================
+     FORMAT — winner stays on
+     ============================================================ -->
+<section class="pd-section" id="format">
+  <div class="pd-shell">
+    <span class="pd-kicker pd-reveal">The format</span>
+    <h2 class="pd-h2 pd-reveal">King of the Court</h2>
+    <p class="pd-sub pd-reveal" data-delay="100">Four courts, 15-minute rounds. You play with and against different people all night, and the games stay close because you start on a court that matches your level.</p>
+    <div class="pd-steps">
+      <div class="pd-step pd-reveal">
+        <span class="pd-step-num">01</span>
+        <div>
+          <h3>Win, move up. Lose, move down.</h3>
+          <p>Every round ends with movement. Take your court and you climb toward court one; drop a game and you slide down a court. Nobody sits out.</p>
+        </div>
+      </div>
+      <div class="pd-step pd-reveal" data-delay="80" data-ball-stop data-ball-side="right">
+        <span class="pd-step-num">02</span>
+        <div>
+          <h3>Winners bank the points</h3>
+          <p>Only round winners bank points, and we track every player's total all night. Friendly comp, all-level rotations, lots of touches.</p>
+        </div>
+      </div>
+      <div class="pd-step pd-reveal" data-delay="160">
+        <span class="pd-step-num">03</span>
+        <div>
+          <h3>Top three take the podium</h3>
+          <p>At the end of the night the three highest totals take first, second and third. Then whoever is still standing sorts dinner.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     BOARD — the padel table. Hidden until somebody has scored,
+     because a podium of zeroes says nothing. Padel's own match
+     points live here; the portal converts them at ×100 into the
+     community total.
+     ============================================================ -->
+<section class="pd-section pd-board" id="board" hidden>
+  <div class="pd-shell">
+    <span class="pd-kicker pd-reveal">The table</span>
+    <h2 class="pd-h2 pd-reveal">Who is winning</h2>
+    <p class="pd-sub pd-reveal" data-delay="100">Match points, banked round by round across every LFG padel night. These carry into your LFG member points too.</p>
+    <ol class="pd-board-list pd-reveal" data-delay="160" id="pdBoardList"></ol>
+    <p class="pd-board-note pd-reveal" data-delay="200" id="pdBoardNote"></p>
+  </div>
+</section>
+
+<div class="pd-seam" aria-hidden="true"></div>
+
+<!-- ============================================================
+     INCLUDED — what the 99 covers
+     ============================================================ -->
+<section class="pd-section pd-included" id="included">
+  <div class="pd-shell">
+    <span class="pd-kicker pd-reveal">What you get</span>
+    <h2 class="pd-h2 pd-reveal">The fee covers the night</h2>
+    <div class="pd-included-grid pd-reveal" data-delay="120" data-ball-stop data-ball-side="center">
+      <div class="pd-inc pd-inc-lead">
+        <!-- court plan: full padel court, service boxes, net -->
+        <svg class="ic" viewBox="0 0 34 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="2" y="3" width="30" height="18"/><line x1="17" y1="3" x2="17" y2="21" stroke-dasharray="2 2.4"/><line x1="2" y1="12" x2="32" y2="12"/><line x1="9.5" y1="3" x2="9.5" y2="12"/><line x1="24.5" y1="12" x2="24.5" y2="21"/></svg>
+        <h3>Court hire</h3>
+        <p><span id="pdPlayTimeCopy">Two hours</span> on proper padel courts, booked and paid before you arrive. You walk on, the court is already yours.</p>
+      </div>
+      <div class="pd-inc">
+        <!-- the match ball: felt circle + its seam -->
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M5 6.5c4.5 1 9.5 6 12.5 11M6.5 19c1-4.5 6-9.5 11-12.5"/></svg>
+        <h3>Equipment</h3>
+        <p>Match balls are on us. Bring a racket, or borrow one of ours.</p>
+      </div>
+      <div class="pd-inc">
+        <!-- seeding bracket -->
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M3 5h5v5H3zM3 14h5v5H3z"/><path d="M8 7.5h4v9H8M12 12h5"/><circle cx="20" cy="12" r="2.4"/></svg>
+        <h3>Fair matching</h3>
+        <p>We seed the games by level so your first rally isn't your last.</p>
+      </div>
+      <div class="pd-inc">
+        <!-- the LFG pennant -->
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><line x1="5" y1="3" x2="5" y2="21"/><path d="M5 4h13l-3.5 4L18 12H5"/></svg>
+        <h3>The group</h3>
+        <p>Same crew as the runs and the bootcamp. New faces welcome every week.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="pd-seam" aria-hidden="true"></div>
+
+<!-- ============================================================
+     FAQ
+     ============================================================ -->
+<!-- ============ REAL FOOTAGE (proof band) ============ -->
+<section class="pd-section pd-real" id="real">
+  <div class="pd-shell pd-real-grid">
+    <figure class="pd-real-frame pd-reveal" data-ball-stop data-ball-side="right" data-ball-scale="1.4">
+      <video class="pd-real-video" autoplay muted loop playsinline preload="none"
+             poster="/app-assets/padel-live-poster.jpg"
+             aria-label="Real footage from an LFG padel night" width="720" height="1280">
+        <source src="/app-assets/padel-live.mp4" type="video/mp4">
+      </video>
+    </figure>
+    <div class="pd-real-copy">
+      <span class="pd-kicker pd-reveal">The proof</span>
+      <h2 class="pd-h2 pd-reveal" data-delay="60" id="pdRealH2">Monday, actually</h2>
+      <p class="pd-sub pd-reveal" data-delay="120">Thirty seconds from a real night. Matched
+      games, full courts, and the standard you walk into.</p>
+    </div>
+  </div>
+</section>
+
+<section class="pd-section" id="faq">
+  <div class="pd-shell">
+    <span class="pd-kicker pd-reveal">Questions</span>
+    <h2 class="pd-h2 pd-reveal">Before you book</h2>
+    <div class="pd-faq-list pd-reveal" data-delay="100" data-ball-stop data-ball-side="right">
+      <details class="pd-faq-item">
+        <summary>I've never played padel. Can I come?<span class="x">+</span></summary>
+        <p>Honestly, not yet. Monday runs matched games at a proper pace, and one player who has never held a racket slows a whole court. Play a few times first, get comfortable serving and rallying, then book. If you want somewhere to start, message us on WhatsApp and we'll point you to a good intro session.</p>
+      </details>
+      <details class="pd-faq-item">
+        <summary>Do I need my own racket?<span class="x">+</span></summary>
+        <p>No. We bring spares. If you have one, bring it. Court shoes or clean trainers are the only thing you need.</p>
+      </details>
+      <details class="pd-faq-item">
+        <summary>What if I book and can't make it?<span class="x">+</span></summary>
+        <p>Tell us on WhatsApp by 2pm on game day. That gives us time to fill your court, and your payment rolls to the next week. After 2pm we can't replace you, one missing player breaks a whole court, so the spot and the payment are burned. No-shows count the same.</p>
+      </details>
+      <details class="pd-faq-item">
+        <summary>Where are the courts?<span class="x">+</span></summary>
+        <p>We rotate between a few courts around Dubai and lock the best one each week. The exact location drops on the group the day before, always evening, always padel-only courts.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     CLOSING COURT — ball lands here
+     ============================================================ -->
+<section class="pd-close">
+  <svg class="pd-close-court" viewBox="0 0 1440 700" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <g stroke="rgba(255,255,255,0.08)" stroke-width="2" fill="none">
+      <rect x="320" y="180" width="800" height="440"/>
+      <line x1="320" y1="400" x2="1120" y2="400"/>
+      <line x1="720" y1="180" x2="720" y2="620" stroke-dasharray="8 12"/>
+    </g>
+  </svg>
+  <div class="pd-shell">
+    <h2 class="pd-h2 pd-reveal" id="pdCloseH2">See you Monday.</h2>
+    <p class="pd-sub pd-reveal" data-delay="80" style="max-width:44ch">Sixteen spots. One night. The court drops on WhatsApp, the winner stays on, and the first serve is at eight.</p>
+    <button type="button" class="pd-btn pd-reveal" data-delay="160" data-book>Book My Monday Spot</button>
+    <p class="pd-close-alt pd-reveal" data-delay="220">Prefer to ask first? <a href="https://wa.me/971504264410?text=Hey%2C%20I%20want%20in%20on%20the%20LFG%20padel%20night">Message us on WhatsApp</a></p>
+  </div>
+  <div class="pd-land" data-ball-stop data-ball-side="center" aria-hidden="true"></div>
+</section>
+
+<footer class="pd-footer">
+  <div class="pd-shell">
+    <a href="/">LFG Dubai</a> · <a href="/bootcamp">Sunday Bootcamp</a> · <a href="/track">Track</a> · <a href="/shop">Shop</a>
+  </div>
+</footer>
+
+<!-- booking drawer: preview panel when padel is off, stepped live checkout when on -->
+<div class="pd-drawer-scrim" id="pdScrim" aria-hidden="true"></div>
+<div class="pd-drawer" id="pdDrawer" role="dialog" aria-modal="true" aria-label="Book padel night">
+  <button class="pd-drawer-close" id="pdDrawerClose" aria-label="Close">&times;</button>
+
+  <!-- PREVIEW — bookings not open yet (today's behavior, unchanged) -->
+  <div class="pd-dstep" id="pdStepPreview">
+    <h3>Almost live</h3>
+    <p>This page is a preview. When bookings open, this button takes your name and your 99 AED and locks your spot for <strong id="pdDrawerDate">Monday</strong> through the same secure checkout as the bootcamp.</p>
+    <p>Until then, the WhatsApp group is where game nights happen.</p>
+    <a class="pd-btn" href="https://wa.me/971504264410?text=Hey%2C%20I%20want%20in%20on%20the%20LFG%20padel%20night">Join via WhatsApp</a>
+  </div>
+
+  <!-- STEP: email (guests only — members skip straight to pay) -->
+  <div class="pd-dstep" id="pdStepLogin" hidden>
+    <span class="pd-kicker">Book your spot</span>
+    <h3 id="pdLoginNight">This Monday</h3>
+    <p>Your spot carries your level, your points and your place in the court
+      rotation, so it lives on your LFG account. Same account as the run club.</p>
+    <a class="pd-btn" id="pdLoginLink" href="/login?next=%2Fpadel%3Fbook%3D1">Log in to book</a>
+    <p class="pd-dalt">New to LFG? The login page makes your account in a couple
+      of taps, then brings you straight back here to pay.</p>
+  </div>
+
+  <!-- STEP: five-tap quiz (first-timers only; the server decides who sees it) -->
+  <div class="pd-dstep" id="pdStepQuiz" hidden>
+    <div class="pd-qtop">
+      <button type="button" class="pd-qback" id="pdQuizBack" aria-label="Back to the previous question">&larr;</button>
+      <span class="pd-qprogress" id="pdQuizProgress">1 of 5</span>
+    </div>
+    <p class="pd-qintro" id="pdQuizIntro">First time with us. Five taps, and you get matched with people who play like you.</p>
+    <h3 id="pdQuizQ">Played padel before?</h3>
+    <div class="pd-qchips" id="pdQuizChips"></div>
+  </div>
+
+  <!-- STEP: pay (Stripe embedded checkout) -->
+  <div class="pd-dstep" id="pdStepPay" hidden>
+    <span class="pd-kicker">Lock it in</span>
+    <p class="pd-paysummary" id="pdPaySummary"></p>
+    <p class="pd-paypolicy">You're taking one of four spots on a court. Can't make it? Tell us on WhatsApp by 2pm on game day and your payment rolls to next week. After 2pm the spot is burned.</p>
+    <p class="pd-derror" id="pdPayErr" hidden></p>
+    <div class="pd-paymount" id="pdPayMount"></div>
+    <button type="button" class="pd-btn" id="pdPayRetry" hidden>Try again</button>
+    <p class="pd-dfoot" id="pdPayWa" hidden>Stuck? <a id="pdPayWaLink" href="https://wa.me/971504264410">Message us on WhatsApp</a></p>
+  </div>
+
+  <!-- STEP: confirmed -->
+  <div class="pd-dstep pd-dsuccess" id="pdStepSuccess" hidden>
+    <h3 id="pdSuccessTitle">You're in.</h3>
+    <p class="pd-success-where" id="pdSuccessWhere"></p>
+    <p>Your court and match group drop before the night. You're matched to your level.</p>
+    <p id="pdSuccessEmailLine">Check your email for the confirmation.</p>
+    <p>If your plans change, tell us on WhatsApp by 2pm on game day so we can fill your spot. Your payment rolls to next week. After 2pm it's burned.</p>
+    <p class="pd-dfoot">Question in the meantime? <a id="pdSuccessWa" href="https://wa.me/971504264410">Message us on WhatsApp</a></p>
+  </div>
+
+  <!-- STEP: sold out (honest — no waitlist theatre) -->
+  <div class="pd-dstep" id="pdStepSoldout" hidden>
+    <h3>This night is sold out.</h3>
+    <p id="pdSoldoutBody">Every spot for this week went.</p>
+    <p class="pd-dfoot"><a id="pdSoldoutWa" href="https://wa.me/971504264410">Message us</a> and we'll ping you if a spot opens.</p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.1"></script>
+<script src="/app-assets/lfg-supabase.js?v=3"></script>
+<script src="/app-assets/lfg-padel-page.js?v=11" defer></script>
+<script>
+  // keep the drawer's date in sync with the booking strip
+  window.addEventListener('DOMContentLoaded', function () {
+    var d = document.getElementById('pdDate');
+    var t = document.getElementById('pdDrawerDate');
+    if (d && t) setTimeout(function () { t.textContent = d.textContent; }, 50);
+  });
+</script>
+</body>
+</html>
