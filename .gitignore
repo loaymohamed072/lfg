@@ -29,3 +29,7 @@ research/kahunas-teardown/export/
 
 # Apple signing/push keys — never commit (canonical copy: ~/.config/secrets/apple/)
 *.p8
+
+# Nested repos — they have their own remotes, never gitlinks here
+coaching-app/
+lfg-coach-mcp/
