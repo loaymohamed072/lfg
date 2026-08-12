@@ -1,0 +1,15 @@
+{
+  "scripts": {
+    "dev": "node --env-file=.env scripts/dev-server.js",
+    "stripe": "./.tools/stripe.exe listen --forward-to localhost:8080/api/stripe-webhook"
+  },
+  "devDependencies": {
+    "png-to-ico": "^3.0.1",
+    "sharp": "^0.34.5"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.106.2",
+    "stripe": "^22.1.1",
+    "web-push": "^3.6.7"
+  }
+}

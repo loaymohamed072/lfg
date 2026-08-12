@@ -1,0 +1,67 @@
+# Shop IS live (/shop returns 200) but intentionally UNLINKED - no nav buttons
+# anywhere, so it's only reachable by typing the URL. Add nav links to launch it
+# properly. (shop.html ships; it was previously excluded here.)
+
+# Local dev / build artefacts
+_deliverables
+drive-download-*
+tshirts
+sponsers
+node_modules
+.env
+.env.*
+.vercel
+.vercel-deploy.log
+.git
+_preview-*.html
+*.log
+.playwright-mcp
+scripts
+
+# Unused large media kept locally for editing — live site serves video from Bunny CDN (lfgdubai.b-cdn.net)
+new videos to check/
+TOBY MORNING RUN .mp4
+First hero video.mov
+First hero video_c.mp4
+running video.mp4
+video edit.mp4
+
+# Non-web artefacts in the repo
+LFG-Proposal.pdf
+LFG-Proposal.html
+Website - feedback.docx
+admin login.txt
+
+# Raw stills not referenced by any HTML
+0DC8133A-5198-4CC3-99F9-3FBA3CF02600.JPG.jpeg
+LFG MAIN LOGO.jpeg
+coaching logo.PNG
+logo no background.png
+tobbys estate logo.jpg
+ig_*.png
+
+# Heavy non-site directories — NOT part of the LFG marketing site deploy (added 2026-07-04
+# to fix upload-aborted; coaching-app is a separate app, the rest are working/reference files)
+coaching-app
+coaching-brain
+design
+docs
+research
+LFG-Business-Plan
+*.zip
+LFG-Coaching-Plan-Proof.pdf
+LFG-Status-Brief.pdf
+LFG-Status-Brief.html
+build_proof_pdf.py
+.claude-flow
+_MAC-HANDOFF.md
+LFG-Coaching-Platform-HANDOFF.md
+IMG_6200.PNG
+464612580_435100992572893_7201260244501341517_n.jpg
+
+# All videos are served from Bunny CDN (lfgdubai.b-cdn.net); no local mp4 ships.
+*.mp4
+# Exception: the padel-night loop ships from Vercel until it gets a Bunny slot
+# (no Bunny credentials on this machine; swap the URL + re-ignore when uploaded).
+!app-assets/padel-live.mp4
+*.docx

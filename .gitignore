@@ -3,3 +3,29 @@
 *.MOV
 new videos to check/*.mp4
 !new videos to check/*_c.mp4
+
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+admin login.txt
+.vercel-deploy.log
+
+# Dependencies / build
+node_modules/
+.vercel/
+.tools/
+
+# OS
+.DS_Store
+Thumbs.db
+.vercel
+
+# Kahunas teardown screenshots (client PII - never commit)
+research/kahunas-teardown/screens/
+research/kahunas-teardown/export/
+
+.env*
+
+# Apple signing/push keys — never commit (canonical copy: ~/.config/secrets/apple/)
+*.p8

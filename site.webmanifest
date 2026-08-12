@@ -1,0 +1,36 @@
+{
+  "name": "LFG Dubai — Sunday Bootcamp & Run Club",
+  "short_name": "LFG Dubai",
+  "description": "Book your Sunday bootcamp with Ahmed Sam. Track credits, attendance, streaks, and your community.",
+  "id": "/?source=pwa",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0A0A0A",
+  "theme_color": "#0A0A0A",
+  "categories": ["fitness", "health", "lifestyle"],
+  "icons": [
+    { "src": "/favicon-96x96.png", "sizes": "96x96", "type": "image/png" },
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Book Sunday",
+      "short_name": "Book",
+      "description": "Reserve your next Sunday bootcamp",
+      "url": "/bootcamp.html?source=pwa#bootcamps",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "My account",
+      "short_name": "Account",
+      "description": "Credits, bookings, streak",
+      "url": "/account?source=pwa",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

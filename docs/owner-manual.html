@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LFG Dubai Website Owner's Manual</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0A0A; --panel:#121211; --panel2:#16160F; --line:rgba(153,153,102,0.22);
+    --gold:#999966; --gold-bright:#C7C79A; --ink:#ECECE6; --muted:#9A9A90; --faint:#6E6E66;
+    --fh:'Barlow Condensed',sans-serif; --fb:'Barlow',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  @page{ size:A4; margin:0; }
+  html,body{ background:var(--bg); color:var(--ink); font-family:var(--fb); -webkit-font-smoothing:antialiased; }
+  .page{
+    position:relative; width:210mm; height:297mm; overflow:hidden; background:var(--bg);
+    padding:16mm 15mm 16mm; page-break-after:always; display:flex; flex-direction:column;
+  }
+  .page:last-child{ page-break-after:auto; }
+
+  /* ---- type ---- */
+  h1,h2,h3,h4{ font-family:var(--fh); font-weight:800; letter-spacing:-0.01em; line-height:0.98; text-transform:uppercase; }
+  .eyebrow{ font-family:var(--fh); font-weight:700; font-size:11.5pt; letter-spacing:0.34em; text-transform:uppercase; color:var(--gold); margin-bottom:8px; }
+  .h-sec{ font-size:30pt; color:#fff; margin-bottom:4px; }
+  .h-sec em{ font-style:normal; color:var(--gold); }
+  .h-sub{ font-size:15pt; color:#fff; margin:0 0 6px; }
+  p{ font-size:10.6pt; line-height:1.62; color:var(--muted); }
+  p.lead{ font-size:12pt; color:var(--ink); line-height:1.6; }
+  p b, li b{ color:var(--ink); }
+  .gold{ color:var(--gold); }
+  .rule{ height:2px; width:54px; background:var(--gold); margin:10px 0 16px; }
+
+  /* ---- figures ---- */
+  figure{ margin:0; }
+  .shot{ background:#0d0d0c; border:1px solid var(--line); border-radius:7px; padding:8px; box-shadow:0 10px 34px rgba(0,0,0,0.5); }
+  .shot img{ display:block; width:100%; height:auto; border-radius:3px; }
+  .shot.tall img{ width:auto; max-width:100%; max-height:212mm; margin:0 auto; }
+  figcaption{ font-family:var(--fh); font-size:9.5pt; letter-spacing:0.16em; text-transform:uppercase; color:var(--faint); margin-top:7px; text-align:center; }
+  .two{ display:flex; gap:12px; align-items:flex-start; justify-content:center; }
+  .two .shot{ flex:1; }
+  .phone{ max-width:66mm; margin:0 auto; }
+
+  /* ---- callouts / boxes ---- */
+  .box{ background:linear-gradient(180deg,rgba(153,153,102,0.10),rgba(153,153,102,0.03)); border:1px solid var(--line); border-radius:8px; padding:13px 16px; }
+  .box .k{ font-family:var(--fh); font-weight:700; letter-spacing:0.18em; text-transform:uppercase; font-size:10pt; color:var(--gold); margin-bottom:5px; }
+  .box p{ font-size:10pt; color:var(--ink); }
+  .tip{ border-left:3px solid var(--gold); padding-left:13px; }
+
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:11px; }
+  .feat{ background:var(--panel); border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:13px 14px; }
+  .feat h4{ font-size:13.5pt; color:#fff; margin-bottom:4px; letter-spacing:0; }
+  .feat h4 .n{ color:var(--gold); margin-right:8px; }
+  .feat p{ font-size:9.6pt; line-height:1.5; }
+
+  ol.steps{ list-style:none; counter-reset:s; }
+  ol.steps li{ counter-increment:s; position:relative; padding:7px 0 7px 30px; font-size:10.4pt; color:var(--ink); line-height:1.5; border-bottom:1px solid rgba(255,255,255,0.05); }
+  ol.steps li::before{ content:counter(s); position:absolute; left:0; top:6px; width:21px; height:21px; background:var(--gold); color:#0A0A0A; font-family:var(--fh); font-weight:800; font-size:10pt; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+  ol.steps li b{ color:#fff; }
+  ul.ticks{ list-style:none; }
+  ul.ticks li{ position:relative; padding:5px 0 5px 20px; font-size:10.2pt; color:var(--muted); line-height:1.5; }
+  ul.ticks li::before{ content:'›'; position:absolute; left:0; color:var(--gold); font-weight:700; }
+  ul.ticks li b{ color:var(--ink); }
+
+  .foot{ position:absolute; left:15mm; right:15mm; bottom:9mm; display:flex; justify-content:space-between; align-items:center;
+    font-family:var(--fh); font-size:8.5pt; letter-spacing:0.18em; text-transform:uppercase; color:var(--faint); border-top:1px solid rgba(255,255,255,0.07); padding-top:6px; }
+  .grow{ flex:1; }
+
+  /* ---- cover ---- */
+  .cover{ padding:0; justify-content:flex-end; }
+  .cover .bg{ position:absolute; inset:0; }
+  .cover .bg img{ width:100%; height:100%; object-fit:cover; }
+  .cover .scrim{ position:absolute; inset:0; background:linear-gradient(180deg,rgba(10,10,10,0.82) 0%,rgba(10,10,10,0.25) 38%,rgba(10,10,10,0.55) 72%,rgba(10,10,10,0.97) 100%); }
+  .cover .top{ position:absolute; top:18mm; left:16mm; right:16mm; display:flex; align-items:center; gap:12px; }
+  .cover .top img{ height:34px; }
+  .cover .top span{ font-family:var(--fh); font-weight:700; letter-spacing:0.34em; text-transform:uppercase; font-size:11pt; color:rgba(255,255,255,0.82); }
+  .cover .body{ position:relative; padding:0 16mm 20mm; }
+  .cover .kicker{ font-family:var(--fh); font-weight:700; letter-spacing:0.42em; text-transform:uppercase; font-size:12pt; color:var(--gold); margin-bottom:12px; }
+  .cover h1{ font-size:50pt; line-height:0.9; color:#fff; }
+  .cover h1 em{ font-style:normal; color:var(--gold); }
+  .cover .desc{ font-size:13.5pt; color:rgba(255,255,255,0.78); margin-top:14px; max-width:150mm; line-height:1.45; }
+  .cover .meta{ margin-top:20px; display:flex; gap:22px; font-family:var(--fh); letter-spacing:0.16em; text-transform:uppercase; font-size:9.5pt; color:rgba(255,255,255,0.6); }
+  .cover .meta b{ color:#fff; display:block; font-size:11pt; letter-spacing:0.1em; }
+
+  /* ---- section opener band ---- */
+  .band{ position:relative; height:74mm; border-radius:10px; overflow:hidden; margin-bottom:16px; border:1px solid var(--line); }
+  .band img{ width:100%; height:100%; object-fit:cover; }
+  .band .ov{ position:absolute; inset:0; background:linear-gradient(90deg,rgba(10,10,10,0.92) 0%,rgba(10,10,10,0.45) 55%,rgba(10,10,10,0.2) 100%); display:flex; flex-direction:column; justify-content:center; padding:0 20px; }
+  .band .ov .eyebrow{ margin-bottom:6px; }
+  .band .ov h2{ font-size:34pt; color:#fff; }
+  .band .ov h2 em{ font-style:normal; color:var(--gold); }
+
+  .toc{ list-style:none; }
+  .toc li{ display:flex; align-items:baseline; gap:10px; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.06); font-size:11pt; }
+  .toc li .num{ font-family:var(--fh); font-weight:800; color:var(--gold); width:26px; }
+  .toc li .t{ color:var(--ink); font-weight:600; }
+  .toc li .d{ flex:1; border-bottom:1px dotted rgba(255,255,255,0.15); margin:0 6px; transform:translateY(-3px); }
+  .toc li .pg{ font-family:var(--fh); color:var(--muted); }
+
+  .backcover{ padding:0; }
+  .backcover .bg{ position:absolute; inset:0; }
+  .backcover .bg img{ width:100%; height:100%; object-fit:cover; }
+  .backcover .scrim{ position:absolute; inset:0; background:linear-gradient(180deg,rgba(10,10,10,0.9),rgba(10,10,10,0.55) 45%,rgba(10,10,10,0.96)); }
+  .backcover .c{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:0 24mm; }
+  .backcover img.logo{ height:40px; margin-bottom:22px; opacity:0.95; }
+  .backcover h2{ font-size:30pt; color:#fff; }
+  .backcover h2 em{ font-style:normal; color:var(--gold); }
+  .backcover p{ color:rgba(255,255,255,0.72); font-size:11.5pt; margin-top:12px; max-width:130mm; }
+  .backcover .sign{ margin-top:26px; font-family:var(--fh); letter-spacing:0.26em; text-transform:uppercase; font-size:10pt; color:var(--gold); }
+  .colflow > * + *{ margin-top:11px; }
+</style>
+</head>
+<body>
+
+<!-- ============== COVER ============== -->
+<section class="page cover" style="justify-content:center;align-items:center;text-align:center;">
+  <div class="bg"><img src="manual-assets/gen-cover.png" alt=""></div>
+  <div class="scrim"></div>
+  <div style="position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:0 18mm;">
+    <img src="manual-assets/logo.png" alt="LFG Dubai" style="width:112mm;max-width:80%;height:auto;margin-bottom:22px;filter:drop-shadow(0 10px 36px rgba(0,0,0,0.65));">
+    <div class="kicker" style="margin-bottom:10px;">Website Owner's Manual</div>
+    <h1 style="font-size:40pt;line-height:0.95;">Run the whole club<br>from <em>one screen.</em></h1>
+    <div class="desc" style="margin:16px auto 0;max-width:140mm;">Your new website is a full membership, booking and points platform. This guide shows where everything lives and how to run it.</div>
+  </div>
+  <div style="position:relative;padding:0 18mm 18mm;width:100%;">
+    <div class="meta" style="justify-content:center;">
+      <div>Prepared for<b>Ahmed &middot; LFG Dubai</b></div>
+      <div>Edition<b>June 2026 &middot; v1.0</b></div>
+      <div>Built by<b>Komplete</b></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== WELCOME ============== -->
+<section class="page">
+  <div class="band">
+    <img src="manual-assets/gen-divider-run.png" alt="">
+    <div class="ov"><div class="eyebrow">Start here</div><h2>Welcome to your<br>new <em>engine.</em></h2></div>
+  </div>
+  <div class="colflow">
+    <p class="lead">Until now, the LFG website was a beautiful brochure. People looked, then messaged you. Everything after that lived in your head, your phone, and a spreadsheet.</p>
+    <p>The new site does the work. A runner finds you, registers in 30 seconds, books a Sunday bootcamp and pays online, gets their own account, earns points every time they show up, and checks in at the run with a QR code. You see all of it, live, from one admin screen.</p>
+    <p>This manual walks you through both sides: what your members experience, and how you run the whole thing. You do not need to be technical. If you can use Instagram, you can run this.</p>
+  </div>
+  <div class="box tip" style="margin-top:auto;">
+    <div class="k">How to read this</div>
+    <p>Part 1 is what your members see. Part 2 is your admin portal, screen by screen. Part 3 explains the new points system. Part 4 is a quick how-to playbook for everyday tasks. Keep it on your phone.</p>
+  </div>
+  <div class="foot"><span>LFG Dubai &middot; Owner's Manual</span><span class="grow"></span><span>01</span></div>
+</section>
+
+<!-- ============== CONTENTS ============== -->
+<section class="page">
+  <div class="eyebrow">Contents</div>
+  <h2 class="h-sec">What's <em>inside</em></h2>
+  <div class="rule"></div>
+  <ul class="toc" style="margin-bottom:18px;">
+    <li><span class="num">01</span><span class="t">What changed, at a glance</span><span class="d"></span><span class="pg">03</span></li>
+    <li><span class="num">02</span><span class="t">The member experience</span><span class="d"></span><span class="pg">04</span></li>
+    <li><span class="num">03</span><span class="t">Your admin portal, screen by screen</span><span class="d"></span><span class="pg">08</span></li>
+    <li><span class="num">04</span><span class="t">The points system</span><span class="d"></span><span class="pg">16</span></li>
+    <li><span class="num">05</span><span class="t">Everyday how-to playbook</span><span class="d"></span><span class="pg">17</span></li>
+    <li><span class="num">06</span><span class="t">Your weekly rhythm &amp; best practice</span><span class="d"></span><span class="pg">18</span></li>
+    <li><span class="num">07</span><span class="t">Quick reference &amp; support</span><span class="d"></span><span class="pg">19</span></li>
+  </ul>
+  <div class="eyebrow" style="margin-top:6px;">01 &middot; What changed, at a glance</div>
+  <div class="grid2" style="margin-top:4px;">
+    <div class="feat"><h4><span class="n">01</span>Member accounts</h4><p>Every runner gets a real account they log into with Google or email. No passwords to manage.</p></div>
+    <div class="feat"><h4><span class="n">02</span>Online booking &amp; pay</h4><p>Members book a Sunday and pay by card without leaving the site. Credits land automatically.</p></div>
+    <div class="feat"><h4><span class="n">03</span>Run registration</h4><p>The Wednesday run form is built in. Every sign-up becomes a member you can reach.</p></div>
+    <div class="feat"><h4><span class="n">04</span>QR check-ins</h4><p>One QR at the run, one at bootcamp. Members scan, you see who showed up live.</p></div>
+    <div class="feat"><h4><span class="n">05</span>Points &amp; leaderboard</h4><p>Points for every run and bootcamp. A public board that keeps people coming back.</p></div>
+    <div class="feat"><h4><span class="n">06</span>Owner command center</h4><p>Revenue, members, schedule, rosters, leads and promo codes in one admin portal.</p></div>
+  </div>
+  <div class="foot"><span>LFG Dubai &middot; Owner's Manual</span><span class="grow"></span><span>02</span></div>
+</section>
+
+<!-- ============== PART 2 OPENER + HOME ============== -->
+<section class="page">
+  <div class="band">
+    <img src="manual-assets/gen-divider-run.png" alt="">
+    <div class="ov"><div class="eyebrow">Part 02</div><h2>The member<br><em>experience</em></h2></div>
+  </div>
+  <p class="lead">This is what a runner sees. Five screens take them from never-heard-of-you to checked-in regular.</p>
+  <h3 class="h-sub" style="margin-top:14px;">The home page</h3>
+  <div class="rule"></div>
+  <p>The front door. Cinematic, fast, built for phones. The three buttons send people exactly where you want them: join the next run, book a bootcamp, or enquire about private coaching. A profile icon, top-right, takes existing members to their account.</p>
+  <figure class="shot" style="margin-top:10px;"><img src="manual-assets/manual-01-home.png" alt="LFG home page"><figcaption>Home page &middot; the first impression and the three entry points</figcaption></figure>
+  <div class="foot"><span>LFG Dubai &middot; The member experience</span><span class="grow"></span><span>03</span></div>
+</section>
+
+<!-- ============== BOOKING ============== -->
+<section class="page">
+  <div class="eyebrow">02 &middot; Member experience</div>
+  <h2 class="h-sec">Booking a <em>bootcamp</em></h2>
+  <div class="rule"></div>
+  <p>The Sunday bootcamp page is built to convert. A runner picks a date, picks a single session or a credit pack, and pays by card in a window that stays on your site. The moment the payment clears, their credits are added and their spot is booked. No DMs, no manual tracking, no chasing payment screenshots.</p>
+  <div class="two" style="margin-top:12px;">
+    <figure class="shot phone"><img src="manual-assets/manual-04-bootcamp.png" alt="Bootcamp booking page"><figcaption>Pick a Sunday &middot; single or pack</figcaption></figure>
+    <div style="flex:1;">
+      <div class="box"><div class="k">In-page card payment</div><p>Powered by Stripe, embedded inside your own page. Members never get bounced to a scary external link, which is exactly why more of them finish paying.</p></div>
+      <ul class="ticks" style="margin-top:12px;">
+        <li><b>Single session</b> or a <b>4 / 8 / 12 credit pack</b>, your prices.</li>
+        <li>Credits never expire silently. Each pack carries its own validity.</li>
+        <li>A booking confirmation and calendar invite are emailed automatically.</li>
+        <li>Referral codes give both people 15% off at checkout.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="box tip" style="margin-top:14px;"><div class="k">Why this matters</div><p>Every booking is money in the bank before the session, and a spot you can count. You walk into Sunday knowing exactly who is coming and that they have already paid.</p></div>
+  <div class="foot"><span>LFG Dubai &middot; The member experience</span><span class="grow"></span><span>04</span></div>
+</section>
+
+<!-- ============== ACCOUNT + LEADERBOARD ============== -->
+<section class="page">
+  <div class="eyebrow">02 &middot; Member experience</div>
+  <h2 class="h-sec">Their account &amp; the <em>leaderboard</em></h2>
+  <div class="rule"></div>
+  <p>Once someone joins, they get a personal account. It shows their credits, sessions attended, their current points, upcoming bookings and a referral code. It installs to their phone home screen like a real app. The leaderboard turns showing up into a competition.</p>
+  <div class="two" style="margin-top:12px;">
+    <figure class="shot phone"><img src="manual-assets/manual-02-account.png" alt="Member account"><figcaption>My Account &middot; credits, points, bookings</figcaption></figure>
+    <figure class="shot phone"><img src="manual-assets/manual-03-leaderboard.png" alt="Leaderboard"><figcaption>Leaderboard &middot; the points race</figcaption></figure>
+  </div>
+  <div class="foot"><span>LFG Dubai &middot; The member experience</span><span class="grow"></span><span>05</span></div>
+</section>
+
+<!-- ============== CHECK-IN ============== -->
+<section class="page">
+  <div class="eyebrow">02 &middot; Member experience</div>
+  <h2 class="h-sec">Checking in at the <em>run</em></h2>
+  <div class="rule"></div>
+  <p>You print one QR code and hold it up at the run. Runners scan it with their phone. If they have an account they are checked in instantly and earn their points. If they are brand new, the same scan walks them through a 20-second sign-up, then confirms them on the spot. The QR is smart: the same code works every Wednesday and Saturday, and the system knows which run is live.</p>
+  <div class="two" style="margin-top:12px;">
+    <figure class="shot phone"><img src="manual-assets/manual-05-checkin.png" alt="Run check-in screen"><figcaption>What a runner sees when they scan</figcaption></figure>
+    <div style="flex:1;">
+      <div class="box"><div class="k">No account? No problem</div><p>A new runner who scans gets signed up and checked in in the same flow, and lands in your member list automatically. That is how a stranger at the run becomes a contact you can nurture toward a paid bootcamp.</p></div>
+      <ul class="ticks" style="margin-top:12px;">
+        <li>Check-in only works <b>at the run</b>, from 90 minutes before to a window after the start.</li>
+        <li>Scanning twice never double-counts.</li>
+        <li>Every run check-in is <b>50 points</b> toward the leaderboard (bootcamp check-ins are 100).</li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot"><span>LFG Dubai &middot; The member experience</span><span class="grow"></span><span>06</span></div>
+</section>
+
+<!-- ============== PART 3 OPENER + LOGIN ============== -->
+<section class="page">
+  <div class="band">
+    <img src="manual-assets/gen-skyline.png" alt="">
+    <div class="ov"><div class="eyebrow">Part 03</div><h2>Your admin<br><em>portal</em></h2></div>
+  </div>
+  <p class="lead">This is your command center. Seven tabs run the entire club. Here is how to get in and what each one does.</p>
+  <h3 class="h-sub" style="margin-top:14px;">Getting in</h3>
+  <div class="rule"></div>
+  <ol class="steps">
+    <li>Go to <b>lfgdubai.com/admin.html</b> on any phone or laptop.</li>
+    <li>Sign in with the <b>Google account</b> we marked as owner. Only that account sees the portal.</li>
+    <li>You land on <b>Today</b>. The tabs run down the left: Today, Overview, Bootcamp, Members, Schedule, Runs, Promo codes.</li>
+  </ol>
+  <div class="box tip" style="margin-top:14px;"><div class="k">Tip</div><p>Add the admin page to your phone's home screen once. From then on it opens like an app, and you can run check-ins, mark attendance and award points from the floor.</p></div>
+  <div class="foot"><span>LFG Dubai &middot; Your admin portal</span><span class="grow"></span><span>07</span></div>
+</section>
+
+<!-- ============== ADMIN: TODAY ============== -->
+<section class="page">
+  <div class="eyebrow">03 &middot; Admin portal</div>
+  <h2 class="h-sec">Today <em>tab</em></h2>
+  <div class="rule"></div>
+  <p>Your morning glance. Everything that needs you right now: this week's revenue and new members, your no-show rate, runners who have never tried a bootcamp, the next session's live check-in count, and which upcoming Sundays are filling slowly so you can push them.</p>
+  <figure class="shot tall" style="margin-top:10px;"><img src="manual-assets/manual-10-admin-today.png" alt="Admin Today tab"><figcaption>Today &middot; the one screen to open every morning</figcaption></figure>
+  <div class="foot"><span>LFG Dubai &middot; Your admin portal</span><span class="grow"></span><span>08</span></div>
+</section>
+
+<!-- ============== ADMIN: OVERVIEW ============== -->
+<section class="page">
+  <div class="eyebrow">03 &middot; Admin portal</div>
+  <h2 class="h-sec">Overview <em>tab</em></h2>
+  <div class="rule"></div>
+  <p>The numbers that tell you if the club is growing. Total members and credits outstanding, revenue and sign-ups over the last eight weeks, website visits, and how the next session's stations are filling. This is your weekly business read in ten seconds.</p>
+  <figure class="shot tall" style="margin-top:10px;"><img src="manual-assets/manual-11-admin-overview.png" alt="Admin Overview tab"><figcaption>Overview &middot; growth, revenue and trends</figcaption></figure>
+  <div class="foot"><span>LFG Dubai &middot; Your admin portal</span><span class="grow"></span><span>09</span></div>
+</section>
+
+<!-- ============== ADMIN: MEMBERS ============== -->
+<section class="page">
+  <div class="eyebrow">03 &middot; Admin portal</div>
+  <h2 class="h-sec">Members <em>tab</em></h2>
+  <div class="rule"></div>
+  <p>Everyone who has ever booked or registered, searchable and filterable. Each row shows spend, credits, sessions booked and attended, points, and when they were last active. Two buttons on every member let you run the club by hand when you need to: <b>Adjust</b> their credits and award <b>+ Points</b>.</p>
+  <figure class="shot" style="margin-top:10px;"><img src="manual-assets/manual-12-admin-members.png" alt="Admin Members tab"><figcaption>Members &middot; your full directory with credits and points</figcaption></figure>
+  <ul class="ticks" style="margin-top:12px;">
+    <li>Filter by nationality, level, occupation, account status and runs attended.</li>
+    <li>Export the whole list to a spreadsheet any time.</li>
+    <li>One tap to message a member on WhatsApp.</li>
+  </ul>
+  <div class="foot"><span>LFG Dubai &middot; Your admin portal</span><span class="grow"></span><span>10</span></div>
+</section>
+
+<!-- ============== ADMIN: CREDITS + POINTS MODALS ============== -->
+<section class="page">
+  <div class="eyebrow">03 &middot; Admin portal</div>
+  <h2 class="h-sec">Adjusting credits &amp; <em>awarding points</em></h2>
+  <div class="rule"></div>
+  <p>Two simple pop-ups, opened from any member row. <b>Adjust credits</b> comps or removes bootcamp credits (a rained-out session, a cash payment, a friend's first one). <b>Award points</b> gives leaderboard points for effort at bootcamp. Both ask for a reason and keep a record, so you always know who did what.</p>
+  <div class="two" style="margin-top:12px;">
+    <figure class="shot"><img src="manual-assets/manual-14-adjust-modal.png" alt="Adjust credits"><figcaption>Adjust credits</figcaption></figure>
+    <figure class="shot"><img src="manual-assets/manual-13-award-modal.png" alt="Award points"><figcaption>Award bootcamp points</figcaption></figure>
+  </div>
+  <div class="box tip" style="margin-top:14px;"><div class="k">Good to know</div><p>Awarding points never charges anyone and never touches their credits. Points are purely for the leaderboard. Credits are what they pay for and spend on bookings. They are two separate things.</p></div>
+  <div class="foot"><span>LFG Dubai &middot; Your admin portal</span><span class="grow"></span><span>11</span></div>
+</section>
+
+<!-- ============== ADMIN: SCHEDULE ============== -->
+<section class="page">
+  <div class="eyebrow">03 &middot; Admin portal</div>
+  <h2 class="h-sec">Schedule <em>tab</em></h2>
+  <div class="rule"></div>
+  <p>You control the calendar here, and the website updates instantly. Set the Wednesday run's time and location, switch the Saturday run on or off, set the bootcamp date and time, and set each Sunday's capacity and number of stations. Change the run time here and the registration form, the check-in window and the leaderboard all follow automatically.</p>
+  <figure class="shot tall" style="margin-top:10px;"><img src="manual-assets/manual-15-admin-schedule.png" alt="Admin Schedule tab"><figcaption>Schedule &middot; one place to set runs, bootcamps and capacity</figcaption></figure>
+  <div class="foot"><span>LFG Dubai &middot; Your admin portal</span><span class="grow"></span><span>12</span></div>
+</section>
+
+<!-- ============== ADMIN: RUNS ============== -->
+<section class="page">
+  <div class="eyebrow">03 &middot; Admin portal</div>
+  <h2 class="h-sec">Runs <em>tab</em></h2>
+  <div class="rule"></div>
+  <p>Everything about your Wednesday and Saturday runs. The <b>run check-in QR</b> to print, a live count of who is coming to the next run, your <b>bootcamp leads</b> (runners who have not booked a Sunday yet) with one-tap WhatsApp, and your full searchable runner directory with nationality and level.</p>
+  <figure class="shot tall" style="margin-top:10px;"><img src="manual-assets/manual-16-admin-runs.png" alt="Admin Runs tab"><figcaption>Runs &middot; QR, headcount, leads and the runner directory</figcaption></figure>
+  <div class="foot"><span>LFG Dubai &middot; Your admin portal</span><span class="grow"></span><span>13</span></div>
+</section>
+
+<!-- ============== ADMIN: BOOTCAMP ============== -->
+<section class="page">
+  <div class="eyebrow">03 &middot; Admin portal</div>
+  <h2 class="h-sec">Bootcamp <em>tab</em></h2>
+  <div class="rule"></div>
+  <p>Run the Sunday itself. Print the <b>bootcamp check-in QR</b> for members to scan on arrival, upload the session's group photo (it appears on the public bootcamp page), and see who is booked. When a booked member scans that QR, they are marked <b>attended automatically</b> and their 100 points land on their own. You only mark someone by hand if they did not scan (a cash drop-in, a phone left in the car).</p>
+  <figure class="shot tall" style="margin-top:10px;"><img src="manual-assets/manual-17-admin-bootcamp.png" alt="Admin Bootcamp tab"><figcaption>Bootcamp &middot; check-in QR, photo upload and roster</figcaption></figure>
+  <div class="foot"><span>LFG Dubai &middot; Your admin portal</span><span class="grow"></span><span>14</span></div>
+</section>
+
+<!-- ============== ADMIN: PROMO ============== -->
+<section class="page">
+  <div class="eyebrow">03 &middot; Admin portal</div>
+  <h2 class="h-sec">Promo codes <em>tab</em></h2>
+  <div class="rule"></div>
+  <p>Create discount codes whenever you want to run an offer or win back a lapsed member. Set the amount or percentage, lock a code to one person's email, set an expiry, and track how many times each code has been used. The referral system also lives here, so you can see who is bringing friends.</p>
+  <figure class="shot tall" style="margin-top:10px;"><img src="manual-assets/manual-18-admin-promo.png" alt="Admin Promo codes tab"><figcaption>Promo codes &middot; offers, win-backs and referral tracking</figcaption></figure>
+  <div class="foot"><span>LFG Dubai &middot; Your admin portal</span><span class="grow"></span><span>15</span></div>
+</section>
+
+<!-- ============== POINTS SYSTEM ============== -->
+<section class="page">
+  <div class="eyebrow">Part 04</div>
+  <h2 class="h-sec">The points <em>system</em></h2>
+  <div class="rule"></div>
+  <p class="lead">Points turn showing up into a game. The more someone trains with you, the higher they climb. It runs quietly in the background and keeps people coming back.</p>
+  <div class="grid2" style="margin-top:14px;">
+    <div class="feat"><h4><span class="n">10</span>points per run</h4><p>Every Wednesday or Saturday run a member checks into, automatically.</p></div>
+    <div class="feat"><h4><span class="n">20</span>points per bootcamp</h4><p>Every Sunday bootcamp they scan into, automatically.</p></div>
+    <div class="feat"><h4><span class="n">+</span>your bonus points</h4><p>You add extra points by hand for effort, PBs or whatever you want to reward.</p></div>
+    <div class="feat"><h4><span class="n">=</span>the leaderboard</h4><p>Everything adds up on a public board. Members see their rank and chase the next one.</p></div>
+  </div>
+  <div class="box" style="margin-top:16px;"><div class="k">The formula</div><p style="font-size:11.5pt;"><b>Total points = (runs &times; 10) + (bootcamps &times; 20) + your bonus points.</b></p></div>
+  <div class="box tip" style="margin-top:12px;"><div class="k">The prize angle (keep this to yourself)</div><p>Members do not need to know there is anything at the end. Run it as bragging rights. When you are ready, reward the top of the board with a prize and watch attendance jump. The points have been quietly counting the whole time.</p></div>
+  <div class="foot"><span>LFG Dubai &middot; The points system</span><span class="grow"></span><span>16</span></div>
+</section>
+
+<!-- ============== HOW-TO PLAYBOOK ============== -->
+<section class="page">
+  <div class="eyebrow">Part 05</div>
+  <h2 class="h-sec">Everyday <em>how-to</em></h2>
+  <div class="rule"></div>
+  <div class="grid2" style="gap:16px;">
+    <div>
+      <h4 style="font-size:13pt;color:#fff;margin-bottom:6px;">Mark attendance by hand (only if they didn't scan)</h4>
+      <ol class="steps"><li>Scanning the QR already marks people attended. Use this only for someone who didn't scan.</li><li>Open <b>Bootcamp</b> tab, find them on the roster.</li><li>Tap <b>attended</b>. Their 100 points land.</li></ol>
+      <h4 style="font-size:13pt;color:#fff;margin:14px 0 6px;">Award bonus points</h4>
+      <ol class="steps"><li>Open <b>Members</b>, find the person.</li><li>Tap <b>+ Points</b>.</li><li>Type the number, add a note, <b>Award</b>.</li></ol>
+      <h4 style="font-size:13pt;color:#fff;margin:14px 0 6px;">Comp a credit</h4>
+      <ol class="steps"><li>Open <b>Members</b>, find the person.</li><li>Tap <b>Adjust</b>, set the amount.</li><li>Add a reason, <b>Apply</b>.</li></ol>
+    </div>
+    <div>
+      <h4 style="font-size:13pt;color:#fff;margin-bottom:6px;">Change a run time</h4>
+      <ol class="steps"><li>Open <b>Schedule</b>.</li><li>Set the new day, time or location.</li><li>Save. The whole site updates.</li></ol>
+      <h4 style="font-size:13pt;color:#fff;margin:14px 0 6px;">Chase a lead on WhatsApp</h4>
+      <ol class="steps"><li>Open <b>Runs</b>, scroll to leads.</li><li>Tap the <b>WhatsApp</b> button by their name.</li><li>The message is pre-written. Send.</li></ol>
+      <h4 style="font-size:13pt;color:#fff;margin:14px 0 6px;">Print your QR codes</h4>
+      <ol class="steps"><li>Run QR lives in <b>Runs</b>.</li><li>Bootcamp QR lives in <b>Bootcamp</b>.</li><li>Print once, reuse every week.</li></ol>
+    </div>
+  </div>
+  <div class="foot"><span>LFG Dubai &middot; How-to playbook</span><span class="grow"></span><span>17</span></div>
+</section>
+
+<!-- ============== WEEKLY RHYTHM ============== -->
+<section class="page">
+  <div class="eyebrow">Part 06</div>
+  <h2 class="h-sec">Your weekly <em>rhythm</em></h2>
+  <div class="rule"></div>
+  <p>You do not need to live in the admin portal. A few small habits keep the machine running and the money flowing.</p>
+  <div class="colflow" style="margin-top:12px;">
+    <div class="box"><div class="k">Every morning &middot; 30 seconds</div><p>Open <b>Today</b>. Glance at revenue, new members and which Sundays are filling slowly.</p></div>
+    <div class="box"><div class="k">At every run</div><p>Hold up the <b>run QR</b>. Let new faces scan and sign up on the spot. They are now in your list forever.</p></div>
+    <div class="box"><div class="k">Every Sunday</div><p>Open <b>Bootcamp</b>, let members scan the bootcamp QR, mark attendance, upload the group photo, award bonus points to anyone who earned it.</p></div>
+    <div class="box"><div class="k">Once a week &middot; 5 minutes</div><p>Open <b>Runs</b>, work the <b>leads</b> list. One tap each on WhatsApp turns runners into paying bootcampers. This is where the revenue is.</p></div>
+  </div>
+  <div class="box tip" style="margin-top:14px;"><div class="k">The one habit that pays</div><p>Working the leads list every week is the single highest-value thing you can do in here. Those runners already trust you. They just have not booked yet.</p></div>
+  <div class="foot"><span>LFG Dubai &middot; Best practice</span><span class="grow"></span><span>18</span></div>
+</section>
+
+<!-- ============== QUICK REFERENCE ============== -->
+<section class="page">
+  <div class="eyebrow">Part 07</div>
+  <h2 class="h-sec">Quick <em>reference</em></h2>
+  <div class="rule"></div>
+  <div class="grid2" style="gap:16px;">
+    <div>
+      <h4 style="font-size:13pt;color:#fff;margin-bottom:8px;">Key links</h4>
+      <ul class="ticks">
+        <li><b>Home:</b> lfgdubai.com</li>
+        <li><b>Admin portal:</b> lfgdubai.com/admin.html</li>
+        <li><b>Book a bootcamp:</b> lfgdubai.com/bootcamp.html</li>
+        <li><b>Member account:</b> lfgdubai.com/account</li>
+        <li><b>Leaderboard:</b> lfgdubai.com/leaderboard</li>
+        <li><b>Run check-in:</b> lfgdubai.com/run-checkin</li>
+      </ul>
+    </div>
+    <div>
+      <h4 style="font-size:13pt;color:#fff;margin-bottom:8px;">Words to know</h4>
+      <ul class="ticks">
+        <li><b>Credit:</b> a paid bootcamp session a member can spend.</li>
+        <li><b>Points:</b> leaderboard score, no money value.</li>
+        <li><b>Lead:</b> a runner who has not booked a bootcamp yet.</li>
+        <li><b>Check-in:</b> scanning the QR to mark attendance.</li>
+        <li><b>Roster:</b> the list of who is booked for a session.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="box" style="margin-top:18px;"><div class="k">Need a hand?</div><p>Anything that does not look right, anything you want changed, or a new idea for the site, message your team at Komplete. We built it, we maintain it, and we are one message away.</p></div>
+  <div class="foot"><span>LFG Dubai &middot; Quick reference</span><span class="grow"></span><span>19</span></div>
+</section>
+
+<!-- ============== BACK COVER ============== -->
+<section class="page backcover">
+  <div class="bg"><img src="manual-assets/gen-skyline.png" alt=""></div>
+  <div class="scrim"></div>
+  <div class="c">
+    <img class="logo" src="manual-assets/logo.png" alt="LFG">
+    <h2>Built to <em>grow</em> with you.</h2>
+    <p>Your website is no longer a brochure. It is the engine of the club: it finds runners, books them, takes payment, keeps them coming back, and shows you everything. Run it with confidence.</p>
+    <div class="sign">Komplete &middot; komplete.tech</div>
+  </div>
+</section>
+
+</body>
+</html>

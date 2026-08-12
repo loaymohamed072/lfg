@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>LFG Wednesday Run — Reserve Your Spot | LFG Dubai</title>
+<meta name="description" content="LFG's next Wednesday run is a paid intervals session in Dubai. Reserve your spot and pay online.">
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://lfgdubai.com/track">
+
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#0A0A0A">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="LFG Dubai">
+<meta property="og:url" content="https://lfgdubai.com/track">
+<meta property="og:title" content="LFG Wednesday Run — Reserve Your Spot">
+<meta property="og:description" content="A paid intervals session with LFG Dubai. Reserve your spot and pay online.">
+<meta property="og:image" content="https://lfgdubai.com/og-image.jpg">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://js.stripe.com">
+<link rel="preconnect" href="https://api.stripe.com">
+<link rel="preconnect" href="https://m.stripe.network">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700;1,800;1,900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* /track reuses the locked LFG design system verbatim: Barlow Condensed / Barlow,
+   --black #0A0A0A + --green #999966 (muted olive accent), hairline borders. Imagery is
+   existing LFG run photos, graded tier-2 (desaturate + contrast) to match the site. */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --black: #0A0A0A;
+  --panel: #111111;
+  --white: #FFFFFF;
+  --green: #999966;
+  --green-dim: rgba(153,153,102,0.15);
+  --green-glow: rgba(153,153,102,0.35);
+  --line: rgba(255,255,255,0.10);
+  --muted: rgba(255,255,255,0.6);
+  --font-head: 'Barlow Condensed', sans-serif;
+  --font-body: 'Barlow', sans-serif;
+  --img-grade: grayscale(0.12) saturate(0.9) contrast(1.06) brightness(0.9);
+}
+html { scroll-behavior: smooth; }
+body {
+  background: var(--black); color: var(--white); font-family: var(--font-body);
+  line-height: 1.55; -webkit-font-smoothing: antialiased; overflow-x: hidden;
+}
+::selection { background: var(--green); color: var(--black); }
+a { color: inherit; text-decoration: none; }
+img, iframe { max-width: 100%; }
+
+.gtop { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; border-bottom: 1px solid var(--line); position: relative; background: var(--black); z-index: 30; }
+.gtop img { height: 28px; width: auto; }
+.gtop .back { font-family: var(--font-head); font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+.gtop .back:hover { color: var(--green); }
+
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+/* HERO — full-bleed graded run photo + scrim */
+.hero { position: relative; min-height: 84vh; display: flex; align-items: flex-end; overflow: hidden; padding: 120px 0 46px; }
+.hero-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 32%; filter: var(--img-grade); z-index: 0; animation: heroIn 1.25s cubic-bezier(0.22,0.61,0.36,1) both; }
+.hero-scrim { position: absolute; inset: 0; z-index: 1; background:
+  linear-gradient(180deg, rgba(10,10,10,0.42) 0%, rgba(10,10,10,0.30) 34%, rgba(10,10,10,0.72) 74%, rgba(10,10,10,0.97) 100%),
+  linear-gradient(90deg, rgba(153,153,102,0.10) 0%, rgba(153,153,102,0) 46%); }
+.hero-inner { position: relative; z-index: 2; width: 100%; }
+@keyframes heroIn { from { opacity: 0; transform: scale(1.06); } to { opacity: 1; transform: scale(1); } }
+
+.eyebrow { display: inline-flex; align-items: center; gap: 10px; font-family: var(--font-head); font-size: 13px; font-weight: 700; letter-spacing: 0.24em; text-transform: uppercase; color: var(--green); margin-bottom: 18px; }
+.eyebrow::before { content: ""; width: 28px; height: 1px; background: var(--green); }
+.hero h1 { font-family: var(--font-head); font-weight: 900; text-transform: uppercase; letter-spacing: 0.01em; line-height: 0.92; font-size: clamp(46px, 9.5vw, 112px); text-shadow: 0 2px 40px rgba(0,0,0,0.5); }
+.hero h1 em { font-style: normal; color: var(--green); }
+.hero-sub { margin-top: 20px; max-width: 600px; color: rgba(255,255,255,0.82); font-size: clamp(16px, 2.4vw, 19px); }
+.hero-cta { margin-top: 28px; display: flex; gap: 14px; flex-wrap: wrap; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px; font-family: var(--font-head);
+  font-weight: 700; font-size: 15px; letter-spacing: 0.14em; text-transform: uppercase;
+  padding: 16px 30px; cursor: pointer; border: 1px solid var(--green); background: var(--green); color: var(--black);
+  transition: box-shadow .25s, transform .15s; box-shadow: 0 0 20px var(--green-glow);
+}
+.btn:hover { box-shadow: 0 0 40px var(--green-glow); transform: translateY(-1px); }
+.btn:active { transform: translateY(0) scale(0.99); }
+.btn-ghost { background: rgba(10,10,10,0.35); color: var(--green); box-shadow: none; backdrop-filter: blur(4px); }
+.btn-ghost:hover { background: var(--green-dim); box-shadow: none; }
+
+/* FACTS band on solid black under the hero */
+.facts { display: flex; flex-wrap: wrap; gap: 14px; padding: 34px 0 8px; }
+.fact { flex: 1 1 180px; min-width: 158px; border: 1px solid var(--line); background: var(--panel); padding: 18px 20px; }
+.fact .k { font-family: var(--font-head); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--green); margin-bottom: 8px; }
+.fact .v { font-family: var(--font-head); font-weight: 700; font-size: 22px; letter-spacing: 0.01em; }
+.fact .v small { display: block; font-family: var(--font-body); font-weight: 400; font-size: 13px; letter-spacing: 0; color: var(--muted); margin-top: 2px; text-transform: none; }
+.price-fact .v { color: var(--green); font-size: 30px; }
+
+.grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: 40px; padding: 28px 0 72px; align-items: start; }
+@media (max-width: 900px){ .grid { grid-template-columns: 1fr; gap: 32px; } }
+
+.section-tag { font-family: var(--font-head); font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--green); margin-bottom: 14px; }
+.lead { color: var(--muted); font-size: 16px; margin-bottom: 22px; }
+
+/* section image — graded, hairline frame */
+.shot { border: 1px solid var(--line); margin: 0 0 24px; overflow: hidden; position: relative; }
+.shot img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; object-position: 50% 40%; filter: var(--img-grade); }
+.shot::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,10,10,0) 55%, rgba(10,10,10,0.5) 100%); pointer-events: none; }
+
+.checklist { list-style: none; display: grid; gap: 12px; }
+.checklist li { display: flex; gap: 12px; align-items: flex-start; font-size: 15.5px; }
+.checklist svg { flex: 0 0 auto; margin-top: 3px; color: var(--green); }
+.map-frame { border: 1px solid var(--line); margin-top: 24px; }
+.map-frame iframe { display: block; width: 100%; height: 230px; border: 0; filter: grayscale(0.35) contrast(1.05) brightness(0.92); }
+.map-open { display: inline-block; margin-top: 12px; font-family: var(--font-head); font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--green); }
+
+.paycard { border: 1px solid var(--line); background: var(--panel); position: sticky; top: 24px; }
+@media (max-width: 900px){ .paycard { position: static; } }
+.paycard-head { padding: 22px 24px 0; }
+.paycard-eyebrow { font-family: var(--font-head); font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--green); }
+.paycard-title { font-family: var(--font-head); font-weight: 800; font-size: 26px; text-transform: uppercase; letter-spacing: 0.01em; margin-top: 6px; }
+.paycard-price { font-family: var(--font-head); font-weight: 700; font-size: 15px; color: var(--muted); margin-top: 4px; }
+.paycard-price b { color: var(--green); }
+.paycard-body { padding: 20px 24px 26px; }
+
+.track-member { padding: 20px 24px 26px; }
+.track-member .tm-eyebrow { font-family: var(--font-head); font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--green); }
+.track-member .tm-name { font-family: var(--font-head); font-weight: 800; font-size: 24px; text-transform: uppercase; letter-spacing: 0.01em; margin: 6px 0 8px; }
+.track-member .tm-sub { color: var(--muted); font-size: 14.5px; margin-bottom: 18px; }
+.track-member .gsubmit { margin-top: 4px; }
+.track-member .tm-switch { display: block; margin: 14px auto 0; background: none; border: none; color: var(--muted); font-size: 12.5px; text-decoration: underline; cursor: pointer; font-family: var(--font-body); }
+.track-member .tm-switch:hover { color: var(--green); }
+
+.frow { margin-bottom: 14px; }
+.frow-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.flabel { display: block; font-family: var(--font-head); font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.75); margin-bottom: 7px; }
+.fhint { text-transform: none; letter-spacing: 0; font-weight: 400; color: rgba(255,255,255,0.45); }
+.gforminput, .gforminput:focus { width: 100%; background: #0c0c0c; border: 1px solid var(--line); color: var(--white); font-family: var(--font-body); font-size: 15px; padding: 12px 13px; outline: none; }
+.gforminput:focus { border-color: var(--green); }
+.phone-row { display: flex; gap: 8px; }
+.phone-row select { flex: 0 0 96px; }
+.levels { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+.lvl { border: 1px solid var(--line); background: #0c0c0c; padding: 11px 8px; text-align: center; cursor: pointer; transition: border-color .15s, background .15s; position: relative; }
+.lvl:hover { border-color: rgba(153,153,102,0.5); }
+.lvl.sel { border-color: var(--green); background: var(--green-dim); }
+.lvl .lh { font-family: var(--font-head); font-weight: 700; font-size: 15px; letter-spacing: 0.04em; text-transform: uppercase; }
+.lvl .ls { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.lvl input { position: absolute; opacity: 0; pointer-events: none; }
+
+.gsubmit { width: 100%; margin-top: 8px; border: none; }
+.gsubmit[disabled] { opacity: 0.6; cursor: default; box-shadow: none; }
+.gerror { color: #ff6b6b; font-size: 13.5px; margin-bottom: 12px; display: none; }
+.gnote { font-size: 12px; color: var(--muted); margin-top: 12px; text-align: center; }
+.gnote a { color: var(--green); }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+#track-pay { display: none; padding: 20px 24px 26px; }
+#track-pay .pay-eyebrow { font-family: var(--font-head); font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--green); margin-bottom: 4px; }
+#track-pay .pay-title { font-family: var(--font-head); font-weight: 800; font-size: 22px; text-transform: uppercase; margin-bottom: 16px; }
+#track-pay-mount { min-height: 260px; }
+.pay-spin { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 14px; padding: 30px 0; }
+.spinner { width: 16px; height: 16px; border: 2px solid var(--line); border-top-color: var(--green); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+#track-success { display: none; padding: 40px 26px; text-align: center; }
+#track-success .tick { width: 58px; height: 58px; border-radius: 50%; border: 2px solid var(--green); display: inline-flex; align-items: center; justify-content: center; color: var(--green); margin-bottom: 18px; }
+#track-success h3 { font-family: var(--font-head); font-weight: 900; font-size: 34px; text-transform: uppercase; letter-spacing: 0.01em; }
+#track-success h3 em { font-style: normal; color: var(--green); }
+#track-success p { color: var(--muted); margin-top: 10px; font-size: 15.5px; }
+
+#track-notpaid { display: none; border: 1px solid var(--line); background: var(--panel); padding: 22px 24px; }
+#track-notpaid p { color: var(--muted); font-size: 15px; }
+#track-notpaid a { color: var(--green); }
+
+.foot { border-top: 1px solid var(--line); padding: 26px 0; text-align: center; color: var(--muted); font-size: 13px; }
+.foot a { color: var(--green); }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .hero-bg { animation: none; }
+  .btn, .lvl { transition: none; }
+  .spinner { animation-duration: 1.6s; }
+}
+</style>
+</head>
+<body>
+
+<div class="gtop">
+  <a href="/"><img src="/lfg-logo.png" alt="LFG Dubai"></a>
+  <a href="/" class="back">← Back to site</a>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <img class="hero-bg" src="/main%20group%20photo.jpeg" alt="LFG Dubai runners training together as a group" fetchpriority="high" decoding="async">
+  <div class="hero-scrim"></div>
+  <div class="wrap hero-inner">
+    <div class="eyebrow" id="hero-eyebrow">This Wednesday · Paid intervals session</div>
+    <h1>LFG × <em id="track-place">GEMS Dubai American Academy</em></h1>
+    <p class="hero-sub" id="track-sub">Wednesday track intervals.</p>
+    <div class="hero-cta">
+      <a href="#reserve" class="btn">Reserve your spot →</a>
+      <a href="#map" class="btn btn-ghost">View location</a>
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+  <!-- FACTS -->
+  <div class="facts">
+    <div class="fact"><div class="k">When</div><div class="v" id="fact-when">Wednesday<small id="fact-when-sub">Loading…</small></div></div>
+    <div class="fact"><div class="k">Where</div><div class="v" id="fact-where">GEMS Dubai American Academy<small id="fact-where-sub">Tap the map below</small></div></div>
+    <div class="fact"><div class="k">Session</div><div class="v">Intervals<small>All levels welcome</small></div></div>
+    <div class="fact price-fact"><div class="k">Entry</div><div class="v" id="fact-price">AED 30<small>per person</small></div></div>
+  </div>
+
+  <!-- GRID: details + reserve -->
+  <section class="grid">
+    <div>
+      <div class="section-tag">What to expect</div>
+      <p class="lead">Intervals are the fastest way to build speed and engine. You'll warm up as a group, run structured hard/easy efforts at your own pace, and cool down together.</p>
+
+      <div class="shot">
+        <img src="/track-session.jpeg" alt="LFG Dubai runners at a training session" loading="lazy" decoding="async">
+      </div>
+
+      <ul class="checklist">
+        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg><span>Coached warm-up and mobility before the efforts.</span></li>
+        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg><span>Interval sets scaled to beginner, occasional, and advanced.</span></li>
+        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg><span>Pace groups so nobody runs alone.</span></li>
+        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg><span>Bring water and running shoes. That's it.</span></li>
+      </ul>
+
+      <div class="map-frame" id="map">
+        <iframe id="track-map" title="Run location map" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+          src="https://www.google.com/maps?q=GEMS%20Dubai%20American%20Academy&output=embed"></iframe>
+      </div>
+      <a class="map-open" id="track-map-open" href="https://maps.app.goo.gl/FqbkMPhEukQKrJef8?g_st=ic" target="_blank" rel="noopener">Open in Google Maps →</a>
+    </div>
+
+    <!-- RESERVE / PAY CARD -->
+    <div id="reserve">
+      <div id="track-notpaid">
+        <p>This run isn't a paid session right now. Head to the <a href="/#register-form">main sign-up</a> to register for the next free run.</p>
+      </div>
+
+      <div class="paycard" id="track-card">
+        <div class="paycard-head">
+          <div class="paycard-eyebrow">Reserve your spot</div>
+          <div class="paycard-title">Pay &amp; you're in</div>
+          <div class="paycard-price">Entry <b id="card-price">AED 30</b> · per person</div>
+        </div>
+
+        <!-- Logged-in members: pay straight from their account, no re-entering details -->
+        <div id="track-member" class="track-member" hidden>
+          <div class="tm-eyebrow">Welcome back</div>
+          <div class="tm-name" id="track-member-name">You're logged in</div>
+          <p class="tm-sub">Your details are on file — just confirm your spot.</p>
+          <button type="button" class="btn gsubmit" id="track-member-pay">Pay <span id="tm-price">AED 30</span> &amp; reserve →</button>
+          <p class="gnote">Secure card payment via Stripe. You'll get an email confirmation.</p>
+          <button type="button" class="tm-switch" id="track-member-switch">Not you? Enter details instead</button>
+        </div>
+
+        <form class="paycard-body" id="track-form" novalidate>
+          <div class="gerror" id="track-error"></div>
+
+          <input type="text" id="track-hp" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+          <div class="frow-2">
+            <div class="frow"><label class="flabel" for="track-first">First name</label><input class="gforminput" id="track-first" maxlength="80" autocomplete="given-name"></div>
+            <div class="frow"><label class="flabel" for="track-last">Last name</label><input class="gforminput" id="track-last" maxlength="80" autocomplete="family-name"></div>
+          </div>
+          <div class="frow"><label class="flabel" for="track-email">Email</label><input class="gforminput" id="track-email" type="email" autocomplete="email"></div>
+          <div class="frow">
+            <label class="flabel" for="track-phone">WhatsApp</label>
+            <div class="phone-row">
+              <select class="gforminput" id="track-cc" aria-label="Country code">
+                <option value="+971" selected>🇦🇪 +971</option>
+                <option value="+966">🇸🇦 +966</option>
+                <option value="+965">🇰🇼 +965</option>
+                <option value="+974">🇶🇦 +974</option>
+                <option value="+973">🇧🇭 +973</option>
+                <option value="+968">🇴🇲 +968</option>
+                <option value="+20">🇪🇬 +20</option>
+                <option value="+91">🇮🇳 +91</option>
+                <option value="+44">🇬🇧 +44</option>
+                <option value="+1">🇺🇸 +1</option>
+              </select>
+              <input class="gforminput" id="track-phone" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="50 123 4567">
+            </div>
+          </div>
+          <div class="frow">
+            <label class="flabel" for="track-ig">Instagram <span class="fhint" id="track-ig-opt" hidden>(optional)</span></label>
+            <input class="gforminput" id="track-ig" maxlength="30" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="@yourhandle">
+          </div>
+          <div class="frow">
+            <label class="flabel">Your level</label>
+            <div class="levels" id="track-levels">
+              <label class="lvl" data-v="beginner"><input type="radio" name="level" value="beginner"><div class="lh">Beginner</div><div class="ls">0–3 km</div></label>
+              <label class="lvl" data-v="occasional"><input type="radio" name="level" value="occasional"><div class="lh">Occasional</div><div class="ls">3–5 km</div></label>
+              <label class="lvl" data-v="advanced"><input type="radio" name="level" value="advanced"><div class="lh">Advanced</div><div class="ls">5 km+</div></label>
+            </div>
+          </div>
+
+          <button type="submit" class="btn gsubmit" id="track-submit">Continue to payment · <span id="btn-price">AED 30</span></button>
+          <p class="gnote">Secure card payment via Stripe. You'll get an email confirmation.</p>
+          <p class="gnote">New here? <a href="/register" style="color:var(--green,#999966);">Create your LFG account</a> and join everything we do.</p>
+        </form>
+
+        <div id="track-pay">
+          <div class="pay-eyebrow">Secure checkout</div>
+          <div class="pay-title">Pay <span id="pay-price">AED 30</span></div>
+          <div id="track-pay-mount"><div class="pay-spin"><span class="spinner"></span>Loading secure checkout…</div></div>
+        </div>
+
+        <div id="track-success">
+          <div class="tick"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg></div>
+          <h3>You're <em>paid in.</em></h3>
+          <p id="track-success-msg">Your spot is locked. Check your email for the details. See you Wednesday.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="foot">
+  Questions? <a id="track-wa" href="https://wa.me/971504264410?text=I%20want%20to%20join%20the%20LFG%20run" target="_blank" rel="noopener">Message us on WhatsApp</a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.1"></script>
+<script src="/app-assets/lfg-supabase.js?v=3"></script>
+<script src="https://js.stripe.com/v3/"></script>
+<script src="/app-assets/lfg-track.js?v=6"></script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+{
+  "title": "Member Login - LFG Dubai",
+  "fonts": {
+    "primary": [
+      "Barlow Condensed",
+      "Barlow"
+    ],
+    "googleFonts": [],
+    "fontFaceFamilies": []
+  },
+  "typeScale": [
+    {
+      "tag": "h1",
+      "fontSizePx": 38,
+      "lineHeight": "36.1px",
+      "fontWeight": "900",
+      "letterSpacing": "-0.38px",
+      "textTransform": "uppercase",
+      "fontFamily": "Barlow Condensed"
+    },
+    {
+      "tag": "a",
+      "fontSizePx": 15,
+      "lineHeight": "normal",
+      "fontWeight": "700",
+      "letterSpacing": "1.8px",
+      "textTransform": "uppercase",
+      "fontFamily": "Barlow Condensed"
+    },
+    {
+      "tag": "button",
+      "fontSizePx": 15,
+      "lineHeight": "normal",
+      "fontWeight": "700",
+      "letterSpacing": "1.8px",
+      "textTransform": "uppercase",
+      "fontFamily": "Barlow Condensed"
+    },
+    {
+      "tag": "p",
+      "fontSizePx": 14,
+      "lineHeight": "21px",
+      "fontWeight": "400",
+      "letterSpacing": "normal",
+      "textTransform": "none",
+      "fontFamily": "Barlow"
+    },
+    {
+      "tag": "p",
+      "fontSizePx": 13,
+      "lineHeight": "20.8px",
+      "fontWeight": "400",
+      "letterSpacing": "normal",
+      "textTransform": "none",
+      "fontFamily": "Barlow"
+    },
+    {
+      "tag": "button",
+      "fontSizePx": 12,
+      "lineHeight": "normal",
+      "fontWeight": "400",
+      "letterSpacing": "normal",
+      "textTransform": "none",
+      "fontFamily": "Barlow"
+    },
+    {
+      "tag": "a",
+      "fontSizePx": 12,
+      "lineHeight": "normal",
+      "fontWeight": "400",
+      "letterSpacing": "1.44px",
+      "textTransform": "uppercase",
+      "fontFamily": "Barlow Condensed"
+    }
+  ],
+  "colors": {
+    "text": [
+      "#ffffff",
+      "#000000",
+      "#1a1a1a",
+      "#999966",
+      "#0a0a0a"
+    ],
+    "background": [
+      "#999966",
+      "#ffffff",
+      "#0c0c0c",
+      "#0a0a0a",
+      "#111111"
+    ]
+  },
+  "layout": {
+    "containerWidthsPx": [],
+    "sectionCount": 1,
+    "sections": [
+      {
+        "tag": "div",
+        "heightPx": 900,
+        "paddingTopPx": 32,
+        "paddingBottomPx": 32,
+        "display": "flex",
+        "background": null,
+        "headings": 1,
+        "hasImage": true
+      }
+    ]
+  },
+  "radii": [],
+  "shadows": [],
+  "motion": {
+    "gsap": false,
+    "scrollTrigger": false,
+    "lenis": false,
+    "locomotive": false,
+    "framerMotion": false,
+    "three": false,
+    "smoothScroll": false,
+    "transitionsCount": 7,
+    "observed": {
+      "animationsAtRest": 0,
+      "elementsChangedOnScroll": 0,
+      "smoothedScroll": false
+    }
+  },
+  "capturedAt": "2026-07-29T08:05:37.629Z",
+  "sourceUrl": "https://www.lfgdubai.com/login"
+}

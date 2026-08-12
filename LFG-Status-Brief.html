@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LFG Dubai · Status Brief</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --olive: #999966;
+    --olive-soft: rgba(153,153,102,0.12);
+    --olive-dim: rgba(153,153,102,0.35);
+    --black: #0A0A0A;
+    --ink: #161616;
+    --paper: #FBFAF6;
+    --rule: rgba(10,10,10,0.10);
+    --rule-strong: rgba(10,10,10,0.22);
+    --muted: rgba(10,10,10,0.55);
+    --dim: rgba(10,10,10,0.40);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  html { background: #d0d0c8; }
+  body {
+    font-family: 'Barlow', -apple-system, sans-serif;
+    color: var(--ink);
+    background: var(--paper);
+    font-size: 11pt;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* PRINT SETUP. A4 pages, generous margins, brand-respecting palette */
+  @page { size: A4; margin: 18mm 16mm 18mm 16mm; }
+  @media print {
+    html, body { background: var(--paper); }
+    .sheet { box-shadow: none; margin: 0; page-break-after: always; }
+    .sheet:last-child { page-break-after: avoid; }
+    .no-print { display: none !important; }
+  }
+  @media screen {
+    .sheet {
+      width: 210mm; min-height: 297mm;
+      margin: 24px auto;
+      padding: 24mm 20mm;
+      background: var(--paper);
+      box-shadow: 0 12px 60px -16px rgba(0,0,0,0.35);
+      position: relative;
+    }
+  }
+  @media print { .sheet { padding: 0; } }
+
+  /* TYPE */
+  .display {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    text-transform: uppercase;
+    line-height: 0.92;
+    letter-spacing: -0.005em;
+    color: var(--black);
+  }
+  h1.display { font-size: 56pt; }
+  h2.display { font-size: 30pt; margin-bottom: 6pt; }
+  h3.display { font-size: 18pt; margin-bottom: 4pt; }
+
+  .eyebrow {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.32em;
+    color: var(--olive);
+    font-size: 8.5pt;
+  }
+
+  .lead {
+    font-size: 13pt;
+    color: var(--ink);
+    line-height: 1.55;
+    max-width: 38em;
+  }
+
+  p { color: var(--ink); }
+  p + p { margin-top: 8pt; }
+
+  .muted { color: var(--muted); }
+  em { font-style: normal; color: var(--olive); font-weight: 600; }
+  strong { color: var(--black); font-weight: 700; }
+
+  /* RULES */
+  .hr {
+    height: 1px; background: var(--rule); margin: 24pt 0;
+  }
+  .hr-olive {
+    height: 2px; width: 48px; background: var(--olive); margin: 16pt 0;
+  }
+
+  /* SECTION HEADER PATTERN */
+  .sect {
+    display: flex; align-items: baseline; gap: 18pt;
+    margin: 0 0 14pt;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 10pt;
+  }
+  .sect-num {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800; font-size: 26pt;
+    color: var(--olive); line-height: 1;
+    min-width: 36pt;
+  }
+  .sect-text h2 { line-height: 1; }
+  .sect-text .eyebrow { display: block; margin-bottom: 4pt; }
+
+  /* COVER */
+  .cover {
+    display: flex; flex-direction: column;
+    min-height: 261mm;
+  }
+  @media print { .cover { min-height: calc(297mm - 36mm); } }
+  .cover-top { display: flex; align-items: center; justify-content: space-between; }
+  .cover-mark {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900; letter-spacing: 0.18em;
+    color: var(--olive); font-size: 11pt;
+    display: inline-flex; align-items: center; gap: 12pt;
+  }
+  .cover-mark .pulse {
+    display: inline-block; width: 8pt; height: 8pt; border-radius: 50%;
+    background: var(--olive);
+  }
+  .cover-meta {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 9pt; letter-spacing: 0.24em; text-transform: uppercase;
+    color: var(--dim); text-align: right;
+  }
+
+  .cover-body { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 24pt 0; }
+  .cover-eyebrow {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.42em; color: var(--olive);
+    font-size: 10pt; margin-bottom: 18pt;
+  }
+  .cover-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900; font-size: 84pt;
+    text-transform: uppercase; line-height: 0.88; letter-spacing: -0.01em;
+    color: var(--black);
+    margin-bottom: 18pt;
+  }
+  .cover-title .accent { color: var(--olive); }
+  .cover-sub {
+    font-size: 14pt; max-width: 32em; color: var(--ink);
+    line-height: 1.5;
+  }
+
+  .cover-bottom {
+    border-top: 1px solid var(--rule);
+    padding-top: 16pt;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 18pt;
+  }
+  .cover-stat .num {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900; font-size: 30pt; line-height: 1; color: var(--olive);
+  }
+  .cover-stat .lbl {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; font-size: 8pt; letter-spacing: 0.28em; text-transform: uppercase;
+    color: var(--muted); margin-top: 4pt;
+  }
+
+  /* PILLAR CARDS */
+  .pillars { display: grid; grid-template-columns: 1fr 1fr; gap: 14pt; margin-top: 10pt; }
+  .pillar {
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--olive);
+    padding: 14pt 16pt;
+  }
+  .pillar-h {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800; text-transform: uppercase;
+    font-size: 14pt; letter-spacing: 0.02em;
+    color: var(--black); margin-bottom: 6pt;
+  }
+  .pillar-p { font-size: 10pt; color: var(--ink); line-height: 1.55; }
+
+  /* FEATURE GRID */
+  .features { display: grid; grid-template-columns: 1fr 1fr; gap: 16pt 24pt; margin-top: 6pt; }
+  .feature h4 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800; text-transform: uppercase;
+    font-size: 11.5pt; letter-spacing: 0.04em;
+    color: var(--black); margin-bottom: 3pt;
+    display: flex; align-items: center; gap: 6pt;
+  }
+  .feature h4::before {
+    content: ""; display: inline-block;
+    width: 6pt; height: 6pt; background: var(--olive);
+  }
+  .feature p { font-size: 10pt; color: var(--muted); line-height: 1.5; }
+
+  /* PIPELINE FLOW */
+  .flow {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 6pt;
+    margin: 12pt 0;
+  }
+  .flow-step {
+    background: var(--olive-soft);
+    border-left: 3px solid var(--olive);
+    padding: 10pt 12pt;
+    position: relative;
+  }
+  .flow-step::after {
+    content: "▸"; position: absolute; right: -10pt; top: 50%;
+    transform: translateY(-50%); color: var(--olive); font-size: 12pt;
+  }
+  .flow-step:last-child::after { display: none; }
+  .flow-when {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; font-size: 8pt; letter-spacing: 0.24em;
+    text-transform: uppercase; color: var(--olive); margin-bottom: 4pt;
+  }
+  .flow-what {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800; font-size: 11pt; letter-spacing: 0.02em;
+    text-transform: uppercase; color: var(--black); line-height: 1.1;
+  }
+
+  /* CHECKLIST */
+  .check { list-style: none; padding: 0; margin: 8pt 0 0; }
+  .check li {
+    padding: 8pt 0 8pt 26pt; position: relative;
+    border-bottom: 1px dashed var(--rule);
+    font-size: 10.5pt; line-height: 1.5;
+  }
+  .check li:last-child { border-bottom: none; }
+  .check li::before {
+    content: "✓"; position: absolute; left: 4pt; top: 8pt;
+    color: var(--olive); font-weight: 700; font-size: 12pt;
+  }
+  .check li b { color: var(--black); font-weight: 700; }
+
+  .check.warn li::before { content: "○"; color: var(--dim); }
+
+  /* PULL QUOTE */
+  .pull {
+    border-left: 3px solid var(--olive);
+    background: var(--olive-soft);
+    padding: 16pt 18pt;
+    margin: 14pt 0;
+  }
+  .pull-text {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; font-size: 16pt; line-height: 1.25;
+    color: var(--black);
+  }
+  .pull-text em { color: var(--olive); font-style: normal; }
+  .pull-by {
+    margin-top: 8pt;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; font-size: 8pt; letter-spacing: 0.24em;
+    text-transform: uppercase; color: var(--muted);
+  }
+
+  /* ROADMAP */
+  .road {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12pt;
+    margin-top: 8pt;
+  }
+  .road-col {
+    border: 1px solid var(--rule); padding: 14pt 14pt 16pt;
+    position: relative;
+  }
+  .road-col .phase {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800; font-size: 9pt; letter-spacing: 0.32em;
+    text-transform: uppercase; color: var(--olive); margin-bottom: 4pt;
+  }
+  .road-col h4 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800; font-size: 14pt; letter-spacing: 0.02em;
+    text-transform: uppercase; color: var(--black); line-height: 1.1;
+    margin-bottom: 8pt;
+  }
+  .road-col p { font-size: 9.5pt; color: var(--ink); line-height: 1.5; }
+  .road-col .status {
+    display: inline-block; margin-top: 8pt;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; font-size: 8pt; letter-spacing: 0.18em; text-transform: uppercase;
+    padding: 3pt 8pt; background: var(--olive); color: #fff;
+  }
+  .road-col .status.next { background: transparent; color: var(--olive); border: 1px solid var(--olive); }
+  .road-col .status.later { background: transparent; color: var(--muted); border: 1px solid var(--rule-strong); }
+
+  /* SAFETY BLOCK */
+  .safety { background: var(--ink); color: #efeee6; padding: 22pt 22pt 18pt; margin: 6pt 0; }
+  .safety .eyebrow { color: var(--olive); }
+  .safety h3 { color: #fff; }
+  .safety p { color: rgba(255,255,255,0.78); }
+  .safety .check li { border-bottom-color: rgba(255,255,255,0.10); color: rgba(255,255,255,0.86); }
+  .safety .check li::before { color: var(--olive); }
+  .safety .check li b { color: #fff; }
+
+  /* FOOTER on each sheet */
+  .sheet-foot {
+    position: absolute; left: 20mm; right: 20mm; bottom: 12mm;
+    display: flex; justify-content: space-between;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 8pt; letter-spacing: 0.3em; text-transform: uppercase;
+    color: var(--dim);
+  }
+  @media print { .sheet-foot { bottom: 6mm; left: 0; right: 0; } }
+
+  .footer-strap {
+    border-top: 1px solid var(--rule);
+    padding-top: 12pt;
+    margin-top: 28pt;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 8pt; letter-spacing: 0.3em; text-transform: uppercase;
+    color: var(--dim);
+    display: flex; justify-content: space-between;
+  }
+
+  /* Block grid for "By the Numbers" */
+  .numbers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin: 8pt 0 16pt;
+    border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+  .num-cell { padding: 14pt 12pt; border-right: 1px solid var(--rule); }
+  .num-cell:last-child { border-right: none; }
+  .num-cell .n {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900; font-size: 32pt; color: var(--olive); line-height: 1;
+  }
+  .num-cell .l {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; font-size: 7.5pt; letter-spacing: 0.28em;
+    text-transform: uppercase; color: var(--muted); margin-top: 5pt;
+  }
+
+  /* Print hint */
+  .print-hint {
+    position: fixed; bottom: 16px; right: 16px;
+    background: var(--black); color: #fff; padding: 10px 14px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    z-index: 99;
+  }
+  @media print { .print-hint { display: none; } }
+</style>
+</head>
+<body>
+
+<!-- ============== COVER ============== -->
+<section class="sheet cover">
+  <div class="cover-top">
+    <div class="cover-mark"><span class="pulse"></span><span>LFG · DUBAI</span></div>
+    <div class="cover-meta">Build Brief · 01 JUN 2026</div>
+  </div>
+
+  <div class="cover-body">
+    <div class="cover-eyebrow">Status &amp; Roadmap</div>
+    <h1 class="cover-title">The new LFG <span class="accent">stack.</span></h1>
+    <p class="cover-sub">A premium member experience, a fully wired GHL pipeline, an admin operating system, and a self-driving lead engine. All on one private link, ready for your walk-through.</p>
+  </div>
+
+  <div class="cover-bottom">
+    <div class="cover-stat"><div class="num">14</div><div class="lbl">Live features shipped</div></div>
+    <div class="cover-stat"><div class="num">28</div><div class="lbl">API endpoints secured</div></div>
+    <div class="cover-stat"><div class="num">91/92</div><div class="lbl">QA tests passing</div></div>
+  </div>
+</section>
+
+<!-- ============== EXEC SUMMARY + PILLARS ============== -->
+<section class="sheet">
+  <div class="sect">
+    <div class="sect-num">01</div>
+    <div class="sect-text">
+      <div class="eyebrow">Executive summary</div>
+      <h2 class="display">What you're looking at.</h2>
+    </div>
+  </div>
+
+  <p class="lead">LFG Dubai now runs on a complete operating system. A premium member account that members open like an app. A booking engine that handles money, credits and attendance. A referral loop that rewards itself. A CRM bridge that pours every lead, every payment and every Sunday attendance straight into your existing GHL pipeline, with the safety guardrails to never touch the work you've already built.</p>
+
+  <div class="pull">
+    <div class="pull-text">"Every cold lead, every paid booking, every Sunday attendance, all visible <em>in your GHL pipeline, automatically.</em> You stop entering data. You start reading the story."</div>
+    <div class="pull-by">What changed</div>
+  </div>
+
+  <div class="pillars">
+    <div class="pillar">
+      <div class="pillar-h">Member experience</div>
+      <p class="pillar-p">Editorial account page, streaks &amp; milestones, one-tap profile from any screen, install-on-home-screen PWA, magic-link &amp; Google sign-in.</p>
+    </div>
+    <div class="pillar">
+      <div class="pillar-h">Booking engine</div>
+      <p class="pillar-p">Stripe checkout (test ready, live one switch away), credit packs, single-session bookings, cancel-by-cutoff with credit return, promo codes with race protection.</p>
+    </div>
+    <div class="pillar">
+      <div class="pillar-h">GHL pipeline bridge</div>
+      <p class="pillar-p">Run RSVP, bootcamp purchase and Sunday attendance push to your <strong>existing</strong> "LFG Community" pipeline. One card per contact, moving left-to-right. Never duplicates, never deletes, never touches anything we didn't create.</p>
+    </div>
+    <div class="pillar">
+      <div class="pillar-h">Operations</div>
+      <p class="pillar-p">Admin dashboard for credit adjustments, attendance marking, roster building, referral &amp; reward issuance, runner-to-bootcamp conversion funnel, weekly KPIs.</p>
+    </div>
+  </div>
+
+  <div class="footer-strap"><span>LFG · Status Brief</span><span>01 / 04</span></div>
+</section>
+
+<!-- ============== WHAT'S LIVE NOW ============== -->
+<section class="sheet">
+  <div class="sect">
+    <div class="sect-num">02</div>
+    <div class="sect-text">
+      <div class="eyebrow">What's live</div>
+      <h2 class="display">14 features. One link.</h2>
+    </div>
+  </div>
+
+  <p class="lead">Everything in this list works end-to-end on the private test link. QA suite confirms 91 of 92 tests passing (the one outlier is a time-based seed quirk, not a feature defect).</p>
+
+  <div class="hr-olive"></div>
+
+  <div class="features">
+    <div class="feature">
+      <h4>Premium account page</h4>
+      <p>Editorial layout, big member header, sessions remaining / attended / Sunday streak in a single band, milestone callouts at 5 / 10 / 25 / 50 / 100 / 200.</p>
+    </div>
+    <div class="feature">
+      <h4>Profile button everywhere</h4>
+      <p>Circular avatar icon top-right of every page on desktop and mobile. One tap → /account.</p>
+    </div>
+    <div class="feature">
+      <h4>Install on home screen</h4>
+      <p>Members add LFG to their phone like an app. Opens with no browser bar. Real PWA install flow for Chrome + iOS.</p>
+    </div>
+    <div class="feature">
+      <h4>Magic link &amp; Google sign-in</h4>
+      <p>Supabase auth, no passwords. Magic link emails arrive instantly through Resend. Google OAuth works on the preview URL.</p>
+    </div>
+    <div class="feature">
+      <h4>Stripe checkout</h4>
+      <p>Single-session and credit-pack purchases. Test mode now, one-switch live mode at cutover. Webhook idempotency confirmed.</p>
+    </div>
+    <div class="feature">
+      <h4>Cancel before 8 AM cutoff</h4>
+      <p>Members cancel from /account up to 8:00 AM Dubai on session day. Credit returns automatically. After cutoff, spot stays.</p>
+    </div>
+    <div class="feature">
+      <h4>Promo codes &amp; rate limit</h4>
+      <p>Percent + fixed-amount codes. Email-lock support. Race-condition protection at exactly the redemption limit. Rate-limited validation.</p>
+    </div>
+    <div class="feature">
+      <h4>Referral system</h4>
+      <p>Each member gets a personal code. Friend gets 15% off. Member gets a 15% off reward, email-locked, 60-day expiry, automatic email via Resend.</p>
+    </div>
+    <div class="feature">
+      <h4>Streak engine</h4>
+      <p>Walks attended Sundays to compute current streak, best streak, lifetime total, this-month rank. Skips today's unmarked session so streaks don't break before coach marks attendance.</p>
+    </div>
+    <div class="feature">
+      <h4>Admin dashboard</h4>
+      <p>Owner can adjust credits with reason + audit log, mark attendance, build Friday roster, issue runner promo codes, see weekly revenue + delta vs last week.</p>
+    </div>
+    <div class="feature">
+      <h4>Service worker / PWA</h4>
+      <p>Network-first for HTML &amp; shell so updates never flash old content. Cache-first for fonts &amp; images. Admin / Stripe / Supabase auth traffic strictly bypassed.</p>
+    </div>
+    <div class="feature">
+      <h4>GHL contact + opp push</h4>
+      <p>Run RSVP, bootcamp purchase, attendance. All auto-pushed to GHL with tags, custom fields, source attribution, and opportunity-value tracking.</p>
+    </div>
+    <div class="feature">
+      <h4>Performance &amp; SEO</h4>
+      <p>Homepage LCP 1.5s on throttled 4G. CLS 0.06. Lighthouse-friendly cache headers. Open Graph, schema, robots ready.</p>
+    </div>
+    <div class="feature">
+      <h4>Safety hardening</h4>
+      <p>Schema-level Supabase lockdown. Service-role bound to lfg_dev only. Stripe signature verification on every webhook. Error responses sanitized to never leak internals.</p>
+    </div>
+  </div>
+
+  <div class="footer-strap"><span>LFG · Status Brief</span><span>02 / 04</span></div>
+</section>
+
+<!-- ============== GHL DEEP DIVE ============== -->
+<section class="sheet">
+  <div class="sect">
+    <div class="sect-num">03</div>
+    <div class="sect-text">
+      <div class="eyebrow">CRM Bridge / How it works</div>
+      <h2 class="display">One contact. One card. <em style="color:var(--olive);font-style:normal;">Moves left to right.</em></h2>
+    </div>
+  </div>
+
+  <p class="lead">When a real lead touches LFG, a single contact card lands in your existing <strong>LFG Community</strong> pipeline and travels through the stages as they progress. No data entry, no duplicates, no clutter.</p>
+
+  <div class="flow">
+    <div class="flow-step">
+      <div class="flow-when">Step 1</div>
+      <div class="flow-what">Run RSVP</div>
+      <p class="pillar-p" style="margin-top:6pt;">Card lands in <strong>"Warm (Replied)"</strong>. Tags: <em>new contact, runclub</em>.</p>
+    </div>
+    <div class="flow-step">
+      <div class="flow-when">Step 2</div>
+      <div class="flow-what">Bootcamp purchase</div>
+      <p class="pillar-p" style="margin-top:6pt;">Same card moves to <strong>"Hot (Interested)"</strong>. Value shows AED paid. Adds tag <em>bootcamp</em>.</p>
+    </div>
+    <div class="flow-step">
+      <div class="flow-when">Step 3</div>
+      <div class="flow-what">Sunday attended</div>
+      <p class="pillar-p" style="margin-top:6pt;">Card moves to <strong>"Attended Bootcamp"</strong>. Value preserved.</p>
+    </div>
+    <div class="flow-step">
+      <div class="flow-when">Future</div>
+      <div class="flow-what">Coaching prospect</div>
+      <p class="pillar-p" style="margin-top:6pt;">Reserved stage. Move manually when ready to upsell coaching.</p>
+    </div>
+  </div>
+
+  <div class="hr"></div>
+
+  <h3 class="display" style="font-size: 16pt; margin-bottom: 8pt;">What gets populated, automatically</h3>
+  <div class="features">
+    <div class="feature">
+      <h4>Contact fields</h4>
+      <p>First name, last name, email, phone (E.164), country = AE, source = exact LFG touchpoint, your existing tags.</p>
+    </div>
+    <div class="feature">
+      <h4>Custom fields</h4>
+      <p>"What is your level?" → Beginner / Occasional / Advanced. "How did you hear about us?" → free-text from the registration form.</p>
+    </div>
+    <div class="feature">
+      <h4>Opportunity</h4>
+      <p>Named <strong>"LFG: &lt;email&gt;"</strong>. That prefix is our marker, so the integration can identify and update <strong>only</strong> opps it created. Yours stay untouched.</p>
+    </div>
+    <div class="feature">
+      <h4>Monetary value</h4>
+      <p>0 on free run RSVP, package AED on bootcamp purchase, preserved through subsequent stage moves.</p>
+    </div>
+  </div>
+
+  <div class="footer-strap"><span>LFG · Status Brief</span><span>03 / 04</span></div>
+</section>
+
+<!-- ============== PENDING / NOT DONE ============== -->
+<section class="sheet">
+  <div class="sect">
+    <div class="sect-num">04</div>
+    <div class="sect-text">
+      <div class="eyebrow">Honest accounting</div>
+      <h2 class="display">What's not done yet.</h2>
+    </div>
+  </div>
+
+  <p class="lead">Short list. None of it blocks your walk-through or the live launch. Each is a small, deliberate next step.</p>
+
+  <ul class="check warn">
+    <li><b>Resend email domain.</b> Booking confirmations and referral reward emails currently send from Resend's sandbox sender. Verifying <em>lfgdubai.com</em> in Resend (4 DNS records into GoDaddy, about 10 minutes) flips the sender to <em>info@lfgdubai.com</em>.</li>
+    <li><b>Stripe live keys.</b> Test mode is wired and working. Promote to live by swapping the keys at cutover and pointing the production webhook URL at the live domain.</li>
+    <li><b>Run attendance tracking.</b> Sunday bootcamp attendance is fully tracked. Wed / Sat runs currently only capture RSVPs, not show-ups. Adding run attendance is a focused half-day sprint when you want runs to count toward streaks.</li>
+    <li><b>Embedded GHL views.</b> The bridge pushes data <em>into</em> GHL. You read it in GHL where your pipeline already lives. If you later want the pipeline and inbox embedded inside the LFG admin, that's a focused sprint we can scope when you're ready.</li>
+    <li><b>Friday roster cron.</b> The roster email endpoint exists, secured, and ready. Wiring a scheduled cron (GitHub Actions or Vercel Cron) so Friday's roster sends itself takes about 15 minutes after the cron token is finalized.</li>
+    <li><b>Production deploy.</b> Everything above lives on the preview link. One Vercel deploy to push it to <em>lfgdubai.com</em>, then promote-to-production for zero additional deploy cost.</li>
+  </ul>
+
+  <div class="hr"></div>
+
+  <p class="muted" style="font-size:10pt;">Nothing on this list is a defect. Each item is a deliberate switch left for you to flip at the right moment.</p>
+
+  <div class="footer-strap"><span>LFG · Status Brief · 01 JUN 2026</span><span>04 / 04</span></div>
+</section>
+
+<!-- screen-only helper -->
+<div class="print-hint no-print">Press Ctrl + P → Save as PDF</div>
+
+</body>
+</html>

@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>The LFG Tee · LFG × PUMA · LFG Dubai</title>
+<meta name="description" content="The LFG Tee. PUMA-branded tee with the LFG crest, black on black. AED 150, pick it up at the next run.">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://lfgdubai.com/shop">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "The LFG Tee (LFG × PUMA)",
+  "description": "PUMA-branded tee with the LFG crest, black on black. Worn by the LFG Dubai running club. Pick it up at the next run.",
+  "image": [
+    "https://lfgdubai.com/app-assets/tee/front-pair.webp",
+    "https://lfgdubai.com/app-assets/tee/back-male.webp"
+  ],
+  "brand": { "@type": "Brand", "name": "PUMA" },
+  "category": "Apparel > T-Shirts",
+  "url": "https://lfgdubai.com/shop",
+  "offers": {
+    "@type": "Offer",
+    "price": "150",
+    "priceCurrency": "AED",
+    "availability": "https://schema.org/InStock",
+    "url": "https://lfgdubai.com/shop",
+    "seller": { "@type": "Organization", "name": "LFG Dubai" }
+  }
+}
+</script>
+<meta property="og:title" content="The LFG Tee · LFG × PUMA">
+<meta property="og:description" content="PUMA-branded tee with the LFG crest. Black on black. AED 150.">
+<meta property="og:image" content="/app-assets/tee/back-male.webp">
+<meta property="og:type" content="product">
+<link rel="icon" type="image/png" href="/lfg-logo.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#0A0A0A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700;800;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://js.stripe.com">
+<link rel="preconnect" href="https://api.stripe.com">
+<link rel="preconnect" href="https://m.stripe.network">
+<style>
+  :root{
+    --black:#0A0A0A; --panel:#121212; --panel2:#171717; --line:rgba(255,255,255,0.08);
+    --white:#fff; --muted:rgba(255,255,255,0.52); --muted2:rgba(255,255,255,0.34);
+    --green:#999966; --green-bright:#bcbc86; --green-dim:rgba(153,153,102,0.14);
+    --fh:'Barlow Condensed',sans-serif; --fb:'Barlow',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--black);color:var(--white);font-family:var(--fb);-webkit-font-smoothing:antialiased;overflow-x:hidden;line-height:1.5}
+  a{color:inherit;text-decoration:none}
+  img{display:block;max-width:100%}
+  ::selection{background:var(--green);color:var(--black)}
+
+  /* ---------- NAV ---------- */
+  .nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;
+       padding:16px 22px;background:rgba(10,10,10,0.55);backdrop-filter:blur(14px);border-bottom:1px solid transparent;transition:border-color .3s,background .3s}
+  .nav.scrolled{background:rgba(10,10,10,0.9);border-bottom-color:var(--line)}
+  .nav-logo{height:30px;width:auto;opacity:.95}
+  .nav-right{display:flex;align-items:center;gap:22px}
+  .nav-links{display:flex;align-items:center;gap:24px;list-style:none}
+  .nav-links a{font-family:var(--fh);font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);transition:color .2s}
+  .nav-links a:hover,.nav-links a.active{color:var(--white)}
+  .nav-cta{color:var(--green)!important}
+  .nav-acct{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border:1px solid var(--line);border-radius:50%;color:var(--white);transition:border-color .2s,color .2s}
+  .nav-acct:hover{border-color:var(--green);color:var(--green)}
+  @media(max-width:760px){.nav-links{display:none}}
+
+  /* ---------- PRODUCT ---------- */
+  .wrap{max-width:1240px;margin:0 auto;padding:0 22px}
+  .product{display:grid;grid-template-columns:1.05fr 0.95fr;gap:54px;padding-top:118px;padding-bottom:70px;align-items:start}
+  @media(max-width:920px){.product{grid-template-columns:1fr;gap:26px;padding-top:90px;padding-bottom:46px}.gallery{max-width:420px;margin:0 auto;width:100%}.gal-main{aspect-ratio:4/5}}
+
+  /* gallery */
+  .gallery{position:sticky;top:96px}
+  @media(max-width:920px){.gallery{position:static;top:auto}}
+  .gal-main{position:relative;background:var(--panel);border:1px solid var(--line);overflow:hidden;aspect-ratio:4/5}
+  .gal-main img{width:100%;height:100%;object-fit:contain;transition:opacity .35s ease, transform 6s ease}
+  .gal-main:hover img{transform:scale(1.04)}
+  .gal-tag{position:absolute;top:16px;left:16px;z-index:2;font-family:var(--fh);font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--green);background:rgba(10,10,10,0.7);backdrop-filter:blur(6px);border:1px solid var(--green-dim);padding:7px 12px}
+  .gal-thumbs{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:10px}
+  .gal-thumb{background:var(--panel);border:1px solid var(--line);overflow:hidden;cursor:pointer;aspect-ratio:4/5;opacity:.55;transition:opacity .2s,border-color .2s}
+  .gal-thumb img{width:100%;height:100%;object-fit:contain}
+  .gal-thumb:hover{opacity:.85}
+  .gal-thumb.active{opacity:1;border-color:var(--green)}
+
+  /* info */
+  .eyebrow{font-family:var(--fh);font-size:12px;font-weight:700;letter-spacing:.32em;text-transform:uppercase;color:var(--green);display:flex;align-items:center;gap:12px}
+  .eyebrow::before{content:'';width:34px;height:1px;background:var(--green);display:inline-block}
+  .ptitle{font-family:var(--fh);font-weight:900;font-size:clamp(46px,7vw,82px);line-height:.9;letter-spacing:-.01em;text-transform:uppercase;margin:18px 0 0}
+  .ptitle em{font-style:normal;color:var(--green)}
+  .price-row{display:flex;align-items:baseline;gap:14px;margin:22px 0 4px}
+  .price{font-family:var(--fh);font-weight:800;font-size:38px;letter-spacing:.01em}
+  .price small{font-size:18px;color:var(--muted);font-weight:600;letter-spacing:.06em}
+  .price-note{font-size:13px;color:var(--muted)}
+  .pdesc{color:rgba(255,255,255,0.72);font-size:15.5px;line-height:1.65;margin:22px 0 0;max-width:46ch}
+  .pdesc strong{color:var(--white);font-weight:600}
+
+  .divider{height:1px;background:var(--line);margin:30px 0}
+
+  .size-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .size-label{font-family:var(--fh);font-size:13px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--white)}
+  .size-guide{font-size:12px;color:var(--muted);letter-spacing:.04em}
+  .sizes{display:flex;flex-wrap:wrap;gap:10px}
+  .size{min-width:62px;padding:13px 16px;background:transparent;border:1px solid var(--line);color:var(--white);font-family:var(--fh);font-size:16px;font-weight:600;letter-spacing:.08em;cursor:pointer;transition:all .18s;position:relative}
+  .size:hover:not(:disabled){border-color:rgba(255,255,255,0.4)}
+  .size.sel{background:var(--green);border-color:var(--green);color:var(--black)}
+  .size:disabled{color:var(--muted2);cursor:not-allowed;border-style:dashed;opacity:.6}
+  .size:disabled::after{content:'';position:absolute;left:8px;right:8px;top:50%;height:1px;background:var(--muted2);transform:rotate(-9deg)}
+
+  .buy{width:100%;margin-top:24px;padding:19px;background:var(--green);border:none;color:var(--black);font-family:var(--fh);font-size:17px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:box-shadow .25s,transform .1s,background .2s;display:flex;align-items:center;justify-content:center;gap:10px}
+  .buy:hover:not(:disabled){box-shadow:0 0 34px var(--green-dim);background:var(--green-bright)}
+  .buy:active{transform:translateY(1px)}
+  .buy:disabled{opacity:.45;cursor:not-allowed}
+  .buy svg{width:16px;height:16px}
+
+  .reassure{display:flex;flex-direction:column;gap:11px;margin-top:22px}
+  .reassure div{display:flex;align-items:center;gap:11px;font-size:13.5px;color:var(--muted)}
+  .reassure svg{width:16px;height:16px;color:var(--green);flex-shrink:0}
+  .reassure b{color:rgba(255,255,255,0.8);font-weight:600}
+
+  /* ---------- MARQUEE ---------- */
+  .marquee{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:18px 0;overflow:hidden;white-space:nowrap;background:var(--panel)}
+  .marquee-track{display:inline-flex;gap:34px;animation:scroll 26s linear infinite;will-change:transform}
+  .marquee span{font-family:var(--fh);font-weight:900;font-size:26px;letter-spacing:.14em;text-transform:uppercase;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,0.22)}
+  .marquee span.fill{color:var(--green);-webkit-text-stroke:0}
+  @keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  @media(prefers-reduced-motion:reduce){.marquee-track{animation:none}.gal-main img{transition:opacity .35s ease}.reveal{opacity:1;transform:none;transition:none}.gal-main:hover img{transform:none}}
+
+  /* ---------- DETAILS ---------- */
+  .details{padding-top:70px;padding-bottom:30px}
+  .det-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+  @media(max-width:760px){.det-grid{grid-template-columns:1fr;gap:16px}}
+  .det{border:1px solid var(--line);padding:30px 26px;background:linear-gradient(180deg,var(--panel),rgba(18,18,18,0.4))}
+  .det-n{font-family:var(--fh);font-size:12px;font-weight:700;letter-spacing:.2em;color:var(--green);margin-bottom:14px}
+  .det h3{font-family:var(--fh);font-weight:700;font-size:21px;letter-spacing:.02em;text-transform:uppercase;margin-bottom:8px}
+  .det p{font-size:14px;color:var(--muted);line-height:1.6}
+
+  /* reveal */
+  .reveal{opacity:0;transform:translateY(22px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
+  .reveal.in{opacity:1;transform:none}
+
+  /* ---------- FOOTER ---------- */
+  footer{border-top:1px solid var(--line);margin-top:40px;padding-top:46px;padding-bottom:60px}
+  .foot{display:flex;flex-wrap:wrap;gap:40px;justify-content:space-between}
+  .foot-logo{height:34px;margin-bottom:10px}
+  .foot p{color:var(--muted);font-size:13px}
+  .foot h5{font-family:var(--fh);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--green);margin-bottom:12px}
+  .foot a{display:block;color:var(--muted);font-size:14px;margin-bottom:8px;transition:color .2s}
+  .foot a:hover{color:var(--white)}
+
+  /* ---------- CHECKOUT MODAL ---------- */
+  .overlay{position:fixed;inset:0;z-index:100;background:rgba(5,5,5,0.82);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px}
+  .overlay.show{display:flex}
+  .modal{width:100%;max-width:460px;max-height:92vh;overflow-y:auto;overflow-x:hidden;background:var(--panel);border:1px solid var(--line);position:relative;padding:30px 28px}
+  .modal::before{content:'';position:absolute;top:0;left:0;width:30px;height:30px;border-top:2px solid var(--green);border-left:2px solid var(--green);pointer-events:none}
+  .modal::after{content:'';position:absolute;bottom:0;right:0;width:30px;height:30px;border-bottom:2px solid var(--green);border-right:2px solid var(--green);pointer-events:none}
+  .m-close{position:absolute;top:14px;right:16px;background:none;border:none;color:var(--muted);font-size:26px;line-height:1;cursor:pointer;transition:color .2s}
+  .m-close:hover{color:var(--white)}
+  .m-eyebrow{font-family:var(--fh);font-size:11px;font-weight:700;letter-spacing:.26em;text-transform:uppercase;color:var(--green);margin-bottom:8px}
+  .m-title{font-family:var(--fh);font-weight:800;font-size:26px;letter-spacing:.01em;text-transform:uppercase;line-height:1.05}
+  .m-sub{color:var(--muted);font-size:14px;margin:8px 0 22px;line-height:1.5}
+  .m-back{background:none;border:none;color:var(--muted);font-family:var(--fh);font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;margin-bottom:14px;padding:0}
+  .m-back:hover{color:var(--white)}
+  .signin-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:11px;padding:15px;border:1px solid var(--line);background:transparent;color:var(--white);font-family:var(--fh);font-size:15px;font-weight:600;letter-spacing:.06em;cursor:pointer;transition:border-color .2s,background .2s;margin-bottom:12px}
+  .signin-btn:hover{border-color:rgba(255,255,255,0.4);background:rgba(255,255,255,0.03)}
+  .signin-btn svg{width:18px;height:18px}
+  .or{display:flex;align-items:center;gap:12px;color:var(--muted2);font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-family:var(--fh);margin:6px 0 16px}
+  .or::before,.or::after{content:'';flex:1;height:1px;background:var(--line)}
+  .field{width:100%;padding:14px 15px;background:var(--panel2);border:1px solid var(--line);color:var(--white);font-family:var(--fb);font-size:15px;margin-bottom:12px}
+  .field:focus{outline:none;border-color:var(--green)}
+  .modal-go{width:100%;padding:15px;background:var(--green);border:none;color:var(--black);font-family:var(--fh);font-size:15px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .2s}
+  .modal-go:hover:not(:disabled){background:var(--green-bright)}
+  .modal-go:disabled{opacity:.5;cursor:default}
+  .m-err{color:#e0655e;font-size:13px;margin-top:10px;display:none}
+  .checkout-mount{min-height:300px}
+  .co-spin{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:50px 0;color:var(--muted);font-size:14px}
+  .spinner{width:26px;height:26px;border:2px solid var(--line);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .m-success{text-align:center;padding:14px 0}
+  .m-success .tick{width:62px;height:62px;border-radius:50%;background:var(--green-dim);border:1px solid var(--green);display:flex;align-items:center;justify-content:center;margin:0 auto 18px}
+  .m-success .tick svg{width:30px;height:30px;color:var(--green)}
+  .m-success-line{background:var(--panel2);border:1px solid var(--line);padding:14px;margin:18px 0;font-family:var(--fh);font-size:18px;letter-spacing:.02em}
+
+  /* toast */
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);z-index:200;background:var(--panel2);border:1px solid var(--line);color:var(--white);padding:13px 20px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.err{border-color:rgba(224,101,94,0.5)}
+</style>
+</head>
+<body>
+
+<nav class="nav" id="nav">
+  <a href="/" aria-label="LFG home"><img src="/LFG MAIN LOGO-Photoroom.png" alt="LFG Dubai" class="nav-logo"></a>
+  <div class="nav-right">
+    <ul class="nav-links">
+      <li><a href="/">Home</a></li>
+      <li><a href="/bootcamp">Bootcamp</a></li>
+      <li><a href="/shop" class="active">Shop</a></li>
+      <li><a href="/leaderboard">Leaderboard</a></li>
+    </ul>
+    <a class="nav-acct" href="/account" aria-label="My account" title="My account">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6"/></svg>
+    </a>
+  </div>
+</nav>
+
+<main>
+  <section class="wrap product">
+    <!-- GALLERY -->
+    <div class="gallery">
+      <div class="gal-main">
+        <span class="gal-tag">LFG × PUMA</span>
+        <img id="galMain" src="/app-assets/tee/front-pair.webp" alt="LFG x PUMA Tee - unisex fit, worn by him and her" fetchpriority="high" width="1100" height="1375">
+      </div>
+      <div class="gal-thumbs" id="galThumbs">
+        <button class="gal-thumb active" data-full="/app-assets/tee/front-pair.webp" aria-label="Unisex - him and her"><img src="/app-assets/tee/front-pair-thumb.webp" alt="" loading="lazy" width="360" height="450"></button>
+        <button class="gal-thumb" data-full="/app-assets/tee/front-male.webp" aria-label="Front, on him"><img src="/app-assets/tee/front-male-thumb.webp" alt="" loading="lazy" width="360" height="450"></button>
+        <button class="gal-thumb" data-full="/app-assets/tee/front-female.webp" aria-label="Front, on her"><img src="/app-assets/tee/front-female-thumb.webp" alt="" loading="lazy" width="360" height="450"></button>
+        <button class="gal-thumb" data-full="/app-assets/tee/back-male.webp" aria-label="Back crest, on him"><img src="/app-assets/tee/back-male-thumb.webp" alt="" loading="lazy" width="360" height="450"></button>
+        <button class="gal-thumb" data-full="/app-assets/tee/back-female.webp" aria-label="On her"><img src="/app-assets/tee/back-female-thumb.webp" alt="" loading="lazy" width="360" height="450"></button>
+      </div>
+    </div>
+
+    <!-- INFO -->
+    <div class="info">
+      <div class="eyebrow">Drop 01 · Lift Focus Grind</div>
+      <h1 class="ptitle">The <em>LFG</em> Tee</h1>
+
+      <div class="price-row">
+        <div class="price">AED <span id="priceVal">150</span></div>
+        <div class="price-note">all in · no shipping fee</div>
+      </div>
+
+      <p class="pdesc">A PUMA-branded tee with the LFG crest. Black on black, unisex fit.</p>
+
+      <div class="divider"></div>
+
+      <div class="size-head">
+        <span class="size-label">Select size</span>
+        <span class="size-guide">Unisex · runs true to size</span>
+      </div>
+      <div class="sizes" id="sizes"><span class="size-guide">Loading sizes…</span></div>
+
+      <button class="buy" id="buyBtn" disabled>
+        <span id="buyLabel">Select a size</span>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </button>
+
+      <div class="reassure">
+        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span><b>Pick it up at the next run.</b> No address, no shipping. We bring it to you.</span></div>
+        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span>Secure card payment via <b>Stripe</b>. Sign in, tap, done.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MARQUEE -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee-track" id="marquee"></div>
+  </div>
+
+  <!-- DETAILS -->
+  <section class="wrap details">
+    <div class="det-grid">
+      <div class="det reveal"><div class="det-n">01</div><h3>The Crest</h3><p>Tonal LFG crest on the chest, full crest across the back.</p></div>
+      <div class="det reveal"><div class="det-n">02</div><h3>PUMA</h3><p>Official PUMA tee. Black on black, unisex fit.</p></div>
+      <div class="det reveal"><div class="det-n">03</div><h3>Pickup</h3><p>Grab it at the next Wednesday or Saturday run. No shipping.</p></div>
+    </div>
+  </section>
+</main>
+
+<footer class="wrap">
+  <div class="foot">
+    <div>
+      <img src="/LFG MAIN LOGO-Photoroom.png" alt="LFG Dubai" class="foot-logo">
+      <p>Dubai's running club.</p>
+    </div>
+    <div>
+      <h5>Shop</h5>
+      <a href="/shop">The LFG Tee</a>
+      <a href="/account">My account</a>
+      <a href="/login">Sign in</a>
+    </div>
+    <div>
+      <h5>Reach us</h5>
+      <a href="https://wa.me/971504264410" target="_blank" rel="noopener">WhatsApp</a>
+      <a href="https://instagram.com/lfgdubai" target="_blank" rel="noopener">Instagram</a>
+      <a href="mailto:info@lfgdubai.com">info@lfgdubai.com</a>
+    </div>
+  </div>
+</footer>
+
+<!-- CHECKOUT / SIGN-IN MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal" id="modal"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.1"></script>
+<script src="/app-assets/lfg-supabase.js?v=3"></script>
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+(function () {
+  var SIZES = ['S','M','L','XL','XXL'];
+  var price = 150, soldout = [], picked = null, embeddedCheckout = null;
+
+  function el(id){ return document.getElementById(id); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];}); }
+
+  var toastT;
+  function toast(msg, isErr){
+    var t = el('toast'); t.textContent = msg; t.className = 'toast show' + (isErr?' err':'');
+    clearTimeout(toastT); toastT = setTimeout(function(){ t.className = 'toast'; }, 3200);
+  }
+
+  /* ---- nav scroll state ---- */
+  var nav = el('nav');
+  function onScroll(){ nav.classList.toggle('scrolled', window.scrollY > 12); }
+  window.addEventListener('scroll', onScroll, { passive:true }); onScroll();
+
+  /* ---- marquee ---- */
+  (function(){
+    var words = ['LIFT','FOCUS','GRIND','LFG','LIFT','FOCUS','GRIND','LFG'];
+    var html = '';
+    for (var rep=0; rep<2; rep++){
+      words.forEach(function(w,i){ html += '<span class="' + (i%4===3?'fill':'') + '">' + w + '</span><span>•</span>'; });
+    }
+    el('marquee').innerHTML = html;
+  })();
+
+  /* ---- reveal on scroll ---- */
+  if ('IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} }); }, { threshold:0.15 });
+    document.querySelectorAll('.reveal').forEach(function(n){ io.observe(n); });
+  } else {
+    document.querySelectorAll('.reveal').forEach(function(n){ n.classList.add('in'); });
+  }
+
+  /* ---- gallery swap ---- */
+  el('galThumbs').addEventListener('click', function(e){
+    var btn = e.target.closest('.gal-thumb'); if(!btn) return;
+    document.querySelectorAll('.gal-thumb').forEach(function(t){ t.classList.remove('active'); });
+    btn.classList.add('active');
+    var main = el('galMain'); main.style.opacity = '0';
+    setTimeout(function(){ main.src = btn.getAttribute('data-full'); main.style.opacity = '1'; }, 180);
+  });
+
+  /* ---- size selection ---- */
+  function renderSizes(){
+    el('priceVal').textContent = price;
+    el('sizes').innerHTML = SIZES.map(function(s){
+      var dead = soldout.indexOf(s) !== -1;
+      return '<button class="size" data-size="' + s + '"' + (dead?' disabled':'') + '>' + s + '</button>';
+    }).join('');
+    el('sizes').querySelectorAll('.size').forEach(function(b){
+      b.addEventListener('click', function(){
+        if (b.disabled) return;
+        document.querySelectorAll('.size').forEach(function(x){ x.classList.remove('sel'); });
+        b.classList.add('sel'); picked = b.getAttribute('data-size');
+        var btn = el('buyBtn'); btn.disabled = false; el('buyLabel').textContent = 'Buy · Size ' + picked + ' · AED ' + price;
+      });
+    });
+  }
+
+  async function loadProduct(){
+    try{
+      var r = await window.lfg.api('/api/merch');
+      if (r.ok && r.data){ price = r.data.price_aed || 150; soldout = r.data.soldout || []; if (r.data.sizes) SIZES = r.data.sizes; }
+    }catch(e){}
+    renderSizes();
+  }
+
+  /* ---- modal helpers ---- */
+  function openModal(html){ el('modal').innerHTML = html; el('overlay').classList.add('show'); document.body.style.overflow='hidden'; }
+  function closeModal(){ destroyEmbedded(); el('overlay').classList.remove('show'); document.body.style.overflow=''; }
+  function destroyEmbedded(){ try{ if(embeddedCheckout) embeddedCheckout.destroy(); }catch(e){} embeddedCheckout=null; }
+  el('overlay').addEventListener('click', function(e){ if(e.target === el('overlay')) closeModal(); });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape' && el('overlay').classList.contains('show')) closeModal(); });
+
+  /* ---- sign-in step (shown if buying while logged out) ---- */
+  function showSignIn(){
+    var embedded = window.lfg.isEmbeddedBrowser && window.lfg.isEmbeddedBrowser();
+    var googleBlock = embedded
+      ? '<p class="m-sub" style="margin-bottom:14px;">You’re in an in-app browser, so Google sign-in is unavailable. Use your email — it works the same.</p>'
+      : '<button class="signin-btn" id="googleBtn"><svg viewBox="0 0 24 24"><path fill="#EA4335" d="M12 10.2v3.9h5.5c-.24 1.4-1.7 4.1-5.5 4.1-3.3 0-6-2.7-6-6.1s2.7-6.1 6-6.1c1.9 0 3.1.8 3.9 1.5l2.6-2.5C17.1 3.4 14.8 2.4 12 2.4 6.9 2.4 2.8 6.5 2.8 12s4.1 9.6 9.2 9.6c5.3 0 8.8-3.7 8.8-9 0-.6-.06-1-.15-1.4H12Z"/></svg>Continue with Google</button>' +
+        '<div class="or">or</div>';
+    openModal(
+      '<button class="m-close" id="mClose">&times;</button>' +
+      '<div class="m-eyebrow">Members only</div>' +
+      '<div class="m-title">Sign in to grab it</div>' +
+      '<p class="m-sub">Your tee links to your LFG account so we know who it’s for at the run.</p>' +
+      googleBlock +
+      '<input class="field" id="emailField" type="email" inputmode="email" placeholder="you@email.com" autocomplete="email">' +
+      '<button class="modal-go" id="linkBtn">Email me a sign-in link</button>' +
+      '<div class="m-err" id="signErr"></div>'
+    );
+    el('mClose').addEventListener('click', closeModal);
+    var gBtn = el('googleBtn');
+    if (gBtn) gBtn.addEventListener('click', function(){
+      gBtn.disabled = true; gBtn.textContent = 'Redirecting…';
+      window.lfg.signInGoogle('/shop');
+    });
+    el('linkBtn').addEventListener('click', async function(){
+      var email = el('emailField').value.trim();
+      var err = el('signErr'); err.style.display='none';
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ err.textContent='Enter a valid email.'; err.style.display='block'; return; }
+      var btn = el('linkBtn'); btn.disabled = true; btn.textContent = 'Sending…';
+      var r = await window.lfg.signInMagicLink(email, '/shop');
+      if (r && r.error){ err.textContent = r.error.message || 'Could not send the link.'; err.style.display='block'; btn.disabled=false; btn.textContent='Email me a sign-in link'; return; }
+      openModal(
+        '<button class="m-close" id="mClose2">&times;</button>' +
+        '<div class="m-eyebrow">Check your inbox</div>' +
+        '<div class="m-title">Link sent</div>' +
+        '<p class="m-sub">We emailed a sign-in link to <b style="color:#fff">' + esc(email) + '</b>. Tap it, you’ll land back here signed in, then pick your size and buy.</p>'
+      );
+      el('mClose2').addEventListener('click', closeModal);
+    });
+  }
+
+  /* ---- embedded Stripe checkout ---- */
+  async function startCheckout(){
+    openModal(
+      '<button class="m-back" id="mBack">← Back</button>' +
+      '<div class="m-eyebrow">Secure checkout</div>' +
+      '<div class="m-title" style="margin-bottom:16px">LFG Tee · ' + esc(picked) + '</div>' +
+      '<div class="checkout-mount" id="coMount"><div class="co-spin"><span class="spinner"></span>Loading secure checkout…</div></div>'
+    );
+    var backed = false;
+    el('mBack').addEventListener('click', function(){ backed = true; closeModal(); });
+
+    var res = await window.lfg.api('/api/checkout', { method:'POST', body: JSON.stringify({ kind:'merch', size: picked }) });
+    if (backed) return;
+    if (!res.ok || !res.data || !res.data.client_secret || !res.data.publishable_key){
+      toast((res.data && res.data.error) || 'Checkout failed. Try again.', true); closeModal(); return;
+    }
+    var sessionId = res.data.id;
+    try{
+      var stripe = window.Stripe(res.data.publishable_key);
+      embeddedCheckout = await stripe.initEmbeddedCheckout({
+        clientSecret: res.data.client_secret,
+        onComplete: async function(){
+          var paid = false;
+          try{ var st = await window.lfg.api('/api/checkout?session_id=' + encodeURIComponent(sessionId)); paid = st.ok && st.data && st.data.payment_status === 'paid'; }catch(e){}
+          destroyEmbedded();
+          showSuccess(paid);
+        }
+      });
+      if (backed){ destroyEmbedded(); return; }
+      var mount = el('coMount'); if (!mount){ destroyEmbedded(); return; }
+      mount.innerHTML = '';
+      embeddedCheckout.mount('#coMount');
+    }catch(e){
+      toast('Could not load checkout. Try again.', true); closeModal();
+    }
+  }
+
+  function showSuccess(paid){
+    openModal(
+      '<button class="m-close" id="mCloseS">&times;</button>' +
+      '<div class="m-success">' +
+        '<div class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>' +
+        '<div class="m-eyebrow" style="text-align:center">' + (paid ? 'Order confirmed' : 'Payment processing') + '</div>' +
+        '<div class="m-title" style="margin-top:6px">' + (paid ? 'You got the tee.' : 'Almost there') + '</div>' +
+        '<div class="m-success-line">LFG Tee · Size ' + esc(picked) + '</div>' +
+        '<p class="m-sub" style="margin-bottom:8px">' + (paid
+            ? 'We’ll have it ready with your name on it at the next run. Check your email for the confirmation.'
+            : 'Your payment is confirming. If it went through, you’ll get a confirmation email shortly.') + '</p>' +
+        '<button class="modal-go" id="doneBtn" style="margin-top:8px">Done</button>' +
+      '</div>'
+    );
+    el('mCloseS').addEventListener('click', closeModal);
+    el('doneBtn').addEventListener('click', closeModal);
+  }
+
+  /* ---- buy click: gate on auth, then size ---- */
+  el('buyBtn').addEventListener('click', async function(){
+    if (!picked){ toast('Pick a size first.'); return; }
+    if (soldout.indexOf(picked) !== -1){ toast('That size is sold out.', true); return; }
+    var btn = el('buyBtn'); var label = el('buyLabel').textContent;
+    btn.disabled = true; el('buyLabel').textContent = 'Checking…';
+    var session = null;
+    try{ session = await window.lfg.ensureSession(); }catch(e){}
+    btn.disabled = false; el('buyLabel').textContent = label;
+    if (!session){ showSignIn(); return; }
+    startCheckout();
+  });
+
+  loadProduct();
+})();
+</script>
+</body>
+</html>

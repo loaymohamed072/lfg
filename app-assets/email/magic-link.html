@@ -1,0 +1,31 @@
+<!-- LFG Dubai - Supabase Auth "Magic Link" email template.
+     Paste into: Supabase Dashboard → Authentication → Emails → Magic Link.
+     Subject: Your LFG Dubai login link
+     Logo is loaded from the live site; swap the src if you host it elsewhere. -->
+<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background:#0A0A0A;font-family:Arial,Helvetica,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0A0A0A;padding:40px 0;">
+    <tr><td align="center">
+      <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width:480px;background:#111111;border:1px solid rgba(153,153,102,0.3);">
+        <tr><td style="padding:40px 40px 0;text-align:center;">
+          <img src="https://www.lfgdubai.com/lfg-logo.png" alt="LFG Dubai" width="60" style="display:block;margin:0 auto;border:0;">
+        </td></tr>
+        <tr><td style="padding:24px 40px 0;text-align:center;">
+          <div style="color:#999966;font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:bold;">LFG Dubai</div>
+          <h1 style="color:#ffffff;font-size:26px;margin:12px 0 0;text-transform:uppercase;letter-spacing:1px;">Your login link</h1>
+        </td></tr>
+        <tr><td style="padding:18px 40px 0;text-align:center;color:rgba(255,255,255,0.6);font-size:15px;line-height:1.55;">
+          Tap below to sign in and book your bootcamp. This link works once and expires shortly.
+        </td></tr>
+        <tr><td style="padding:28px 40px;text-align:center;">
+          <a href="{{ .ConfirmationURL }}" style="display:inline-block;background:#999966;color:#0A0A0A;text-decoration:none;font-weight:bold;text-transform:uppercase;letter-spacing:1px;padding:15px 42px;font-size:15px;">Sign in to LFG</a>
+        </td></tr>
+        <tr><td style="padding:0 40px 36px;text-align:center;color:rgba(255,255,255,0.35);font-size:12px;line-height:1.5;">
+          If you didn't request this, you can safely ignore this email.<br>&copy; LFG Dubai
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>

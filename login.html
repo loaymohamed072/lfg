@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Member Login - LFG Dubai</title>
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" href="/lfg-logo.png">
+<link rel="stylesheet" href="/app-assets/lfg-app.css">
+</head>
+<body>
+<div class="lfg-shell">
+  <div class="lfg-card">
+    <img src="/LFG MAIN LOGO-Photoroom.png" alt="LFG" class="lfg-logo">
+    <div class="lfg-eyebrow">LFG Dubai</div>
+    <h1 class="lfg-title">Member <em>Login</em></h1>
+    <p class="lfg-sub">Sign in to book your bootcamp and manage your sessions.</p>
+
+    <!-- Shown only once we know the typed email is a coaching client. Their program,
+         check-ins and plan live on the coaching site, not here. -->
+    <div id="coachingCard" class="lfg-cross" style="display:none;">
+      <div class="lfg-cross-title">Your coaching account is on the coaching site</div>
+      <p class="lfg-cross-text">
+        Your program, check-ins, food plan and history are at coaching.lfgdubai.com.
+        Sign in there with this same email.
+      </p>
+      <a id="coachingBtn" class="lfg-btn lfg-btn-primary" href="https://coaching.lfgdubai.com/login">
+        Go to LFG Coaching
+      </a>
+      <button type="button" id="stayHereBtn" class="lfg-cross-stay">
+        I'm here to book a run or bootcamp
+      </button>
+    </div>
+
+    <button id="googleBtn" class="lfg-btn lfg-btn-google">
+      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.97 10.72a5.4 5.4 0 0 1 0-3.44V4.95H.96a9 9 0 0 0 0 8.1l3.01-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.9 11.43 0 9 0A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"/></svg>
+      Continue with Google
+    </button>
+
+    <div class="lfg-divider">or</div>
+
+    <form id="magicForm">
+      <div class="lfg-field">
+        <label class="lfg-label" for="email">Email</label>
+        <input class="lfg-input" type="email" id="email" name="email" placeholder="you@email.com" required autocomplete="email">
+      </div>
+      <button type="submit" id="magicBtn" class="lfg-btn lfg-btn-ghost">Email me a sign-in code</button>
+    </form>
+
+    <form id="codeForm" style="display:none;margin-top:8px;">
+      <div class="lfg-field">
+        <label class="lfg-label" for="code">Enter the code from your email</label>
+        <input class="lfg-input" type="text" id="code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="00000000" pattern="[0-9]*" style="letter-spacing:0.3em;text-align:center;font-size:22px;">
+      </div>
+      <button type="submit" id="codeBtn" class="lfg-btn lfg-btn-google">Sign me in</button>
+    </form>
+
+    <div id="msg" class="lfg-msg"></div>
+
+    <div class="lfg-foot">
+      <a href="/" id="backLink" class="lfg-back">&larr; Back to site</a>
+      <div style="margin-top:12px;">Trouble signing in? <a href="https://wa.me/971504264410" target="_blank" rel="noopener">Message us on WhatsApp</a></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.1"></script>
+<script src="/app-assets/lfg-supabase.js?v=3"></script>
+<script>
+  (function () {
+    var msg = document.getElementById('msg');
+    function show(type, text) { msg.className = 'lfg-msg show ' + type; msg.textContent = text; }
+
+    // Inside Instagram/Facebook/TikTok webviews Google blocks OAuth outright
+    // (403 disallowed_useragent), so hide the Google button there and point
+    // people at the email link, which works everywhere.
+    if (lfg.isEmbeddedBrowser && lfg.isEmbeddedBrowser()) {
+      var gb = document.getElementById('googleBtn');
+      var dv = document.querySelector('.lfg-divider');
+      if (gb) gb.style.display = 'none';
+      if (dv) dv.style.display = 'none';
+      var note = document.createElement('p');
+      note.style.cssText = 'font-size:13px;color:rgba(255,255,255,0.55);line-height:1.5;margin:0 0 16px;';
+      note.textContent = 'You’re in an in-app browser, so Google sign-in is unavailable. Use your email below — it works the same.';
+      var form = document.getElementById('magicForm');
+      if (form) form.parentNode.insertBefore(note, form);
+    }
+
+    // If login was started from the booking flow OR the QR check-in flow, return
+    // to whatever page initiated it. Otherwise default to /account.
+    var fromBook = !!sessionStorage.getItem('lfg_book_after_login');
+    // Prefer an explicit ?next= (survives the round-trip), fall back to sessionStorage.
+    var qsNext = new URLSearchParams(location.search).get('next') || '';
+    var rawPath = qsNext || sessionStorage.getItem('lfg_book_return_path') || '';
+
+    // Whitelist of internal pages we'll return to (paths only, query allowed).
+    function safeReturn(p) {
+      if (!p || typeof p !== 'string') return null;
+      if (!p.startsWith('/') || p.startsWith('//')) return null;
+      var base = p.split('?')[0].split('#')[0];
+      var allowed = ['/', '/bootcamp.html', '/checkin', '/checkin.html',
+        '/run-checkin', '/run-checkin.html', '/leaderboard', '/leaderboard.html', '/account', '/shop',
+        '/padel', '/padel.html'];
+      return allowed.indexOf(base) >= 0 ? p : null;
+    }
+    var safe = safeReturn(rawPath);
+    function destFor() {
+      if (fromBook) return (safe === '/' || safe === '/bootcamp.html' ? safe : '/') + '#bootcamps';
+      return safe || '/account';
+    }
+    var dest = destFor();
+
+    // Google OAuth uses the implicit flow, which returns the session in the URL
+    // FRAGMENT (#access_token=...). If redirectTo already carries a #hash (e.g.
+    // "/#bootcamps"), the two fragments collide -> the token is unparseable -> no
+    // session -> the user lands logged-out and the booking button loops back to
+    // sign-in. Strip the fragment for OAuth; the booking page still resumes from
+    // sessionStorage on load, so the #bootcamps scroll isn't needed to continue.
+    var oauthDest = dest.split('#')[0] || '/';
+
+    // Back-to-site link mirrors the same logic.
+    var bl = document.getElementById('backLink');
+    if (bl) bl.href = fromBook ? dest : (safe || '/');
+
+    // Already logged in (or just landed from an auth redirect)? Go straight on.
+    // getSettledSession waits out the token-processing race instead of reading once.
+    lfg.getSettledSession().then(function (s) { if (s) window.location.replace(dest); });
+
+    document.getElementById('googleBtn').addEventListener('click', async function () {
+      this.disabled = true;
+      var res = await lfg.signInGoogle(oauthDest);
+      if (res.error) { show('err', res.error.message); this.disabled = false; }
+    });
+
+    var codeForm = document.getElementById('codeForm');
+    var loginEmail = '';
+
+    // The run club and the coaching app share one login email, two different sites.
+    // Before emailing a run-club code, check whether this address belongs to a coaching
+    // client and send them across instead. Never blocks: any failure falls through to
+    // the normal code flow.
+    var coachingCard = document.getElementById('coachingCard');
+    var crossShownFor = '';
+    async function isCoachingClient(email) {
+      try {
+        var r = await fetch('/api/where-to-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email })
+        });
+        if (!r.ok) return false;
+        var d = await r.json();
+        return !!(d && d.coaching);
+      } catch (err) { return false; }
+    }
+    function showCrossSite(email) {
+      document.getElementById('coachingBtn').href =
+        'https://coaching.lfgdubai.com/login?email=' + encodeURIComponent(email);
+      coachingCard.style.display = 'block';
+      document.getElementById('googleBtn').style.display = 'none';
+      var dv = document.querySelector('.lfg-divider');
+      if (dv) dv.style.display = 'none';
+      document.getElementById('magicForm').style.display = 'none';
+      msg.className = 'lfg-msg';
+    }
+    document.getElementById('stayHereBtn').addEventListener('click', function () {
+      // They really do want the run club. Put the form back and let the next
+      // submit send the code without asking again.
+      coachingCard.style.display = 'none';
+      document.getElementById('magicForm').style.display = 'block';
+      document.getElementById('googleBtn').style.display = '';
+      var dv = document.querySelector('.lfg-divider');
+      if (dv) dv.style.display = '';
+      document.getElementById('magicBtn').click();
+    });
+
+    document.getElementById('magicForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var btn = document.getElementById('magicBtn');
+      var email = document.getElementById('email').value.trim();
+      if (!email) return;
+      btn.disabled = true; btn.textContent = 'Checking…';
+      if (crossShownFor !== email.toLowerCase() && await isCoachingClient(email)) {
+        crossShownFor = email.toLowerCase();
+        btn.disabled = false; btn.textContent = 'Email me a sign-in code';
+        showCrossSite(email);
+        return;
+      }
+      btn.textContent = 'Sending…';
+      var res = await lfg.signInMagicLink(email, dest);
+      if (res.error) {
+        show('err', res.error.message);
+        btn.disabled = false; btn.textContent = 'Email me a sign-in code';
+      } else {
+        loginEmail = email;
+        // Reveal the code field. Typing the code back in here keeps the whole
+        // sign-in inside the app (critical for the iPhone home-screen app, where a
+        // tapped email link opens Safari, not the app, and loses the session).
+        show('ok', 'We emailed a code to ' + email + '. Enter it below, or tap the link in the email on a computer.');
+        codeForm.style.display = 'block';
+        btn.textContent = 'Resend code';
+        btn.disabled = false;
+        var ci = document.getElementById('code');
+        if (ci) { ci.value = ''; try { ci.focus(); } catch (err) {} }
+      }
+    });
+
+    codeForm.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var btn = document.getElementById('codeBtn');
+      var code = (document.getElementById('code').value || '').replace(/\D/g, '').trim();
+      if (!loginEmail) { show('err', 'Enter your email and request a code first.'); return; }
+      if (code.length < 6) { show('err', 'Enter the full code from your email.'); return; }
+      btn.disabled = true; btn.textContent = 'Signing you in…';
+      try {
+        var r = await lfg.sb.auth.verifyOtp({ email: loginEmail, token: code, type: 'email' });
+        if (r.error || !r.data || !r.data.session) {
+          show('err', 'That code is wrong, expired, or already used. Request a fresh one.');
+          btn.disabled = false; btn.textContent = 'Sign me in';
+          return;
+        }
+        show('ok', 'You’re in. Taking you in…');
+        window.location.replace(dest);
+      } catch (err) {
+        show('err', 'Could not verify the code. Try again.');
+        btn.disabled = false; btn.textContent = 'Sign me in';
+      }
+    });
+  })();
+</script>
+</body>
+</html>

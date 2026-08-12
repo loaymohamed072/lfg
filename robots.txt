@@ -1,0 +1,30 @@
+User-agent: *
+Allow: /
+
+# Keep app/auth pages out of search
+Disallow: /account
+Disallow: /admin
+Disallow: /login
+Disallow: /register
+Disallow: /api/
+
+# AI / answer-engine crawlers — explicitly welcomed (GEO)
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+Sitemap: https://lfgdubai.com/sitemap.xml

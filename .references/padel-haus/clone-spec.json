@@ -1,0 +1,147 @@
+{
+  "title": "Padel Haus | Luxury Padel Club & Indoor Courts",
+  "fonts": {
+    "primary": [
+      "wfont_cac1be_d8f722c5d8b640d5afd272326f7cc11a",
+      "wfont_ebdcb0_b7d8f01eec1e440b95e1f39039f3705e",
+      "Helvetica",
+      "Arial"
+    ],
+    "googleFonts": [],
+    "fontFaceFamilies": [
+      "wf_b7d8f01eec1e440b95e1f3903",
+      "wf_d0214956734a4504b11e5178a",
+      "wf_d8f722c5d8b640d5afd272326",
+      "avenir-lt-w01_35-light1475496",
+      "avenir-lt-w01_85-heavy1475544",
+      "din-next-w01-light",
+      "neue-haas-grotesk-display-pro"
+    ]
+  },
+  "typeScale": [
+    {
+      "tag": "span",
+      "fontSizePx": 16,
+      "lineHeight": "normal",
+      "fontWeight": "400",
+      "letterSpacing": "0.8px",
+      "textTransform": "uppercase",
+      "fontFamily": "wfont_cac1be_d8f722c5d8b640d5afd272326f7cc11a"
+    },
+    {
+      "tag": "span",
+      "fontSizePx": 15,
+      "lineHeight": "normal",
+      "fontWeight": "400",
+      "letterSpacing": "normal",
+      "textTransform": "uppercase",
+      "fontFamily": "wfont_ebdcb0_b7d8f01eec1e440b95e1f39039f3705e"
+    },
+    {
+      "tag": "button",
+      "fontSizePx": 14,
+      "lineHeight": "normal",
+      "fontWeight": "400",
+      "letterSpacing": "normal",
+      "textTransform": "none",
+      "fontFamily": "Helvetica"
+    },
+    {
+      "tag": "span",
+      "fontSizePx": 10,
+      "lineHeight": "normal",
+      "fontWeight": "400",
+      "letterSpacing": "normal",
+      "textTransform": "none",
+      "fontFamily": "Arial"
+    },
+    {
+      "tag": "li",
+      "fontSizePx": 10,
+      "lineHeight": "normal",
+      "fontWeight": "400",
+      "letterSpacing": "normal",
+      "textTransform": "none",
+      "fontFamily": "Arial"
+    },
+    {
+      "tag": "a",
+      "fontSizePx": 10,
+      "lineHeight": "normal",
+      "fontWeight": "400",
+      "letterSpacing": "normal",
+      "textTransform": "none",
+      "fontFamily": "Arial"
+    }
+  ],
+  "colors": {
+    "text": [
+      "#000000",
+      "#1f1f1f",
+      "#e9e8e3",
+      "#0000ee",
+      "#242323"
+    ],
+    "background": [
+      "#e9e8e3",
+      "#b7b6b2",
+      "#1f1f1f",
+      "#242323"
+    ]
+  },
+  "layout": {
+    "containerWidthsPx": [],
+    "sectionCount": 1,
+    "sections": [
+      {
+        "tag": "div",
+        "heightPx": 6034,
+        "paddingTopPx": 0,
+        "paddingBottomPx": 0,
+        "display": "block",
+        "background": null,
+        "groundImage": null,
+        "groundLayers": 0,
+        "hasCanvas": false,
+        "hasVideoBg": true,
+        "headings": 7,
+        "hasImage": true
+      }
+    ]
+  },
+  "atmosphere": {
+    "gradients": [],
+    "blends": [],
+    "filters": [],
+    "backdropFilters": [],
+    "masks": [],
+    "pseudoDecor": [],
+    "svgTurbulence": 0,
+    "webglCanvas": 0,
+    "videoBackgrounds": 1
+  },
+  "radii": [
+    "24px",
+    "2px"
+  ],
+  "shadows": [
+    "rgb(255, 255, 255) 0px 0px 0px 0px"
+  ],
+  "motion": {
+    "gsap": false,
+    "scrollTrigger": false,
+    "lenis": false,
+    "locomotive": false,
+    "framerMotion": false,
+    "three": false,
+    "smoothScroll": false,
+    "transitionsCount": 119,
+    "observed": {
+      "animationsAtRest": 1,
+      "elementsChangedOnScroll": 0,
+      "smoothedScroll": false
+    }
+  },
+  "capturedAt": "2026-08-05T09:49:57.447Z",
+  "sourceUrl": "https://www.padel.haus/"
+}

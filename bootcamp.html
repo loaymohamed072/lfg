@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en" class="bc-page">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Sunday Bootcamp · Reserve Your Spot · LFG Dubai</title>
+<meta name="description" content="Reserve your seat for LFG's Sunday Bootcamp in Dubai. 12:45 PM. Four stations. Single sessions or credit packs.">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://lfgdubai.com/bootcamp">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SportsEvent",
+  "name": "LFG Sunday Bootcamp (Dubai)",
+  "description": "LFG Dubai's Sunday bootcamp. 60 minutes, four stations, scaled to your level. First session 99 AED, or train cheaper with a credit pack.",
+  "sport": "Fitness",
+  "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+  "eventStatus": "https://schema.org/EventScheduled",
+  "image": "https://lfgdubai.com/main group photo.jpeg",
+  "eventSchedule": {
+    "@type": "Schedule",
+    "byDay": "https://schema.org/Sunday",
+    "startTime": "12:45",
+    "duration": "PT1H"
+  },
+  "location": {
+    "@type": "Place",
+    "name": "CrossFit Alioth",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Dubai",
+      "addressCountry": "AE"
+    }
+  },
+  "organizer": {
+    "@type": "SportsOrganization",
+    "name": "LFG Dubai",
+    "url": "https://lfgdubai.com/"
+  },
+  "offers": {
+    "@type": "Offer",
+    "price": "99",
+    "priceCurrency": "AED",
+    "availability": "https://schema.org/InStock",
+    "url": "https://lfgdubai.com/bootcamp"
+  }
+}
+</script>
+<meta property="og:title" content="Sunday Bootcamp · LFG Dubai">
+<meta property="og:description" content="60 minutes. 4 stations. Every Sunday 12:45 PM.">
+<meta property="og:image" content="/main group photo.jpeg">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/png" href="/lfg-logo.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#0A0A0A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LFG Dubai">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/app-assets/lfg-bootcamp-page.css?v=8">
+<link rel="stylesheet" href="/app-assets/lfg-booking-widget.css?v=7">
+<link rel="preconnect" href="https://js.stripe.com">
+<link rel="preconnect" href="https://api.stripe.com">
+<link rel="preconnect" href="https://m.stripe.network">
+</head>
+<body>
+
+<!-- ============================================================
+     NAV
+     ============================================================ -->
+<nav class="bc-nav" id="bcNav">
+  <a href="/" aria-label="Back to LFG home">
+    <img src="/LFG MAIN LOGO-Photoroom.png" alt="LFG" class="bc-nav-logo">
+  </a>
+  <div class="bc-nav-right">
+    <ul class="bc-nav-links">
+      <li><a href="#bootcamps">Reserve</a></li>
+      <li><a href="#bc-gallery">Inside</a></li>
+      <li><a href="#bc-coach">Coach</a></li>
+      <li><a href="#bc-reviews">Reviews</a></li>
+      <li><a href="#bc-faq">FAQ</a></li>
+      <li><a href="/leaderboard">Leaderboard</a></li>
+      <li><a href="/shop">Shop</a></li>
+      <li><a href="/" class="nav-cta">Back to LFG</a></li>
+    </ul>
+    <a class="bc-nav-account" href="/account" aria-label="My account" title="My account">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6"/></svg>
+    </a>
+    <button class="bc-burger" id="navBurger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="bc-mobile-menu" id="mobileMenu" role="dialog" aria-label="Menu">
+  <button class="mm-close" id="mmClose" aria-label="Close menu">&times;</button>
+  <a href="#bootcamps" data-mm>Reserve</a>
+  <a href="#bc-gallery" data-mm>Inside</a>
+  <a href="#bc-coach" data-mm>Coach</a>
+  <a href="#bc-reviews" data-mm>Reviews</a>
+  <a href="#bc-faq" data-mm>FAQ</a>
+  <a href="/leaderboard" data-mm>Leaderboard</a>
+  <a href="/shop" data-mm>Shop</a>
+  <div class="mm-auth" id="mmAuth"></div>
+  <a href="/" class="mm-cta" data-mm>Back to LFG</a>
+</div>
+
+<!-- ============================================================
+     FOLD - reservation is the hero. Booking widget mounts here,
+     immediately visible without scrolling.
+     ============================================================ -->
+<section class="bc-fold" id="bootcamps">
+  <span class="bc-fold-orb" aria-hidden="true"></span>
+
+  <div class="bc-fold-shell">
+
+    <!-- Media side: photo/video framed -->
+    <aside class="bc-fold-media bc-tilt">
+      <div class="bc-tilt-inner">
+        <video class="bc-fold-video" autoplay muted loop playsinline preload="auto" poster="/main group photo.jpeg" aria-hidden="true">
+          <source src="/bootcamp%20video.mp4" type="video/mp4">
+        </video>
+        <div class="bc-fold-stamp">
+          <span class="bc-fold-stamp-line"></span>
+          <span>Sunday · <span data-bc-loc>CrossFit Alioth</span> · <span data-bc-time>12:45 PM</span></span>
+        </div>
+        <div class="bc-fold-badge"><b>Since 2022</b> · 220+ Sundays</div>
+      </div>
+    </aside>
+
+    <!-- Panel side: meta + booking widget -->
+    <div class="bc-fold-panel">
+      <div class="bc-fold-meta">
+        <div class="bc-fold-eyebrow"><span>Reserve</span></div>
+        <h1 class="bc-fold-h1" data-split>Your <em>Sunday,</em><br>booked in 30 seconds.</h1>
+        <div class="bc-fold-mini">
+          <span><b>60</b> min</span>
+          <span><b>4</b> stations</span>
+          <span><b>220+</b> Sundays</span>
+        </div>
+      </div>
+
+      <div class="bc-fold-stack">
+        <!-- Loading skeleton - hidden by CSS as soon as the widget renders the real featured card -->
+        <div class="bc-skel" aria-hidden="true">
+          <span class="bc-skel-line tag"></span>
+          <span class="bc-skel-line title"></span>
+          <span class="bc-skel-line sub"></span>
+          <span class="bc-skel-line bar"></span>
+          <span class="bc-skel-line stats"></span>
+        </div>
+        <div id="bootcamp-dates"></div>
+        <a class="bootcamp-book-btn" href="#book">Book Now</a>
+        <div class="bootcamp-booking-sub"></div>
+        <div class="bootcamp-book-note"></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============================================================
+     SHOP TEASER - support the club, grab the tee (links to /shop)
+     ============================================================ -->
+<section style="padding:10px 22px 2px;">
+  <a href="/shop" aria-label="Shop the LFG x PUMA tee" style="display:flex;align-items:center;gap:18px;max-width:920px;margin:0 auto;padding:16px 20px;background:linear-gradient(180deg,rgba(153,153,102,0.09),rgba(153,153,102,0.02));border:1px solid rgba(153,153,102,0.32);text-decoration:none;color:#fff;flex-wrap:wrap;">
+    <img src="/app-assets/tee/front-pair.webp" alt="LFG x PUMA tee" width="68" height="85" loading="lazy" style="width:68px;height:85px;object-fit:cover;border:1px solid rgba(255,255,255,0.12);flex-shrink:0;">
+    <div style="flex:1;min-width:200px;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:#999966;margin-bottom:3px;">Support the club</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:22px;text-transform:uppercase;line-height:1.05;">Grab the LFG &times; PUMA tee</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.6);margin-top:4px;line-height:1.45;">Wear it to the bootcamp. AED 150, pick it up at the next run. Limited stock.</div>
+    </div>
+    <span style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#0A0A0A;background:#999966;padding:12px 20px;white-space:nowrap;">Shop the tee &rarr;</span>
+  </a>
+</section>
+
+<!-- ============================================================
+     GALLERY - bento, compressed
+     ============================================================ -->
+<section class="bc-gallery" id="bc-gallery">
+  <div class="bc-gallery-head">
+    <div>
+      <div class="bc-section-eyebrow bc-reveal">Inside the room</div>
+      <h2 class="bc-gallery-title bc-reveal d1">Real <em>sessions.</em> Real members.</h2>
+    </div>
+  </div>
+
+  <div class="bc-gallery-grid">
+    <div class="bc-tilt bc-tile bc-tile-big bc-reveal d1">
+      <div class="bc-tilt-inner">
+        <img src="/main%20group%20photo.jpeg" alt="LFG bootcamp group photo" loading="lazy">
+        <span class="bc-tile-tag">The community</span>
+      </div>
+    </div>
+    <div class="bc-gallery-strip">
+      <div class="bc-tilt bc-tile bc-tile-small bc-reveal d2">
+        <div class="bc-tilt-inner">
+          <video autoplay muted loop playsinline preload="metadata" poster="/main group photo.jpeg">
+            <source src="https://lfgdubai.b-cdn.net/bootcamp.mp4" type="video/mp4">
+          </video>
+          <span class="bc-tile-tag">Bootcamp</span>
+        </div>
+      </div>
+      <div class="bc-tilt bc-tile bc-tile-small bc-reveal d3">
+        <div class="bc-tilt-inner">
+          <img src="/bootcamp%20member.jpeg" alt="LFG bootcamp member during a Sunday session" loading="lazy">
+          <span class="bc-tile-tag">In the work</span>
+        </div>
+      </div>
+      <div class="bc-tilt bc-tile bc-tile-small bc-reveal d2">
+        <div class="bc-tilt-inner">
+          <img src="/selfie%20in%20bootcamp.jpeg" alt="Members at the Sunday bootcamp" loading="lazy">
+          <span class="bc-tile-tag">Post-session</span>
+        </div>
+      </div>
+      <div class="bc-tilt bc-tile bc-tile-small bc-reveal d3">
+        <div class="bc-tilt-inner">
+          <img src="/commuinty%20and%20brand.jpeg" alt="LFG community moment" loading="lazy">
+          <span class="bc-tile-tag">Together</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin-uploaded group photos, one per Sunday session. Added, never replacing. -->
+  <div class="bc-session-photos-wrap" id="bc-session-photos-wrap" hidden>
+    <div class="bc-section-eyebrow bc-reveal">From recent Sundays</div>
+    <div class="bc-session-photos" id="bc-session-photos"></div>
+  </div>
+</section>
+
+<!-- ============================================================
+     COACH - single row, compact
+     ============================================================ -->
+<section class="bc-coach" id="bc-coach">
+  <div class="bc-coach-photo bc-reveal">
+    <img src="/ahmed%20sam.jpeg" alt="Coach Ahmed Sam, LFG Dubai">
+  </div>
+  <div class="bc-coach-body">
+    <div class="bc-section-eyebrow bc-reveal">Coached by</div>
+    <h2 class="bc-coach-title bc-reveal d1"><em>Ahmed Sam.</em></h2>
+    <p class="bc-reveal d2">Ahmed founded LFG and runs the Sunday bootcamp himself. He calls every station, scales the work for every body in the room. Train with him once and you already know.</p>
+  </div>
+</section>
+
+<!-- ============================================================
+     REVIEWS
+     ============================================================ -->
+<section class="bc-reviews" id="bc-reviews">
+  <div class="bc-reviews-head">
+    <div>
+      <div class="bc-section-eyebrow bc-reveal">Reviews</div>
+      <h2 class="bc-reviews-title bc-reveal d1">What <em>members</em> say.</h2>
+    </div>
+    <div class="bc-reviews-aggregate bc-reveal d2">
+      <div class="bc-rev-score" id="bcRevScore">5.0</div>
+      <div class="bc-rev-meta">
+        <div class="bc-stars" aria-label="5 out of 5 stars">
+          <svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg>
+          <svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg>
+          <svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg>
+          <svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg>
+          <svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg>
+        </div>
+        <div class="bc-rev-count" id="bcRevCount">Based on <b>6</b> member reviews</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bc-reviews-grid" id="bcReviewsGrid">
+    <article class="bc-review bc-reveal d1">
+      <div class="bc-stars sm" aria-label="5 stars"><svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg></div>
+      <p class="bc-review-text">First Sunday I went I thought I'd die in the warmup. Now I plan my whole week around it. The coaching is unreal.</p>
+      <div class="bc-review-by"><b>Sarah K.</b> · Member 4 months</div>
+    </article>
+
+    <article class="bc-review bc-reveal d2">
+      <div class="bc-stars sm" aria-label="5 stars"><svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg></div>
+      <p class="bc-review-text">Not a runner, not a gym person. Ahmed actually cares whether you can keep up. Showed up nervous, left part of the family.</p>
+      <div class="bc-review-by"><b>Mo H.</b> · Member 2 months</div>
+    </article>
+
+    <article class="bc-review bc-reveal d3">
+      <div class="bc-stars sm" aria-label="5 stars"><svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg></div>
+      <p class="bc-review-text">The stations thing actually works. I'm in C and I never feel slow or judged, just challenged in the right way.</p>
+      <div class="bc-review-by"><b>Priya R.</b> · Member 6 months</div>
+    </article>
+
+    <article class="bc-review bc-reveal d1">
+      <div class="bc-stars sm" aria-label="5 stars"><svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg></div>
+      <p class="bc-review-text">Way better than any gym class I've done in Dubai. Real community, no egos, sweat is mandatory.</p>
+      <div class="bc-review-by"><b>James L.</b> · Member 3 months</div>
+    </article>
+
+    <article class="bc-review bc-reveal d2">
+      <div class="bc-stars sm" aria-label="5 stars"><svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg></div>
+      <p class="bc-review-text">Tried it once on a friend's pack. Bought my own 8-credit pack the next week. I haven't missed a Sunday since.</p>
+      <div class="bc-review-by"><b>Layla A.</b> · Member 5 months</div>
+    </article>
+
+    <article class="bc-review bc-reveal d3">
+      <div class="bc-stars sm" aria-label="5 stars"><svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg><svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg></div>
+      <p class="bc-review-text">Sunday morning fixes my whole week. Ahmed pushes you in the right way, never demoralizing. Best decision I made this year.</p>
+      <div class="bc-review-by"><b>Tareq M.</b> · Founding member</div>
+    </article>
+  </div>
+
+  <!-- Inline review composer - sits at the bottom of the reviews section -->
+  <div class="bc-rev-compose bc-reveal" id="bcRevCompose">
+    <div class="bc-rev-compose-h">Add your review</div>
+    <p class="bc-rev-compose-sub">Trained with us? Tell us what you thought. Posted after a quick check from Ahmed.</p>
+
+    <form id="bcRevForm" novalidate>
+      <div class="bc-rev-picker" id="bcRevPicker" role="radiogroup" aria-label="Your rating">
+        <button type="button" data-r="1" class="bc-rev-star" aria-label="1 star"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 7 7.6.6-5.8 5 1.8 7.4L12 18l-6.5 4 1.8-7.4L1.5 9.6 9.1 9z"/></svg></button>
+        <button type="button" data-r="2" class="bc-rev-star" aria-label="2 stars"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 7 7.6.6-5.8 5 1.8 7.4L12 18l-6.5 4 1.8-7.4L1.5 9.6 9.1 9z"/></svg></button>
+        <button type="button" data-r="3" class="bc-rev-star" aria-label="3 stars"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 7 7.6.6-5.8 5 1.8 7.4L12 18l-6.5 4 1.8-7.4L1.5 9.6 9.1 9z"/></svg></button>
+        <button type="button" data-r="4" class="bc-rev-star" aria-label="4 stars"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 7 7.6.6-5.8 5 1.8 7.4L12 18l-6.5 4 1.8-7.4L1.5 9.6 9.1 9z"/></svg></button>
+        <button type="button" data-r="5" class="bc-rev-star" aria-label="5 stars"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 7 7.6.6-5.8 5 1.8 7.4L12 18l-6.5 4 1.8-7.4L1.5 9.6 9.1 9z"/></svg></button>
+        <span class="bc-rev-picker-label" id="bcRevPickerLabel">Tap the stars to rate</span>
+      </div>
+
+      <textarea id="bcRevComment" class="bc-rev-textarea" maxlength="2000" rows="5" placeholder="What stood out about Sunday? What surprised you? Why would you tell a friend?" required></textarea>
+
+      <div class="bc-rev-name-row">
+        <input type="text" id="bcRevName" class="bc-rev-input" maxlength="80" autocomplete="name" placeholder="Your name" required>
+        <input type="email" id="bcRevEmail" class="bc-rev-input" maxlength="320" autocomplete="email" placeholder="Email (optional)">
+      </div>
+
+      <!-- Honeypot off-screen -->
+      <div style="position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden;">
+        <label>Website <input type="text" id="bcRevHp" name="website_url" tabindex="-1" autocomplete="off"></label>
+      </div>
+
+      <div class="bc-rev-bottom">
+        <div class="bc-rev-msg" id="bcRevMsg"></div>
+        <button type="submit" class="bc-rev-submit" id="bcRevSubmit">Post review</button>
+      </div>
+    </form>
+
+    <div class="bc-rev-thanks" id="bcRevThanks" hidden>
+      <div class="bc-rev-thanks-icon">&#10003;</div>
+      <div class="bc-rev-thanks-h">Thanks, posted.</div>
+      <p class="bc-rev-thanks-sub">Ahmed will read it and it'll show up on the wall.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     FAQ
+     ============================================================ -->
+<section class="bc-faq" id="bc-faq">
+  <div class="bc-faq-head">
+    <div class="bc-section-eyebrow bc-reveal">Before you book</div>
+    <h2 class="bc-faq-title bc-reveal d1">The <em>questions</em> we get.</h2>
+  </div>
+
+  <div class="bc-q">
+    <button class="bc-q-btn" aria-expanded="false">
+      <span>Where is the bootcamp?</span>
+      <svg class="bc-q-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 4v12M4 10h12"/></svg>
+    </button>
+    <div class="bc-q-body"><div class="bc-q-body-inner"><span data-bc-loc>CrossFit Alioth</span>, Dubai. Free parking on-site.</div></div>
+  </div>
+  <div class="bc-q">
+    <button class="bc-q-btn" aria-expanded="false">
+      <span>I'm new to working out. Can I do this?</span>
+      <svg class="bc-q-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 4v12M4 10h12"/></svg>
+    </button>
+    <div class="bc-q-body"><div class="bc-q-body-inner">Yes. Coaches scale the work live for every body in the room. Stations exist to split the group so the workout flows smoothly, not to grade your fitness. If you can move for an hour, you're already in.</div></div>
+  </div>
+  <div class="bc-q">
+    <button class="bc-q-btn" aria-expanded="false">
+      <span>What do I bring?</span>
+      <svg class="bc-q-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 4v12M4 10h12"/></svg>
+    </button>
+    <div class="bc-q-body"><div class="bc-q-body-inner">Trainers, water bottle, towel. Showers and changing rooms on-site. Forgot something? Someone in the group always has a spare.</div></div>
+  </div>
+  <div class="bc-q">
+    <button class="bc-q-btn" aria-expanded="false">
+      <span>Can I cancel or postpone a booking?</span>
+      <svg class="bc-q-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 4v12M4 10h12"/></svg>
+    </button>
+    <div class="bc-q-body"><div class="bc-q-body-inner">Yes. Cancel from <a href="/account" style="color:var(--bc-green); text-decoration:underline;">My account</a> any time up to <b>8:00 AM Dubai time on the day of your session</b> and your credit goes straight back. After 8 AM the spot stays yours, so move it to another Sunday before then if you can't make it.</div></div>
+  </div>
+  <div class="bc-q">
+    <button class="bc-q-btn" aria-expanded="false">
+      <span>How do credits work?</span>
+      <svg class="bc-q-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 4v12M4 10h12"/></svg>
+    </button>
+    <div class="bc-q-body"><div class="bc-q-body-inner">Each booking spends one credit. Packs come with 4, 8, or 12 credits, valid for 2, 4, or 5 months. Train as often as you want inside that window.</div></div>
+  </div>
+  <div class="bc-q">
+    <button class="bc-q-btn" aria-expanded="false">
+      <span>Should I buy a single or a pack?</span>
+      <svg class="bc-q-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 4v12M4 10h12"/></svg>
+    </button>
+    <div class="bc-q-body"><div class="bc-q-body-inner">First Sunday? Single at 99 AED. Already know you're hooked? The 8-credit pack drops the per-session price the most. Packs don't expire mid-cycle, so life can happen.</div></div>
+  </div>
+</section>
+
+<!-- ============================================================
+     FOOTER - slim
+     ============================================================ -->
+<footer class="bc-footer">
+  <div class="bc-footer-inner">
+    <div>
+      <img src="/LFG MAIN LOGO-Photoroom.png" alt="LFG" class="bc-footer-logo">
+      <p>Dubai's Sunday ritual.</p>
+    </div>
+    <div>
+      <h5>Reserve</h5>
+      <a href="#bootcamps">Pick a Sunday</a>
+      <a href="/account">My account</a>
+      <a href="/login">Sign in</a>
+    </div>
+    <div>
+      <h5>Reach us</h5>
+      <a href="https://wa.me/971504264410" target="_blank" rel="noopener">WhatsApp</a>
+      <a href="https://instagram.com/lfgdubai" target="_blank" rel="noopener">Instagram</a>
+      <a href="mailto:info@lfgdubai.com">info@lfgdubai.com</a>
+    </div>
+  </div>
+</footer>
+
+<!-- ============================================================
+     STICKY MOBILE CTA
+     ============================================================ -->
+<div class="bc-sticky" id="bcSticky">
+  <div class="bc-sticky-inner">
+    <div class="bc-sticky-info">
+      <span class="when" id="bcStickyWhen">Next Sunday · <span data-bc-time>12:45</span></span>
+      <span class="left" id="bcStickyLeft">Tap to reserve</span>
+    </div>
+    <a href="#bootcamps">
+      Reserve
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+    </a>
+  </div>
+</div>
+
+<!-- ============================================================
+     SCRIPTS
+     ============================================================ -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.1"></script>
+<script src="/app-assets/lfg-supabase.js?v=3"></script>
+<script src="https://js.stripe.com/v3/"></script>
+<script src="/app-assets/lfg-home-booking.js?v=12"></script>
+
+<!-- Live bootcamp location: single source of truth is lfg_event_config.bootcamp_location
+     (set from the admin Schedule view). Fills every [data-bc-loc] placeholder so the venue
+     stays correct everywhere the moment the admin changes it. -->
+<script>
+(function () {
+  function fill(loc) {
+    if (!loc) return;
+    window.__LFG_BC_LOCATION = loc;
+    document.querySelectorAll('[data-bc-loc]').forEach(function (el) { el.textContent = loc; });
+  }
+  // Bootcamp time is owned by the Schedule tab too - fill [data-bc-time] from config so the
+  // hero + sticky bar never drift from the real start time.
+  function fillTime(iso) {
+    if (!iso) return;
+    var t = new Date(iso).toLocaleTimeString('en-US', { timeZone: 'Asia/Dubai', hour: 'numeric', minute: '2-digit', hour12: true });
+    document.querySelectorAll('[data-bc-time]').forEach(function (el) { el.textContent = t; });
+  }
+  try {
+    if (window.lfg && window.lfg.sb) {
+      window.lfg.sb.from('event_config')
+        .select('bootcamp_location,bootcamp_datetime').eq('id', 1).single()
+        .then(function (r) { if (r && r.data) { fill(r.data.bootcamp_location); fillTime(r.data.bootcamp_datetime); } })
+        .catch(function () {});
+    }
+  } catch (e) {}
+})();
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+
+<script>
+(function () {
+  var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Nav scrolled state
+  var nav = document.getElementById('bcNav');
+  function onScroll() {
+    if (window.scrollY > 30) nav.classList.add('scrolled'); else nav.classList.remove('scrolled');
+  }
+  window.addEventListener('scroll', onScroll, { passive: true }); onScroll();
+
+  // Smooth scroll
+  var lenis = null;
+  if (window.Lenis && !reduced) {
+    lenis = new Lenis({ duration: 1.0, smoothWheel: true });
+    function raf(t) { lenis.raf(t); requestAnimationFrame(raf); }
+    requestAnimationFrame(raf);
+    document.querySelectorAll('a[href^="#"]').forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        var id = a.getAttribute('href').slice(1);
+        if (!id) return;
+        var el = document.getElementById(id);
+        if (el) { e.preventDefault(); lenis.scrollTo(el, { offset: -30, duration: 1.1 }); }
+      });
+    });
+  }
+
+  // Split headline into CHARACTER spans for a blur-fade reveal (no flying words).
+  // Whitespace is preserved verbatim; inline children (e.g. <em>) are recursed into
+  // so their styling stays intact while each glyph gets its own animatable span.
+  document.querySelectorAll('[data-split]').forEach(function (h) {
+    function walk(node) {
+      var out = [];
+      node.childNodes.forEach(function (n) {
+        if (n.nodeType === 3) {
+          Array.from(n.nodeValue).forEach(function (ch) {
+            if (ch === ' ' || ch === ' ') { out.push(document.createTextNode(ch)); return; }
+            if (ch === '\n' || ch === '\r' || ch === '\t') { out.push(document.createTextNode(ch)); return; }
+            var s = document.createElement('span'); s.className = 'bc-split-char'; s.textContent = ch;
+            out.push(s);
+          });
+        } else if (n.nodeType === 1) {
+          if (n.tagName === 'BR') { out.push(n.cloneNode(false)); return; }
+          var copy = n.cloneNode(false);
+          walk(n).forEach(function (c) { copy.appendChild(c); });
+          out.push(copy);
+        }
+      });
+      return out;
+    }
+    var tmp = document.createElement('div'); tmp.innerHTML = h.innerHTML;
+    var newNodes = walk(tmp);
+    h.innerHTML = '';
+    newNodes.forEach(function (n) { h.appendChild(n); });
+  });
+
+  // GSAP reveals
+  if (window.gsap && window.ScrollTrigger) {
+    gsap.registerPlugin(ScrollTrigger);
+    document.querySelectorAll('.bc-reveal').forEach(function (el) {
+      gsap.to(el, { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out',
+        scrollTrigger: { trigger: el, start: 'top 90%', once: true } });
+    });
+    document.querySelectorAll('[data-split]').forEach(function (h) {
+      var chars = h.querySelectorAll('.bc-split-char');
+      gsap.to(chars, {
+        opacity: 1, filter: 'blur(0px)',
+        duration: 0.8, ease: 'power2.out', stagger: 0.018
+      });
+    });
+  } else {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { rootMargin: '0px 0px -10% 0px' });
+    document.querySelectorAll('.bc-reveal, .bc-split-char').forEach(function (el) { io.observe(el); });
+  }
+
+  // 3D tilt on tilt elements
+  if (!reduced) {
+    document.querySelectorAll('.bc-tilt').forEach(function (t) {
+      var inner = t.querySelector('.bc-tilt-inner'); if (!inner) return;
+      t.addEventListener('mousemove', function (e) {
+        var r = t.getBoundingClientRect();
+        var x = (e.clientX - r.left) / r.width;
+        var y = (e.clientY - r.top) / r.height;
+        var rx = (y - 0.5) * -6;
+        var ry = (x - 0.5) * 6;
+        inner.style.setProperty('--rx', rx + 'deg');
+        inner.style.setProperty('--ry', ry + 'deg');
+        inner.style.setProperty('--lx', (x * 100) + '%');
+        inner.style.setProperty('--ly', (y * 100) + '%');
+      });
+      t.addEventListener('mouseleave', function () {
+        inner.style.setProperty('--rx', '0deg');
+        inner.style.setProperty('--ry', '0deg');
+      });
+    });
+  }
+
+  // FAQ accordion
+  document.querySelectorAll('.bc-q-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var q = btn.closest('.bc-q');
+      var open = q.classList.toggle('open');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+  });
+
+  // ----- Inline review composer -----
+  (function () {
+    var compose = document.getElementById('bcRevCompose');
+    if (!compose) return;
+    var form = document.getElementById('bcRevForm');
+    var thanks = document.getElementById('bcRevThanks');
+    var msgEl = document.getElementById('bcRevMsg');
+    var picker = document.getElementById('bcRevPicker');
+    var pickerLabel = document.getElementById('bcRevPickerLabel');
+    var stars = picker.querySelectorAll('.bc-rev-star');
+    var submitBtn = document.getElementById('bcRevSubmit');
+    var rating = 0;
+    var LABELS = ['Tap the stars to rate', 'Hated it', 'Meh', 'Decent', 'Loved it', 'Best class in Dubai'];
+
+    function paint(n) {
+      stars.forEach(function (s) {
+        s.classList.toggle('on', Number(s.getAttribute('data-r')) <= n);
+      });
+      pickerLabel.textContent = LABELS[n] || LABELS[0];
+    }
+    stars.forEach(function (s) {
+      s.addEventListener('mouseenter', function () { paint(Number(s.getAttribute('data-r'))); });
+      s.addEventListener('click', function () {
+        rating = Number(s.getAttribute('data-r'));
+        picker.classList.add('set');
+        paint(rating);
+      });
+    });
+    picker.addEventListener('mouseleave', function () { paint(rating); });
+
+    function setMsg(text, isErr) {
+      msgEl.textContent = text || '';
+      msgEl.className = 'bc-rev-msg' + (isErr ? ' err' : '');
+    }
+
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      setMsg('');
+      if (rating < 1) { setMsg('Pick a star rating first.', true); return; }
+      var name = document.getElementById('bcRevName').value.trim();
+      var email = document.getElementById('bcRevEmail').value.trim();
+      var comment = document.getElementById('bcRevComment').value.trim();
+      var hp = document.getElementById('bcRevHp').value;
+      if (!name) { setMsg('Add your name.', true); return; }
+      if (comment.length < 20) { setMsg('Your review should be at least a full sentence (20+ chars).', true); return; }
+
+      submitBtn.disabled = true; submitBtn.textContent = 'Posting…';
+      try {
+        var res = await fetch('/api/submit-review', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ rating: rating, name: name, email: email || undefined, comment: comment, website_url: hp })
+        });
+        var data = null; try { data = await res.json(); } catch (_) {}
+        if (!res.ok || !data || !data.ok) {
+          setMsg((data && data.error) || 'Could not send right now. Try again in a moment.', true);
+          submitBtn.disabled = false; submitBtn.textContent = 'Post review';
+          return;
+        }
+        form.hidden = true;
+        thanks.hidden = false;
+      } catch (_) {
+        setMsg('Network error. Try again.', true);
+        submitBtn.disabled = false; submitBtn.textContent = 'Post review';
+      }
+    });
+  })();
+
+  // Real member reviews. The section ships with placeholder cards; the moment a
+  // review is approved in the admin, these replace them and the aggregate score
+  // is recomputed from what people actually wrote.
+  (function () {
+    var grid = document.getElementById('bcReviewsGrid');
+    if (!grid) return;
+    var STAR = '<svg viewBox="0 0 20 20"><path d="M10 1l2.5 6 6.5.5-5 4.5 1.5 6.5L10 15l-5.5 3.5L6 12 1 7.5 7.5 7z"/></svg>';
+
+    function esc(v) {
+      return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+        return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+      });
+    }
+    function stars(n) {
+      var out = '';
+      for (var i = 0; i < Math.max(0, Math.min(5, Number(n) || 0)); i++) out += STAR;
+      return out;
+    }
+    function joined(iso) {
+      if (!iso) return '';
+      try {
+        return new Date(iso).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+      } catch (e) { return ''; }
+    }
+
+    fetch('/api/reviews').then(function (r) { return r.json(); }).then(function (d) {
+      if (!d || !d.ok || !d.reviews || !d.reviews.length) return; // keep what's on the page
+      grid.innerHTML = d.reviews.map(function (rv, i) {
+        var when = joined(rv.approved_at);
+        return '<article class="bc-review bc-reveal d' + ((i % 3) + 1) + '">'
+          + '<div class="bc-stars sm" aria-label="' + Number(rv.rating) + ' stars">' + stars(rv.rating) + '</div>'
+          + '<p class="bc-review-text">' + esc(rv.comment) + '</p>'
+          + '<div class="bc-review-by"><b>' + esc(rv.name) + '</b>' + (when ? ' \u00b7 ' + esc(when) : '') + '</div>'
+          + '</article>';
+      }).join('');
+      var score = document.getElementById('bcRevScore');
+      var count = document.getElementById('bcRevCount');
+      if (score && d.average != null) score.textContent = Number(d.average).toFixed(1);
+      if (count) count.innerHTML = 'Based on <b>' + d.count + '</b> member review' + (d.count === 1 ? '' : 's');
+      grid.querySelectorAll('.bc-reveal').forEach(function (el) { el.classList.add('in'); });
+    }).catch(function () { /* leave the page as served */ });
+  })();
+
+  // Sticky mobile CTA
+  var sticky = document.getElementById('bcSticky');
+  function onScrollSticky() {
+    var fold = document.getElementById('bootcamps');
+    var foldRect = fold.getBoundingClientRect();
+    var foldVisible = foldRect.bottom > 80; // booking still visible
+    if (foldVisible) { sticky.classList.remove('show'); return; }
+    sticky.classList.add('show');
+  }
+  window.addEventListener('scroll', onScrollSticky, { passive: true });
+  onScrollSticky();
+
+  // Mirror live capacity into sticky bar
+  function updateStickyCapacity() {
+    var feat = document.querySelector('.lfgw-feat');
+    if (!feat) return;
+    var date = feat.querySelector('.lfgw-feat-date');
+    var urge = feat.querySelector('.urge');
+    if (date) document.getElementById('bcStickyWhen').textContent = date.textContent.trim();
+    if (urge) document.getElementById('bcStickyLeft').textContent = urge.textContent.trim();
+  }
+  var t0 = Date.now();
+  var poll = setInterval(function () {
+    updateStickyCapacity();
+    if (Date.now() - t0 > 12000) clearInterval(poll);
+  }, 700);
+})();
+</script>
+
+<!-- PWA: register the service worker once per visit. The install card lives on /account. -->
+<script>
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+    var lfgReloaded = false;
+    navigator.serviceWorker.addEventListener('message', function (ev) {
+      if (ev.data && ev.data.type === 'SW_UPDATED' && !lfgReloaded) { lfgReloaded = true; location.reload(); }
+    });
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      if (lfgReloaded) return; lfgReloaded = true; location.reload();
+    });
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('/sw.js').then(function (reg) {
+        if (reg && reg.waiting) reg.waiting.postMessage('SKIP_WAITING');
+        if (reg) reg.addEventListener('updatefound', function () {
+          var w = reg.installing; if (!w) return;
+          w.addEventListener('statechange', function () {
+            if (w.state === 'installed' && navigator.serviceWorker.controller) w.postMessage('SKIP_WAITING');
+          });
+        });
+      }).catch(function () {});
+    });
+  }
+</script>
+
+</body>
+</html>

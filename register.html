@@ -3,9 +3,355 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Register — LFG Dubai</title>
-<meta name="robots" content="noindex">
-<script>window.location.replace('/#register-form');</script>
+<title>Join LFG Dubai - Create Your Account</title>
+<meta name="description" content="Create your LFG Dubai account. One profile for runs, bootcamps and everything else we do.">
+<link rel="icon" type="image/png" href="/lfg-logo.png">
+<link rel="stylesheet" href="/app-assets/lfg-app.css?v=4">
+<style>
+  /* Page-specific: stepped sign-up. Colors and type all come from lfg-app.css
+     variables (the shipped design system); nothing new is introduced here. */
+  .reg-card { max-width: 460px; }
+  /* 16px stops iOS zooming the viewport on focus; matters on a form-heavy page. */
+  .reg-card .lfg-input { font-size: 16px; }
+  .reg-progress { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+  .reg-progress-label { font-family: var(--font-head); font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color: var(--muted); }
+  .reg-progress-bar { flex: 1; height: 2px; background: var(--line); margin-left: 16px; position: relative; }
+  .reg-progress-fill { position: absolute; inset: 0 auto 0 0; background: var(--green); transition: width .3s ease; }
+  .reg-step { display: none; }
+  .reg-step.on { display: block; }
+  .reg-step-title { font-family: var(--font-head); font-size: 17px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 18px; }
+  .reg-hint { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+  .reg-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .reg-phone { display: grid; grid-template-columns: 118px 1fr; gap: 10px; }
+  .reg-nav { display: flex; gap: 10px; margin-top: 20px; }
+  .reg-nav .lfg-btn { margin: 0; }
+  .reg-back { flex: 0 0 auto; width: auto; padding: 0 18px; min-height: 48px; }
+  .reg-next { flex: 1; min-height: 48px; }
+  .reg-levels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .reg-lvl input { position: absolute; opacity: 0; }
+  .reg-lvl { position: relative; border: 1px solid var(--line); padding: 14px 8px; text-align: center; cursor: pointer; transition: border-color .2s, background .2s; }
+  .reg-lvl:hover { border-color: var(--green); }
+  .reg-lvl.on { border-color: var(--green); background: var(--green-dim); }
+  .reg-lvl-h { font-family: var(--font-head); font-size: 14px; font-weight: 800; text-transform: uppercase; }
+  .reg-lvl-s { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .reg-consent { display: flex; gap: 10px; align-items: flex-start; margin-top: 16px; font-size: 12px; color: var(--muted); line-height: 1.55; cursor: pointer; }
+  .reg-consent input { margin-top: 2px; accent-color: var(--green); width: 16px; height: 16px; flex: none; }
+  textarea.lfg-input { min-height: 74px; resize: vertical; font-family: inherit; }
+  .hp { position: absolute; left: -9999px; opacity: 0; height: 0; width: 0; }
+  #reg-success { display: none; text-align: center; }
+  #reg-success.on { display: block; }
+  .reg-tick { width: 52px; height: 52px; border: 1px solid var(--green); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 4px auto 18px; color: var(--green); }
+</style>
 </head>
-<body></body>
+<body>
+<div class="lfg-shell">
+  <div class="lfg-card reg-card">
+    <img src="/LFG MAIN LOGO-Photoroom.png" alt="LFG" class="lfg-logo">
+    <div class="lfg-eyebrow">LFG Dubai</div>
+    <h1 class="lfg-title">Join <em>the squad</em></h1>
+    <p class="lfg-sub">One account for runs, bootcamps and everything we do. Two minutes, then you're in.</p>
+
+    <div class="reg-progress" id="reg-progress">
+      <span class="reg-progress-label" id="reg-step-label">Step 1 of 3</span>
+      <div class="reg-progress-bar"><span class="reg-progress-fill" id="reg-fill" style="width:33%"></span></div>
+    </div>
+
+    <form id="reg-form" novalidate>
+      <input type="text" name="website_url" id="reg-hp" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+      <!-- STEP 1: who you are -->
+      <section class="reg-step on" id="reg-step-1">
+        <h2 class="reg-step-title">Who you are</h2>
+        <div class="reg-row-2">
+          <div class="lfg-field"><label class="lfg-label" for="reg-first">First name</label><input class="lfg-input" id="reg-first" maxlength="80" autocomplete="given-name"></div>
+          <div class="lfg-field"><label class="lfg-label" for="reg-last">Last name</label><input class="lfg-input" id="reg-last" maxlength="80" autocomplete="family-name"></div>
+        </div>
+        <div class="lfg-field"><label class="lfg-label" for="reg-email">Email</label><input class="lfg-input" id="reg-email" type="email" autocomplete="email" placeholder="you@email.com"></div>
+        <div class="lfg-field">
+          <label class="lfg-label" for="reg-phone">WhatsApp</label>
+          <div class="reg-phone">
+            <select class="lfg-input" id="reg-cc" aria-label="Country code">
+              <option value="+971" selected>🇦🇪 +971</option>
+              <option value="+966">🇸🇦 +966</option>
+              <option value="+965">🇰🇼 +965</option>
+              <option value="+974">🇶🇦 +974</option>
+              <option value="+973">🇧🇭 +973</option>
+              <option value="+968">🇴🇲 +968</option>
+              <option value="+20">🇪🇬 +20</option>
+              <option value="+91">🇮🇳 +91</option>
+              <option value="+44">🇬🇧 +44</option>
+              <option value="+1">🇺🇸 +1</option>
+            </select>
+            <input class="lfg-input" id="reg-phone" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="50 123 4567">
+          </div>
+          <p class="reg-hint">Run updates and your spot confirmations land here.</p>
+        </div>
+        <div class="lfg-field">
+          <label class="lfg-label" for="reg-ig">Instagram <span id="reg-ig-opt" hidden>(optional)</span></label>
+          <input class="lfg-input" id="reg-ig" maxlength="30" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="@yourhandle">
+          <p class="reg-hint" id="reg-ig-hint">So the team can tag you in run photos.</p>
+        </div>
+      </section>
+
+      <!-- STEP 2: you in Dubai -->
+      <section class="reg-step" id="reg-step-2">
+        <h2 class="reg-step-title">You in Dubai</h2>
+        <div class="lfg-field">
+          <label class="lfg-label" for="reg-nationality">Nationality</label>
+          <input class="lfg-input" id="reg-nationality" list="reg-nationality-list" autocomplete="off" placeholder="Start typing your nationality">
+          <datalist id="reg-nationality-list">
+                    <option>Afghan</option><option>Albanian</option><option>Algerian</option><option>American</option><option>Andorran</option><option>Angolan</option><option>Antiguan</option><option>Argentine</option><option>Armenian</option><option>Australian</option><option>Austrian</option><option>Azerbaijani</option>
+                    <option>Bahamian</option><option>Bahraini</option><option>Bangladeshi</option><option>Barbadian</option><option>Belarusian</option><option>Belgian</option><option>Belizean</option><option>Beninese</option><option>Bhutanese</option><option>Bolivian</option><option>Bosnian</option><option>Botswanan</option><option>Brazilian</option><option>British</option><option>Bruneian</option><option>Bulgarian</option><option>Burkinabé</option><option>Burmese</option><option>Burundian</option>
+                    <option>Cambodian</option><option>Cameroonian</option><option>Canadian</option><option>Cape Verdean</option><option>Central African</option><option>Chadian</option><option>Chilean</option><option>Chinese</option><option>Colombian</option><option>Comoran</option><option>Congolese</option><option>Costa Rican</option><option>Croatian</option><option>Cuban</option><option>Cypriot</option><option>Czech</option>
+                    <option>Danish</option><option>Djiboutian</option><option>Dominican</option><option>Dutch</option>
+                    <option>East Timorese</option><option>Ecuadorian</option><option>Egyptian</option><option>Emirati</option><option>English</option><option>Equatorial Guinean</option><option>Eritrean</option><option>Estonian</option><option>Ethiopian</option>
+                    <option>Fijian</option><option>Filipino</option><option>Finnish</option><option>French</option>
+                    <option>Gabonese</option><option>Gambian</option><option>Georgian</option><option>German</option><option>Ghanaian</option><option>Greek</option><option>Grenadian</option><option>Guatemalan</option><option>Guinean</option><option>Guyanese</option>
+                    <option>Haitian</option><option>Honduran</option><option>Hungarian</option>
+                    <option>Icelandic</option><option>Indian</option><option>Indonesian</option><option>Iranian</option><option>Iraqi</option><option>Irish</option><option>Israeli</option><option>Italian</option><option>Ivorian</option>
+                    <option>Jamaican</option><option>Japanese</option><option>Jordanian</option>
+                    <option>Kazakh</option><option>Kenyan</option><option>Kiribati</option><option>Kuwaiti</option><option>Kyrgyz</option>
+                    <option>Lao</option><option>Latvian</option><option>Lebanese</option><option>Liberian</option><option>Libyan</option><option>Liechtensteiner</option><option>Lithuanian</option><option>Luxembourgish</option>
+                    <option>Macedonian</option><option>Malagasy</option><option>Malawian</option><option>Malaysian</option><option>Maldivian</option><option>Malian</option><option>Maltese</option><option>Marshallese</option><option>Mauritanian</option><option>Mauritian</option><option>Mexican</option><option>Micronesian</option><option>Moldovan</option><option>Monégasque</option><option>Mongolian</option><option>Montenegrin</option><option>Moroccan</option><option>Mozambican</option>
+                    <option>Namibian</option><option>Nauruan</option><option>Nepali</option><option>New Zealander</option><option>Nicaraguan</option><option>Nigerien</option><option>Nigerian</option><option>North Korean</option><option>Norwegian</option>
+                    <option>Omani</option>
+                    <option>Pakistani</option><option>Palauan</option><option>Palestinian</option><option>Panamanian</option><option>Papua New Guinean</option><option>Paraguayan</option><option>Peruvian</option><option>Polish</option><option>Portuguese</option>
+                    <option>Qatari</option>
+                    <option>Romanian</option><option>Russian</option><option>Rwandan</option>
+                    <option>Saint Lucian</option><option>Salvadoran</option><option>Samoan</option><option>San Marinese</option><option>Saudi</option><option>Scottish</option><option>Senegalese</option><option>Serbian</option><option>Seychellois</option><option>Sierra Leonean</option><option>Singaporean</option><option>Slovak</option><option>Slovenian</option><option>Solomon Islander</option><option>Somali</option><option>South African</option><option>South Korean</option><option>South Sudanese</option><option>Spanish</option><option>Sri Lankan</option><option>Sudanese</option><option>Surinamese</option><option>Swazi</option><option>Swedish</option><option>Swiss</option><option>Syrian</option>
+                    <option>Taiwanese</option><option>Tajik</option><option>Tanzanian</option><option>Thai</option><option>Togolese</option><option>Tongan</option><option>Trinidadian</option><option>Tunisian</option><option>Turkish</option><option>Turkmen</option><option>Tuvaluan</option>
+                    <option>Ugandan</option><option>Ukrainian</option><option>Uruguayan</option><option>Uzbek</option>
+                    <option>Vanuatuan</option><option>Venezuelan</option><option>Vietnamese</option>
+                    <option>Welsh</option><option>Yemeni</option><option>Zambian</option><option>Zimbabwean</option><option>Other</option>
+                  </datalist>
+        </div>
+        <div class="lfg-field">
+          <label class="lfg-label" for="reg-tenure">How long have you lived in the UAE?</label>
+          <select class="lfg-input" id="reg-tenure">
+            <option value="">Select</option>
+            <option value="lt1">Less than 1 year</option>
+            <option value="1to5">1 to 5 years</option>
+            <option value="5to10">5 to 10 years</option>
+            <option value="10plus">10+ years</option>
+            <option value="born">Born here</option>
+          </select>
+        </div>
+        <div class="lfg-field">
+          <label class="lfg-label" for="reg-occupation">Currently</label>
+          <select class="lfg-input" id="reg-occupation">
+            <option value="">Select</option>
+            <option value="student">Student</option>
+            <option value="working_pro">Working professional</option>
+            <option value="freelancer">Freelancer</option>
+            <option value="business_owner">Business owner</option>
+            <option value="visiting">Visiting</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="lfg-field" id="reg-occdetail-wrap" hidden>
+          <label class="lfg-label" for="reg-occdetail">What do you do?</label>
+          <input class="lfg-input" id="reg-occdetail" maxlength="120" autocomplete="off" placeholder="e.g. Software Engineer, Doctor, Marketing Manager">
+        </div>
+      </section>
+
+      <!-- STEP 3: running -->
+      <section class="reg-step" id="reg-step-3">
+        <h2 class="reg-step-title">Your running</h2>
+        <div class="lfg-field">
+          <label class="lfg-label">Your level</label>
+          <div class="reg-levels" id="reg-levels">
+            <label class="reg-lvl" data-v="beginner"><input type="radio" name="reg-level" value="beginner"><div class="reg-lvl-h">Beginner</div><div class="reg-lvl-s">0-3 km</div></label>
+            <label class="reg-lvl" data-v="occasional"><input type="radio" name="reg-level" value="occasional"><div class="reg-lvl-h">Occasional</div><div class="reg-lvl-s">3-5 km</div></label>
+            <label class="reg-lvl" data-v="advanced"><input type="radio" name="reg-level" value="advanced"><div class="reg-lvl-h">Advanced</div><div class="reg-lvl-s">5 km+</div></label>
+          </div>
+        </div>
+        <div class="lfg-field">
+          <label class="lfg-label" for="reg-interests">Interests, passions, hobbies <span style="text-transform:none;letter-spacing:0;">(optional)</span></label>
+          <textarea class="lfg-input" id="reg-interests" maxlength="400" placeholder="Padel, hiking, coffee, anything"></textarea>
+        </div>
+        <div class="lfg-field">
+          <label class="lfg-label" for="reg-hear">How did you hear about us?</label>
+          <select class="lfg-input" id="reg-hear">
+            <option value="">Pick one (optional)</option>
+            <option value="instagram">Instagram</option>
+            <option value="friend">A friend told me</option>
+            <option value="tobys">Toby's Estate</option>
+            <option value="search">Google search</option>
+            <option value="event">At an event</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <label class="reg-consent">
+          <input type="checkbox" id="reg-consent">
+          <span>Keep me posted on runs, bootcamps and events on WhatsApp and email. No spam, unsubscribe anytime.</span>
+        </label>
+      </section>
+
+      <div class="lfg-msg" id="reg-msg"></div>
+
+      <div class="reg-nav">
+        <button type="button" class="lfg-btn lfg-btn-ghost reg-back" id="reg-back" hidden>&larr; Back</button>
+        <button type="submit" class="lfg-btn lfg-btn-primary reg-next" id="reg-next">Continue</button>
+      </div>
+    </form>
+
+    <div id="reg-success">
+      <div class="reg-tick"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg></div>
+      <h2 class="lfg-title" style="font-size:26px;">You're <em>in.</em></h2>
+      <p class="lfg-sub" id="reg-success-msg" style="margin-bottom:20px;">Account created. We emailed you a sign-in link. Open it and your account is ready.</p>
+      <a class="lfg-btn lfg-btn-primary" href="/account">Go to my account</a>
+      <a class="lfg-btn lfg-btn-ghost" href="/#register-form" style="margin-top:10px;">Sign up for the next run</a>
+    </div>
+
+    <div class="lfg-foot">
+      <a href="/" class="lfg-back">&larr; Back to site</a>
+      <div style="margin-top:12px;">Already have an account? <a href="/login">Log in</a></div>
+      <div style="margin-top:8px;">Questions? <a href="https://wa.me/971504264410?text=Hi%2C%20I%27m%20signing%20up%20on%20the%20LFG%20site" target="_blank" rel="noopener">Message us on WhatsApp</a></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var TOTAL = 3;
+    var step = 1;
+    var igRequired = true; // new account by default; profile-check relaxes it
+    var el = function (id) { return document.getElementById(id); };
+    var msg = el('reg-msg');
+    function show(type, text) { msg.className = 'lfg-msg show ' + type; msg.textContent = text; }
+    function hideMsg() { msg.className = 'lfg-msg'; }
+
+    // Prefill from ?email= (the account page links here for members without a profile).
+    var qs = new URLSearchParams(location.search);
+    if (qs.get('email')) el('reg-email').value = qs.get('email');
+
+    function setStep(n) {
+      step = n;
+      for (var i = 1; i <= TOTAL; i++) el('reg-step-' + i).classList.toggle('on', i === n);
+      el('reg-step-label').textContent = 'Step ' + n + ' of ' + TOTAL;
+      el('reg-fill').style.width = Math.round(n / TOTAL * 100) + '%';
+      el('reg-back').hidden = n === 1;
+      el('reg-next').textContent = n === TOTAL ? 'Create my account' : 'Continue';
+      hideMsg();
+      var first = el('reg-step-' + n).querySelector('input,select,textarea');
+      if (first) { try { first.focus({ preventScroll: true }); } catch (e) {} }
+    }
+
+    // Instagram rule: mandatory for a new account, optional when a profile is on file.
+    el('reg-email').addEventListener('blur', function () {
+      var email = this.value.trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+      fetch('/api/profile-check', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email })
+      }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+        if (!d) return;
+        igRequired = !!d.instagram_required;
+        el('reg-ig-opt').hidden = igRequired;
+        el('reg-ig-hint').textContent = igRequired
+          ? 'So the team can tag you in run photos.'
+          : 'Welcome back. Add it if we don’t have it yet.';
+      }).catch(function () {});
+    });
+
+    // Occupation detail only matters for working professionals.
+    el('reg-occupation').addEventListener('change', function () {
+      el('reg-occdetail-wrap').hidden = this.value !== 'working_pro';
+    });
+
+    // Level chips.
+    var levels = el('reg-levels');
+    levels.addEventListener('click', function (e) {
+      var chip = e.target.closest('.reg-lvl');
+      if (!chip) return;
+      levels.querySelectorAll('.reg-lvl').forEach(function (c) { c.classList.remove('on'); });
+      chip.classList.add('on');
+      chip.querySelector('input').checked = true;
+    });
+
+    function cleanIg(v) {
+      var s = String(v || '').trim().replace(/^@/, '');
+      return /^[A-Za-z0-9._]{1,30}$/.test(s) ? s : null;
+    }
+
+    function validateStep(n) {
+      if (n === 1) {
+        if (!el('reg-first').value.trim()) return 'Enter your first name.';
+        if (!el('reg-last').value.trim()) return 'Enter your last name.';
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(el('reg-email').value.trim())) return 'Enter a valid email.';
+        var digits = el('reg-phone').value.replace(/\D/g, '');
+        if (digits.length < 7) return 'Enter your WhatsApp number.';
+        var ig = el('reg-ig').value.trim();
+        if (igRequired && !ig) return 'Add your Instagram handle. New accounts need one so the team knows who’s who.';
+        if (ig && !cleanIg(ig)) return 'That Instagram handle doesn’t look right. Letters, numbers, dots and underscores only.';
+      }
+      if (n === 2) {
+        if (!el('reg-nationality').value.trim()) return 'Add your nationality.';
+        if (!el('reg-tenure').value) return 'Pick how long you’ve been in the UAE.';
+        if (!el('reg-occupation').value) return 'Pick what you’re currently doing.';
+      }
+      if (n === 3) {
+        if (!document.querySelector('input[name="reg-level"]:checked')) return 'Pick your running level.';
+      }
+      return null;
+    }
+
+    el('reg-back').addEventListener('click', function () { if (step > 1) setStep(step - 1); });
+
+    el('reg-form').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var err = validateStep(step);
+      if (err) { show('err', err); return; }
+      if (step < TOTAL) { setStep(step + 1); return; }
+
+      var btn = el('reg-next');
+      btn.disabled = true; btn.textContent = 'Creating your account…';
+      var phone = el('reg-cc').value + el('reg-phone').value.replace(/\D/g, '').replace(/^0+/, '');
+      var payload = {
+        source: 'signup',
+        website_url: el('reg-hp').value,
+        first_name: el('reg-first').value.trim(),
+        last_name: el('reg-last').value.trim(),
+        email: el('reg-email').value.trim(),
+        whatsapp: phone,
+        instagram_handle: el('reg-ig').value.trim() || null,
+        nationality: el('reg-nationality').value.trim(),
+        uae_tenure: el('reg-tenure').value,
+        occupation: el('reg-occupation').value,
+        occupation_detail: el('reg-occdetail').value.trim() || null,
+        level: (document.querySelector('input[name="reg-level"]:checked') || {}).value,
+        interests: el('reg-interests').value.trim() || null,
+        hear_source: el('reg-hear').value || null,
+        consent_marketing: el('reg-consent').checked,
+        utm_source: qs.get('utm_source'), utm_medium: qs.get('utm_medium'),
+        utm_campaign: qs.get('utm_campaign'), utm_content: qs.get('utm_content'),
+        referrer: document.referrer || null, landing_page: location.pathname + location.search
+      };
+      try {
+        var res = await fetch('/api/run-register', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        var data = null; try { data = await res.json(); } catch (e2) {}
+        if (!res.ok) {
+          show('err', (data && data.error) || 'Something went wrong. Try again.');
+          btn.disabled = false; btn.textContent = 'Create my account';
+          return;
+        }
+        el('reg-form').style.display = 'none';
+        el('reg-progress').style.display = 'none';
+        if (data && data.already_member) {
+          el('reg-success-msg').textContent = 'Profile saved. You already have an account, so just log in and everything is there.';
+        }
+        el('reg-success').classList.add('on');
+      } catch (e3) {
+        show('err', 'Network error. Check your connection and try again.');
+        btn.disabled = false; btn.textContent = 'Create my account';
+      }
+    });
+
+    setStep(1);
+  })();
+</script>
+</body>
 </html>

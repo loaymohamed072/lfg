@@ -1,0 +1,58 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--ink:#0A0A0A;--paper:#F4F1E9;--olive:#C2C28A;--muted:rgba(244,241,233,.6);
+    --fh:'Barlow Condensed',Impact,sans-serif;--fb:'Barlow',Arial,sans-serif}
+  html,body{width:1080px;height:1920px}
+  .poster{position:relative;width:1080px;height:1920px;overflow:hidden;background:var(--ink)}
+  .bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 38%;
+    filter:contrast(1.13) saturate(.6) brightness(.64)}
+  .scrim-top{position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,7,9,.8) 2%,rgba(6,7,9,.34) 14%,transparent 28%)}
+  .scrim-mid{position:absolute;inset:0;background:radial-gradient(60% 26% at 50% 36%,rgba(5,6,8,.84),rgba(5,6,8,.4) 60%,transparent 82%)}
+  .scrim-bot{position:absolute;inset:0;background:linear-gradient(0deg,rgba(4,5,7,.98),rgba(4,5,7,.9) 20%,rgba(4,5,7,.45) 40%,transparent 58%)}
+  .vignette{position:absolute;inset:0;background:radial-gradient(120% 88% at 50% 42%,transparent 52%,rgba(0,0,0,.62))}
+  .grain{position:absolute;inset:-50%;width:200%;height:200%;opacity:.13;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+  .frame{position:absolute;inset:36px;border:1px solid rgba(244,241,233,.24);pointer-events:none}
+  .wrap{position:absolute;inset:36px;display:flex;flex-direction:column;align-items:center;
+    justify-content:flex-start;padding:64px 58px 60px;text-align:center}
+  .eyebrow{font-family:var(--fh);font-weight:700;font-size:23px;letter-spacing:.46em;
+    color:var(--olive);text-transform:uppercase;padding-left:.46em}
+  .lockup{display:flex;flex-direction:column;align-items:center;gap:34px;margin-top:430px}
+  .lfg{height:196px;width:auto;filter:brightness(0) invert(1) drop-shadow(0 6px 26px rgba(0,0,0,.78))}
+  .culture{width:590px;height:auto;filter:drop-shadow(0 6px 26px rgba(0,0,0,.78))}
+  .info{display:flex;flex-direction:column;align-items:center;margin-top:auto}
+  .date{font-family:var(--fh);font-weight:900;font-size:228px;line-height:.84;letter-spacing:-.02em;
+    color:var(--paper);text-transform:uppercase}
+  .when{font-family:var(--fh);font-weight:700;font-size:54px;line-height:1;letter-spacing:.04em;
+    color:var(--paper);text-transform:uppercase;margin-top:16px}
+  .when b{color:var(--olive)}
+  .spec{display:flex;align-items:center;justify-content:center;gap:17px;flex-wrap:wrap;
+    font-family:var(--fh);font-weight:600;font-size:29px;letter-spacing:.12em;color:var(--muted);
+    text-transform:uppercase;margin-top:24px}
+  .spec .d{width:6px;height:6px;border-radius:50%;background:var(--olive)}
+  .spec strong{color:var(--paper);font-weight:700}
+  .rule{width:210px;height:1px;background:rgba(244,241,233,.2);margin:32px 0 22px}
+  .foot{font-family:var(--fh);font-weight:700;font-size:21px;letter-spacing:.34em;
+    color:var(--muted);text-transform:uppercase;padding-left:.34em}
+</style></head><body>
+  <div class="poster">
+    <img class="bg" src="photo.png">
+    <div class="scrim-top"></div><div class="scrim-mid"></div><div class="scrim-bot"></div>
+    <div class="vignette"></div><div class="grain"></div><div class="frame"></div>
+    <div class="wrap">
+      <div class="lockup">
+        <img class="lfg" src="lfg_t.png">
+        <img class="culture" src="culture_two.png">
+      </div>
+      <div class="info">
+        <div class="date">1 July</div>
+        <div class="when">Wednesday <b>·</b> 7:30 PM</div>
+        <div class="spec"><strong>5 KM / 30 MIN</strong><span class="d"></span>Run or Jog<span class="d"></span>All Levels</div>
+        <div class="rule"></div>
+        <div class="foot">lfgdubai.com</div>
+      </div>
+    </div>
+  </div>
+</body></html>

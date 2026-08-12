@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="format-detection" content="telephone=no">
+<title>My Account - LFG Dubai</title>
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" href="/lfg-logo.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#0A0A0A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LFG Dubai">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="/app-assets/lfg-app.css">
+<link rel="stylesheet" href="/app-assets/lfg-account-page.css?v=10">
+</head>
+<body>
+<span class="acct-orb" aria-hidden="true"></span>
+<span class="acct-orb two" aria-hidden="true"></span>
+<span class="acct-grain" aria-hidden="true"></span>
+<div class="lfg-shell">
+  <div class="lfg-account">
+
+    <div class="lfg-account-top">
+      <a id="backBtn" class="lfg-back-btn" href="/" aria-label="Back to where you came from">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M13 8H3M7 4L3 8l4 4"/></svg>
+        <span id="backLabel">Back</span>
+      </a>
+      <button id="signOut" class="lfg-quiet-link">Sign out</button>
+    </div>
+
+    <header class="member-head">
+      <span class="member-card-photo" aria-hidden="true"></span>
+      <img class="member-card-crest" src="/app-assets/acct/crest.webp" alt="" aria-hidden="true" loading="lazy">
+      <div class="member-card-chrome">
+        <span class="chrome-mark">LFG &middot; Members Club</span>
+        <img class="member-card-badge" src="/app-assets/acct/crest.webp" alt="LFG crest">
+      </div>
+      <div class="member-status">
+        <span class="pulse" aria-hidden="true"></span>
+        <span>Active Member</span>
+      </div>
+      <div class="member-id">
+        <img id="avatar" class="member-avatar" alt="" style="display:none">
+        <div class="member-id-text">
+          <h1 id="whoName" class="member-name">Member</h1>
+          <div id="whoEmail" class="member-email"></div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Coaching clients who signed in here: their program lives on the coaching site.
+         Without this the run-club page looks like their account is empty. -->
+    <a id="coachingLink" class="lfg-cross-band" href="https://coaching.lfgdubai.com/login" style="display:none;">
+      <span class="lfg-cross-band-k">LFG Coaching</span>
+      <span class="lfg-cross-band-v">Your program, check-ins and food plan are on the coaching site. Open them &rarr;</span>
+    </a>
+
+    <!-- Members whose profile is missing details (Google sign-ups, quick payments):
+         one tap to the sign-up page, prefilled with their email. -->
+    <a id="profileLink" class="lfg-cross-band" href="/register" style="display:none;">
+      <span class="lfg-cross-band-k">Your profile</span>
+      <span class="lfg-cross-band-v">A few details are missing from your profile. Complete it in two minutes &rarr;</span>
+    </a>
+
+    <div class="stats-grid">
+    <section class="numbers-band" id="numbersBand">
+      <div class="num-col">
+        <div class="num" id="creditsK">—</div>
+        <div class="num-label">Sessions remaining</div>
+      </div>
+      <div class="num-col">
+        <div class="num" id="attendedK">—</div>
+        <div class="num-label">Sessions attended</div>
+      </div>
+      <div class="num-col num-col-since">
+        <div class="num num-date" id="sinceK">—</div>
+        <div class="num-label">Member since</div>
+      </div>
+      <div class="num-col num-col-streak" id="streakStat" style="display:none">
+        <div class="num"><svg id="streakFlame" class="flame-svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.5 0.67s0.74 2.65 0.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l0.03-0.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5 0.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-0.36 3.6-1.21 4.62-2.58 0.39 1.29 0.59 2.65 0.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/></svg><span id="streakK">0</span></div>
+        <div class="num-label" id="streakLabel">Sunday streak</div>
+      </div>
+    </section>
+
+    <section id="pointsCard" style="display:none;border:1px solid rgba(153,153,102,0.4);background:rgba(153,153,102,0.07);border-radius:12px;padding:18px 20px;margin-top:4px;">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;">
+        <div style="font-family:var(--font-head,inherit);font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:#999966;">Your points</div>
+        <div id="pointsBig" style="font-family:var(--font-head,inherit);font-weight:800;font-size:40px;line-height:1;color:#fff;">0</div>
+      </div>
+      <div id="pointsBreak" style="margin-top:8px;font-size:13px;color:rgba(255,255,255,0.6);"></div>
+      <div style="margin-top:6px;font-size:12px;color:rgba(255,255,255,0.45);line-height:1.5;">50 points every run, 100 every bootcamp you check into, plus bonus points the coaches hand out. Keep stacking them.</div>
+    </section>
+    </div><!-- /stats-grid -->
+
+    <div id="streakMeta" class="streak-meta" style="display:none"></div>
+
+    <div id="milestoneTrack" class="milestone-track" style="display:none">
+      <div class="milestone-track-head">
+        <span class="milestone-track-label" id="mtLabel">Next milestone</span>
+        <span class="milestone-track-count" id="mtCount"></span>
+      </div>
+      <div class="milestone-track-bar"><span class="milestone-track-fill" id="mtFill"></span></div>
+    </div>
+
+    <div id="milestone" class="milestone-quote" style="display:none">
+      <div class="milestone-eyebrow">Milestone</div>
+      <h3 class="milestone-h" id="milestoneHeadline"></h3>
+      <p class="milestone-sub" id="milestoneSub"></p>
+    </div>
+
+    <div class="cta-grid">
+      <a href="/bootcamp.html#bootcamps" class="next-cta primary">
+        <div class="next-eyebrow">Next session</div>
+        <div class="next-headline">Book <em>Sunday</em><span class="next-arrow" aria-hidden="true">→</span></div>
+        <div class="next-sub">Reserve your spot before the stations close.</div>
+      </a>
+
+      <a href="/leaderboard" class="next-cta">
+        <div class="next-eyebrow">Leaderboard</div>
+        <div class="next-headline">Your <em>rank</em><span class="next-arrow" aria-hidden="true">→</span></div>
+        <div class="next-sub">It's a points race now - 10 per run plus bootcamp bonus. See where you stand.</div>
+      </a>
+
+      <a href="/shop" class="next-cta">
+        <div class="next-eyebrow">Shop</div>
+        <div class="next-headline">The <em>LFG tee</em><span class="next-arrow" aria-hidden="true">→</span></div>
+        <div class="next-sub">LFG × PUMA. Pick it up at the next run. Limited stock.</div>
+      </a>
+    </div>
+
+    <section class="ledger" id="ordersCard" style="display:none;">
+      <div class="ledger-head"><span class="ledger-h">Your orders</span></div>
+      <div id="ordersList"></div>
+    </section>
+
+
+    <section class="ledger">
+      <div class="ledger-head">
+        <span class="ledger-h">Upcoming</span>
+        <span class="ledger-note" id="ledgerNote" style="display:none">Cancel up to 8:00 AM Dubai time on session day. Credit returns to your account.</span>
+      </div>
+      <div class="lfg-list" id="bookingsList">
+        <div class="lfg-empty" id="bookingsState">Loading…</div>
+      </div>
+    </section>
+
+    <section id="referralPanel" class="referral-panel" style="display:none;">
+      <div class="referral-head">
+        <div class="lfg-eyebrow" style="text-align:left;margin-bottom:8px;letter-spacing:.32em;font-size:10px;">Refer a friend</div>
+        <h3 class="referral-h">Both of you get <em>15% off.</em></h3>
+        <p class="referral-sub">Share your code. They save 15% straight at checkout. You unlock 15% off your next Sunday.</p>
+      </div>
+
+      <div class="referral-code-card">
+        <div class="referral-code-label">Your code</div>
+        <div class="referral-code-wrap">
+          <code class="referral-code" id="referralCode">—</code>
+          <button type="button" class="referral-action" id="referralCopy" title="Copy">Copy</button>
+          <a class="referral-action" id="referralShare" target="_blank" rel="noopener" title="Share on WhatsApp">Share</a>
+        </div>
+        <div class="referral-counter" id="referralCounter"></div>
+      </div>
+
+      <div id="referralRewards" class="referral-rewards" style="display:none;"></div>
+    </section>
+
+    <!-- Push opt-in. Same pill component as the install prompt so the two read as one
+         row of app settings rather than two competing banners. -->
+    <div id="notifyCard" class="install-pill" style="display:none">
+      <span class="install-glyph" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+      </span>
+      <span class="install-text">
+        <span class="install-h" id="notifyH">Run &amp; bootcamp alerts</span>
+        <span class="install-sub" id="notifySub">Know when the next session drops, without checking the group.</span>
+      </span>
+      <button type="button" class="install-action" id="notifyBtn">Turn on <span aria-hidden="true">&rarr;</span></button>
+    </div>
+
+    <div id="installCard" class="install-pill" style="display:none">
+      <span class="install-glyph" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="5" y="2" width="14" height="20" rx="2.5"/>
+          <line x1="12" y1="18" x2="12.01" y2="18"/>
+        </svg>
+      </span>
+      <span class="install-text">
+        <span class="install-h">Install on home screen</span>
+        <span class="install-sub">Opens like a real app. No browser bar.</span>
+      </span>
+      <button type="button" class="install-action" id="installBtn">Install <span aria-hidden="true">→</span></button>
+    </div>
+
+    <footer class="account-footer">
+      LFG &middot; Dubai &middot; Est. 2025 &middot; Sunday morning bootcamp
+    </footer>
+
+  </div>
+</div>
+
+<!-- First-time name prompt (magic-link members with no name) -->
+<div class="modal-overlay" id="nameModal">
+  <div class="modal">
+    <div class="m-eyebrow">Welcome to LFG</div>
+    <h3>What should we call you?</h3>
+    <p>Add your name so the coaches know who's in the room.</p>
+    <div class="lfg-field"><input class="lfg-input" type="text" id="nameInput" placeholder="Your name" autocomplete="name" maxlength="80"></div>
+    <div class="modal-actions">
+      <button class="lfg-btn lfg-btn-primary" id="nameSave" style="flex:1">Save</button>
+    </div>
+    <div id="nameErr" class="lfg-msg"></div>
+  </div>
+</div>
+
+<!-- Cancel-booking confirm - themed, replaces native confirm() -->
+<div class="modal-overlay" id="cancelModal">
+  <div class="modal">
+    <div class="m-eyebrow">Heads up</div>
+    <h3>Cancel this <em>booking?</em></h3>
+    <p id="cancelModalBody">Your credit goes straight back to your account. You can book another Sunday after.</p>
+    <div class="modal-actions">
+      <button class="lfg-btn lfg-btn-ghost" id="cancelKeep">Keep it</button>
+      <button class="lfg-btn lfg-btn-danger" id="cancelConfirm">Cancel booking</button>
+    </div>
+  </div>
+</div>
+
+<!-- iOS Add-to-Home-Screen instructions (iOS doesn't fire beforeinstallprompt) -->
+<div class="modal-overlay" id="iosInstallModal">
+  <div class="modal">
+    <div class="m-eyebrow">Install on iPhone</div>
+    <h3>Add LFG to your <em>home screen.</em></h3>
+    <p>iOS doesn't have a one-tap install button, but it takes 5 seconds:</p>
+    <ol class="lfg-ios-steps">
+      <li>Tap the <b>Share</b> button at the bottom of Safari <span class="lfg-ios-icon" aria-hidden="true">↑</span></li>
+      <li>Scroll and tap <b>Add to Home Screen</b></li>
+      <li>Tap <b>Add</b> in the top right</li>
+    </ol>
+    <p class="lfg-ios-note">It'll open like a native app from your home screen, full-screen, no browser bar.</p>
+    <div class="modal-actions">
+      <button class="lfg-btn lfg-btn-primary" id="iosInstallClose" style="flex:1">Got it</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast for inline errors / success notes -->
+<div class="lfg-toast" id="lfgToast" role="status" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.1"></script>
+<script src="/app-assets/lfg-supabase.js?v=3"></script>
+<script>
+  (function () {
+    function el(id) { return document.getElementById(id); }
+
+    // Count-up for the big stat numbers. Skipped entirely under reduced motion.
+    var REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function countUp(node, target) {
+      target = Number(target) || 0;
+      if (REDUCED || target === 0) { node.textContent = target; return; }
+      var dur = 900, start = null;
+      function tick(ts) {
+        if (!start) start = ts;
+        var p = Math.min((ts - start) / dur, 1);
+        var eased = 1 - Math.pow(1 - p, 3);
+        node.textContent = Math.round(target * eased);
+        if (p < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    // Resolve where "Back" should go for this visit.
+    // Priority: sessionStorage capture (set on the previous page when they clicked the
+    // /account link) → same-origin document.referrer → home. We keep the value cached
+    // so refreshing /account still preserves the back target.
+    (function setupBack() {
+      var btn = el('backBtn');
+      var labelEl = el('backLabel');
+      if (!btn || !labelEl) return;
+
+      function safeInternal(path) {
+        if (!path || typeof path !== 'string') return null;
+        if (path.indexOf('/') !== 0) return null;
+        if (path.indexOf('//') === 0) return null;
+        if (path.indexOf('/account') === 0) return null;
+        return path;
+      }
+
+      var target = null;
+      try {
+        var saved = sessionStorage.getItem('lfg_acct_back');
+        target = safeInternal(saved);
+      } catch (e) {}
+
+      if (!target && document.referrer) {
+        try {
+          var ref = new URL(document.referrer);
+          if (ref.origin === window.location.origin) {
+            target = safeInternal(ref.pathname + ref.search);
+          }
+        } catch (e) {}
+      }
+
+      target = target || '/';
+
+      // Smart label based on where we're heading back to.
+      var basePath = target.split('?')[0].split('#')[0];
+      var label = 'Back';
+      if (basePath === '/' || basePath === '/index.html') label = 'Back to LFG';
+      else if (basePath === '/bootcamp.html') label = 'Back to bootcamp';
+      else if (basePath === '/login') label = 'Back to sign in';
+
+      btn.setAttribute('href', target);
+      labelEl.textContent = label;
+    })();
+
+    (async function init() {
+      var session = await lfg.requireAuth('/login');
+      if (!session) return;
+
+      // Identity from the auth session (works for Google + magic link)
+      var u = session.user || {};
+      var meta = u.user_metadata || {};
+      var name = meta.full_name || meta.name || (u.email ? u.email.split('@')[0] : 'Member');
+      el('whoName').textContent = name;
+      el('whoEmail').textContent = u.email || '';
+      if (meta.avatar_url) { var a = el('avatar'); a.src = meta.avatar_url; a.style.display = 'block'; }
+
+      // Members with an incomplete profile (Google sign-ups, quick payments) get a
+      // one-tap route to finish it. Best-effort; never blocks the page.
+      lfg.api('/api/run-profile').then(function (r) {
+        if (!r || !r.ok || !r.data || r.data.complete !== false) return;
+        var band = el('profileLink');
+        band.href = '/register' + (u.email ? '?email=' + encodeURIComponent(u.email) : '');
+        band.style.display = 'flex';
+      }).catch(function () {});
+
+      // Coaching clients land here when they sign in on the main site out of habit.
+      // Surface the way across instead of showing them an account with nothing in it.
+      if (u.email) {
+        fetch('/api/where-to-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: u.email })
+        }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+          if (!d || !d.coaching) return;
+          var band = el('coachingLink');
+          band.href = 'https://coaching.lfgdubai.com/login?email=' + encodeURIComponent(u.email);
+          band.style.display = 'flex';
+        }).catch(function () {});
+      }
+
+      // Member data via serverless (/api/me). Builds in the next step;
+      // until then we fail gracefully without breaking the page.
+      var res = await lfg.api('/api/me');
+      if (res.ok && res.data) {
+        if (res.data.full_name) el('whoName').textContent = res.data.full_name;
+        countUp(el('creditsK'), res.data.sessions_remaining != null ? res.data.sessions_remaining : 0);
+        countUp(el('attendedK'), res.data.sessions_attended != null ? res.data.sessions_attended : 0);
+        // Member since - third stat so the band always carries real data.
+        (function () {
+          var raw = (res.data.streak && res.data.streak.member_since) || u.created_at;
+          var d = raw ? new Date(raw) : null;
+          if (d && !isNaN(d)) {
+            el('sinceK').textContent = d.toLocaleDateString('en-GB', { month: 'short' }).toUpperCase() +
+              ' ’' + String(d.getFullYear()).slice(2);
+          } else { el('sinceK').textContent = '’' + String(new Date().getFullYear()).slice(2); }
+        })();
+        renderBookings(res.data.upcoming_bookings || []);
+        renderStreak(res.data.streak);
+        renderPoints(res.data);
+        renderReferral(res.data);
+        renderOrders(res.data.merch_orders || []);
+        if (res.data.needs_name) el('nameModal').classList.add('show');
+      } else {
+        el('creditsK').textContent = '0';
+        el('attendedK').textContent = '0';
+        el('bookingsList').innerHTML = emptySessionCard();
+      }
+    })();
+
+    function renderStreak(s) {
+      if (!s) return;
+      var stat = el('streakStat');
+      var meta = el('streakMeta');
+      var milestone = el('milestone');
+
+      // Always show the streak tile (even at 0) once attended > 0, so members
+      // see what they're working toward. Hide it for brand-new members.
+      if (s.total > 0 || s.current > 0) {
+        stat.style.display = '';
+        var band = el('numbersBand');
+        if (band) band.classList.add('has-streak');
+        el('streakK').textContent = s.current;
+        // Dim the flame when streak is zero to avoid "burning out" visual
+        var flame = el('streakFlame');
+        flame.style.opacity = s.current > 0 ? '1' : '0.25';
+        el('streakLabel').textContent = s.current === 1 ? 'Sunday started' : 'Sundays in a row';
+      }
+
+      // Meta line: best · member since · this month's rank
+      var bits = [];
+      if (s.best > 0) bits.push('Personal best: <b>' + s.best + '</b> in a row');
+      if (s.attended_this_month > 0) bits.push('<b>' + s.attended_this_month + '</b> this month');
+      if (s.rank_this_month && s.rank_this_month <= 5) {
+        var rankWord = s.rank_this_month === 1 ? 'Top attendee' :
+                       s.rank_this_month === 2 ? '2nd most this month' :
+                       s.rank_this_month === 3 ? '3rd most this month' :
+                       'Top 5 this month';
+        bits.push('<b>' + rankWord + '</b>');
+      }
+      if (s.member_since) {
+        var d = new Date(s.member_since);
+        if (!isNaN(d)) bits.push('Member since ' + d.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }));
+      }
+      if (bits.length) {
+        meta.innerHTML = bits.join(' <span class="dot">·</span> ');
+        meta.style.display = '';
+      }
+
+      // Milestone progress track - lifetime sessions vs the next round-number target.
+      var milestones = [5, 10, 25, 50, 100, 200];
+      var total = Number(s.total || 0);
+      if (total > 0) {
+        var next = null, prev = 0;
+        for (var mi = 0; mi < milestones.length; mi++) {
+          if (milestones[mi] > total) { next = milestones[mi]; prev = mi === 0 ? 0 : milestones[mi - 1]; break; }
+        }
+        if (next) {
+          var track = el('milestoneTrack');
+          el('mtLabel').innerHTML = '<b>' + (next - total) + '</b> session' + (next - total === 1 ? '' : 's') + ' to your next milestone';
+          el('mtCount').textContent = total + ' / ' + next;
+          track.style.display = '';
+          var pct = Math.max(4, Math.round(((total - prev) / (next - prev)) * 100));
+          // Defer so the CSS width transition actually plays.
+          requestAnimationFrame(function () { requestAnimationFrame(function () { el('mtFill').style.width = pct + '%'; }); });
+        }
+      }
+
+      // Milestone celebration - only triggers on round-number lifetime totals.
+      // Suppressed if already dismissed this session.
+      var hit = milestones.indexOf(s.total);
+      var dismissedKey = 'lfg_ms_seen_' + s.total;
+      var alreadySeen = false;
+      try { alreadySeen = !!sessionStorage.getItem(dismissedKey); } catch (e) {}
+      if (hit >= 0 && !alreadySeen) {
+        el('milestoneHeadline').textContent = s.total + ' Sundays done.';
+        el('milestoneSub').textContent =
+          s.total === 5  ? "Five down. You're not 'trying it out' anymore. You're in." :
+          s.total === 10 ? "Double-digits. Ahmed knows your name and your section." :
+          s.total === 25 ? "Twenty-five. That's six months of getting up early." :
+          s.total === 50 ? "Fifty Sundays. You earned the right to brag about this." :
+          s.total === 100? "Triple-digit Sundays. You are the room." :
+          s.total === 200? "Two hundred. Living legend. Coffee's on Ahmed." :
+          "Another milestone. Keep going.";
+        milestone.style.display = '';
+        try { sessionStorage.setItem(dismissedKey, '1'); } catch (e) {}
+      }
+    }
+
+    function renderPoints(me) {
+      var card = el('pointsCard');
+      if (!card) return;
+      var pts = Number(me.points || 0);
+      var runs = Number(me.points_runs || 0);
+      var bcs = Number(me.points_bootcamps || 0);
+      var bonus = Number(me.points_bonus || 0);
+      // Points contribution comes pre-computed from the API (rates changed on 2026-06-17,
+      // so older check-ins may be valued differently than newer ones - never multiply here).
+      var runVal = Number(me.points_runs_value != null ? me.points_runs_value : runs * Number(me.points_per_run || 50));
+      var bcVal = Number(me.points_bootcamps_value != null ? me.points_bootcamps_value : bcs * Number(me.points_per_bootcamp || 100));
+      countUp(el('pointsBig'), pts);
+      card.classList.add('on');
+      var parts = [];
+      parts.push(runs + ' run' + (runs === 1 ? '' : 's') + ' = <b style="color:#fff">' + runVal + '</b>');
+      if (bcs) parts.push(bcs + ' bootcamp' + (bcs === 1 ? '' : 's') + ' = <b style="color:#fff">' + bcVal + '</b>');
+      if (bonus) parts.push('<b style="color:#fff">' + bonus + '</b> bonus');
+      el('pointsBreak').innerHTML = parts.join(' &nbsp;·&nbsp; ');
+      card.style.display = '';
+    }
+
+    function renderReferral(me) {
+      var panel = el('referralPanel');
+      if (!panel) return;
+      var code = me.referral_code;
+      if (!code) { panel.style.display = 'none'; return; }
+      panel.style.display = '';
+      el('referralCode').textContent = code;
+
+      // Counter line
+      var n = me.referral_used_count || 0;
+      el('referralCounter').innerHTML = n === 0
+        ? 'No friends have used it yet. Share it and unlock 15% off your next session.'
+        : '<b>' + n + '</b> friend' + (n === 1 ? '' : 's') + ' used it. Each one bought you 15% off.';
+
+      // WhatsApp share button - pre-filled message
+      var shareUrl = window.location.origin + '/bootcamp.html#bootcamps';
+      var msg = "Hey, you should try LFG's Sunday bootcamp with me. Use my code *" + code + "* at checkout and you get 15% off your first one: " + shareUrl;
+      el('referralShare').href = 'https://wa.me/?text=' + encodeURIComponent(msg);
+
+      // Copy button
+      el('referralCopy').onclick = function () {
+        navigator.clipboard.writeText(code).then(function () {
+          toast('Code copied to clipboard.', 'ok');
+        }).catch(function () {
+          toast(code, 'ok');
+        });
+      };
+
+      // Active rewards (codes other members earned them)
+      var rewards = me.active_rewards || [];
+      var rEl = el('referralRewards');
+      if (!rewards.length) { rEl.style.display = 'none'; rEl.innerHTML = ''; return; }
+      rEl.style.display = '';
+      var rowsHtml = rewards.map(function (r) {
+        var expDays = r.expires_at ? Math.max(0, Math.ceil((new Date(r.expires_at) - new Date()) / 86400000)) : null;
+        var expLabel = expDays != null ? (expDays + ' day' + (expDays === 1 ? '' : 's') + ' left') : 'no expiry';
+        return '<div class="reward-row">' +
+          '<div><div class="reward-code">' + escapeHtml(r.code) + '</div>' +
+          '<div class="reward-meta"><b>' + escapeHtml(r.label) + '</b> · ' + escapeHtml(expLabel) + '</div></div>' +
+          '<button type="button" class="referral-action" data-rwd="' + escapeHtml(r.code) + '">Copy</button>' +
+          '</div>';
+      }).join('');
+      rEl.innerHTML = '<div class="referral-rewards-h">Your unlocked rewards</div>' + rowsHtml;
+      rEl.querySelectorAll('[data-rwd]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          navigator.clipboard.writeText(b.getAttribute('data-rwd')).then(function () {
+            toast('Reward code copied.', 'ok');
+          }).catch(function () {});
+        });
+      });
+    }
+
+    function escapeHtml(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]; });
+    }
+
+    // Merch orders the member has placed - confirms the tee purchase landed.
+    function renderOrders(list) {
+      var card = el('ordersCard'), wrap = el('ordersList');
+      if (!card || !wrap) return;
+      if (!list.length) { card.style.display = 'none'; return; }
+      card.style.display = '';
+      wrap.innerHTML = list.map(function (o) {
+        var when = o.created_at ? new Date(o.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) : '';
+        var status = o.fulfilled ? 'Picked up' : (o.status === 'cancelled' ? 'Cancelled' : 'Confirmed');
+        var color = o.status === 'cancelled' ? '#e58a8a' : '#9c9';
+        return '<div class="lfg-row"><div><div class="date">LFG Tee · Size ' + escapeHtml(o.size || '') + '</div>' +
+          '<div class="meta">AED ' + (o.amount_aed || 0) + ' · ' + escapeHtml(when) + ' · we bring it to you at the next run</div></div>' +
+          '<div style="display:flex;align-items:center;gap:14px;"><span class="meta" style="color:' + color + ';">' + escapeHtml(status) + '</span></div></div>';
+      }).join('');
+    }
+
+    // Composed empty state: the real run-group photo, not a line of grey text.
+    function emptySessionCard() {
+      return '<a class="empty-session" href="/bootcamp.html#bootcamps">' +
+        '<span class="empty-session-eyebrow">Nothing booked</span>' +
+        '<span class="empty-session-h">Your <em>Sunday</em> starts here</span>' +
+        '<span class="empty-session-sub">Reserve your spot for the next bootcamp <span class="go" aria-hidden="true">&rarr;</span></span>' +
+        '</a>';
+    }
+
+    function renderBookings(list) {
+      var wrap = el('bookingsList');
+      var note = el('ledgerNote');
+      if (note) note.style.display = list.length ? '' : 'none';
+      if (!list.length) { wrap.innerHTML = emptySessionCard(); return; }
+      wrap.innerHTML = list.map(function (b) {
+        var statusText = b.status || 'Booked';
+        var section = b.section ? ' · Section ' + b.section : '';
+        var cancelControl = '';
+        if (b.status === 'Booked') {
+          cancelControl = b.can_cancel
+            ? '<button class="lfg-cancel-btn" data-bid="' + b.id + '" style="background:transparent;border:1px solid rgba(220,80,80,0.45);color:#e58a8a;padding:8px 14px;font-family:var(--font-head,inherit);font-size:12px;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;transition:background 0.2s,color 0.2s;">Cancel</button>'
+            : '<span class="meta" style="font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:0.1em;text-transform:uppercase;">Past 8 AM cutoff</span>';
+        } else {
+          cancelControl = '<span class="meta">' + statusText + '</span>';
+        }
+        return '<div class="lfg-row" data-bid="' + b.id + '"><div><div class="date">' + b.date_label + '</div>' +
+               '<div class="meta">' + (b.location || '') + section + '</div></div>' +
+               '<div style="display:flex;align-items:center;gap:14px;">' +
+                 (b.status === 'Booked' ? '<span class="meta" style="color:#9c9;">Booked</span>' : '') +
+                 cancelControl +
+               '</div></div>';
+      }).join('');
+      wrap.querySelectorAll('.lfg-cancel-btn').forEach(function (btn) {
+        btn.addEventListener('mouseenter', function () { btn.style.background = 'rgba(220,80,80,0.12)'; });
+        btn.addEventListener('mouseleave', function () { btn.style.background = 'transparent'; });
+        btn.addEventListener('click', function () { cancelBooking(btn.getAttribute('data-bid'), btn); });
+      });
+    }
+
+    // Tiny toast helper - used wherever we'd otherwise reach for alert().
+    var toastTimer = null;
+    function toast(msg, kind) {
+      var t = el('lfgToast');
+      if (!t) return;
+      t.textContent = msg;
+      t.className = 'lfg-toast show' + (kind ? ' ' + kind : '');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { t.className = 'lfg-toast'; }, 4200);
+    }
+
+    // Themed confirm - returns a Promise<boolean> so callers can `await` the user's choice.
+    function confirmCancel(bookingId) {
+      return new Promise(function (resolve) {
+        var modal = el('cancelModal');
+        modal.classList.add('show');
+        var keep = el('cancelKeep');
+        var go = el('cancelConfirm');
+
+        function cleanup(value) {
+          modal.classList.remove('show');
+          keep.removeEventListener('click', onKeep);
+          go.removeEventListener('click', onGo);
+          modal.removeEventListener('click', onBackdrop);
+          document.removeEventListener('keydown', onKey);
+          resolve(value);
+        }
+        function onKeep() { cleanup(false); }
+        function onGo() { cleanup(true); }
+        function onBackdrop(e) { if (e.target === modal) cleanup(false); }
+        function onKey(e) { if (e.key === 'Escape') cleanup(false); }
+
+        keep.addEventListener('click', onKeep);
+        go.addEventListener('click', onGo);
+        modal.addEventListener('click', onBackdrop);
+        document.addEventListener('keydown', onKey);
+        setTimeout(function () { go.focus(); }, 30);
+      });
+    }
+
+    async function cancelBooking(bookingId, btn) {
+      if (!bookingId) return;
+      var ok = await confirmCancel(bookingId);
+      if (!ok) return;
+
+      btn.disabled = true;
+      var prev = btn.textContent;
+      btn.textContent = 'Cancelling…';
+
+      var r = await lfg.api('/api/cancel-booking', { method: 'POST', body: JSON.stringify({ booking_id: bookingId }) });
+
+      if (r.ok && r.data && r.data.ok) {
+        toast('Booking cancelled. Credit returned to your account.', 'ok');
+        var me = await lfg.api('/api/me');
+        if (me.ok && me.data) {
+          el('creditsK').textContent = me.data.sessions_remaining != null ? me.data.sessions_remaining : 0;
+          renderBookings(me.data.upcoming_bookings || []);
+        }
+      } else {
+        var msg = (r.data && r.data.error) || 'Could not cancel.';
+        toast(msg, 'err');
+        btn.disabled = false;
+        btn.textContent = prev;
+      }
+    }
+
+    el('signOut').addEventListener('click', function () { lfg.signOut('/login'); });
+
+    el('nameSave').addEventListener('click', async function () {
+      var name = el('nameInput').value.trim();
+      if (name.length < 2) { el('nameErr').className = 'lfg-msg show err'; el('nameErr').textContent = 'Enter your name.'; return; }
+      this.disabled = true; this.textContent = 'Saving…';
+      var r = await lfg.api('/api/profile', { method: 'POST', body: JSON.stringify({ full_name: name }) });
+      if (r.ok && r.data.ok) { el('whoName').textContent = r.data.full_name; el('nameModal').classList.remove('show'); }
+      else { el('nameErr').className = 'lfg-msg show err'; el('nameErr').textContent = (r.data && r.data.error) || 'Could not save.'; this.disabled = false; this.textContent = 'Save'; }
+    });
+    el('nameInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') el('nameSave').click(); });
+
+    // ===== PWA install flow =====
+    // Three paths:
+    //   1) Already running as installed app (display-mode:standalone) → hide card
+    //   2) Android/Chromium with beforeinstallprompt → native prompt
+    //   3) iOS Safari → custom instruction modal (iOS has no programmatic install)
+    (function setupInstall() {
+      var card = el('installCard');
+      var btn = el('installBtn');
+      if (!card || !btn) return;
+
+      function isStandalone() {
+        return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+          || window.navigator.standalone === true;
+      }
+      function isIOS() {
+        return /iphone|ipad|ipod/i.test(window.navigator.userAgent) && !window.MSStream;
+      }
+      function isInAppBrowser() {
+        var ua = window.navigator.userAgent;
+        return /FBAN|FBAV|Instagram|Line\//i.test(ua); // in-app browsers can't install
+      }
+      function dismissedRecently() {
+        try {
+          var when = Number(localStorage.getItem('lfg_install_dismissed_at') || 0);
+          return when && (Date.now() - when) < 7 * 86400 * 1000; // 7 day cooldown
+        } catch (e) { return false; }
+      }
+
+      if (isStandalone() || isInAppBrowser() || dismissedRecently()) return;
+
+      var deferred = null;
+      window.addEventListener('beforeinstallprompt', function (e) {
+        e.preventDefault();
+        deferred = e;
+        card.style.display = '';
+      });
+
+      // iOS path - show the card with a different label, opens the instruction modal.
+      if (isIOS()) {
+        card.style.display = '';
+        btn.textContent = 'How to install';
+      }
+
+      btn.addEventListener('click', async function () {
+        if (deferred) {
+          deferred.prompt();
+          try {
+            var choice = await deferred.userChoice;
+            if (choice && choice.outcome === 'accepted') {
+              toast('Installing LFG…', 'ok');
+              card.style.display = 'none';
+            }
+          } catch (e) {}
+          deferred = null;
+          return;
+        }
+        if (isIOS()) {
+          el('iosInstallModal').classList.add('show');
+          return;
+        }
+        toast('Your browser doesn\'t support installing. Try Chrome or Safari.', 'err');
+      });
+
+      // Long-press the card → hide for a week
+      var pressTimer = null;
+      card.addEventListener('touchstart', function () {
+        pressTimer = setTimeout(function () {
+          try { localStorage.setItem('lfg_install_dismissed_at', String(Date.now())); } catch (e) {}
+          card.style.display = 'none';
+        }, 1200);
+      }, { passive: true });
+      card.addEventListener('touchend', function () { clearTimeout(pressTimer); });
+
+      // iOS modal close
+      var iosClose = el('iosInstallClose');
+      if (iosClose) {
+        iosClose.addEventListener('click', function () {
+          el('iosInstallModal').classList.remove('show');
+        });
+      }
+      var iosModal = el('iosInstallModal');
+      if (iosModal) {
+        iosModal.addEventListener('click', function (e) {
+          if (e.target === iosModal) iosModal.classList.remove('show');
+        });
+      }
+
+      // Hide card once the app is actually installed
+      window.addEventListener('appinstalled', function () {
+        card.style.display = 'none';
+        toast('LFG installed. Look on your home screen.', 'ok');
+      });
+    })();
+
+    // ===== Push notifications (opt-in) =====
+    // iOS delivers push only to a home-screen install, so on iOS Safari the pill
+    // steers to the install instructions rather than firing a permission prompt
+    // that can only fail. Nothing here ever prompts on its own: the browser
+    // permission dialog appears when the member taps the button, never on load.
+    (function setupNotify() {
+      var card = el('notifyCard'), btn = el('notifyBtn');
+      var h = el('notifyH'), sub = el('notifySub');
+      if (!card || !btn) return;
+      if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return;
+
+      function isStandalone() {
+        return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+          || window.navigator.standalone === true;
+      }
+      function isIOS() {
+        return /iphone|ipad|ipod/i.test(window.navigator.userAgent) && !window.MSStream;
+      }
+
+      // VAPID keys travel as base64url. Chrome takes the string, Safari needs bytes.
+      function keyBytes(base64) {
+        var pad = '='.repeat((4 - base64.length % 4) % 4);
+        var raw = window.atob((base64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+        var out = new Uint8Array(raw.length);
+        for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+        return out;
+      }
+
+      var mode = 'off';
+      function paint(next) {
+        mode = next;
+        card.style.display = '';
+        btn.disabled = false;
+        btn.style.display = '';
+        if (next === 'on') {
+          h.textContent = 'Alerts are on';
+          sub.textContent = 'Runs and bootcamps land on your lockscreen.';
+          btn.innerHTML = 'Turn off';
+        } else if (next === 'ios-install') {
+          h.textContent = 'Run & bootcamp alerts';
+          sub.textContent = 'Add LFG to your home screen first, then turn these on.';
+          btn.innerHTML = 'How to install <span aria-hidden="true">&rarr;</span>';
+        } else if (next === 'blocked') {
+          h.textContent = 'Alerts are blocked';
+          sub.textContent = 'Your browser is blocking notifications for this site. Allow them in site settings, then come back.';
+          btn.style.display = 'none';
+        } else {
+          h.textContent = 'Run & bootcamp alerts';
+          sub.textContent = 'Know when the next session drops, without checking the group.';
+          btn.innerHTML = 'Turn on <span aria-hidden="true">&rarr;</span>';
+        }
+      }
+
+      // navigator.serviceWorker.ready never settles if registration fails, which would
+      // leave the card hidden forever. Cap the wait and let the button path retry.
+      function readyOrNull(ms) {
+        return Promise.race([
+          navigator.serviceWorker.ready,
+          new Promise(function (r) { setTimeout(function () { r(null); }, ms || 5000); })
+        ]);
+      }
+
+      async function turnOn() {
+        btn.disabled = true; btn.textContent = 'Working…';
+        try {
+          var keyRes = await fetch('/api/push-key');
+          var keyJson = await keyRes.json();
+          if (!keyJson || !keyJson.key) {
+            toast('Notifications aren\'t switched on for the site yet.', 'err');
+            paint('off'); return;
+          }
+          var perm = await Notification.requestPermission();
+          if (perm === 'denied') { paint('blocked'); return; }
+          if (perm !== 'granted') { paint('off'); return; }
+
+          var reg = await navigator.serviceWorker.ready;
+          var s = await reg.pushManager.getSubscription();
+          if (!s) {
+            s = await reg.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: keyBytes(keyJson.key)
+            });
+          }
+          var r = await lfg.api('/api/push-subscribe', {
+            method: 'POST', body: JSON.stringify({ subscription: s.toJSON() })
+          });
+          if (!r.ok) {
+            toast((r.data && r.data.error) || 'Could not turn alerts on.', 'err');
+            paint('off'); return;
+          }
+          paint('on');
+          toast('Alerts on. You\'ll hear about the next run.', 'ok');
+        } catch (e) {
+          toast('Could not turn alerts on. Try again.', 'err');
+          paint(Notification.permission === 'denied' ? 'blocked' : 'off');
+        }
+      }
+
+      async function turnOff() {
+        btn.disabled = true; btn.textContent = 'Working…';
+        try {
+          var reg = await navigator.serviceWorker.ready;
+          var s = await reg.pushManager.getSubscription();
+          if (s) {
+            // Tell the server first: if unsubscribe() succeeds and the POST fails we
+            // lose the endpoint and can never clean the row up.
+            await lfg.api('/api/push-unsubscribe', {
+              method: 'POST', body: JSON.stringify({ endpoint: s.endpoint })
+            });
+            await s.unsubscribe();
+          }
+          paint('off');
+          toast('Alerts off.', 'ok');
+        } catch (e) {
+          toast('Could not turn alerts off.', 'err');
+          paint('on');
+        }
+      }
+
+      btn.addEventListener('click', function () {
+        if (mode === 'ios-install') { el('iosInstallModal').classList.add('show'); return; }
+        if (mode === 'on') { turnOff(); return; }
+        turnOn();
+      });
+
+      (async function init() {
+        if (isIOS() && !isStandalone()) { paint('ios-install'); return; }
+        if (Notification.permission === 'denied') { paint('blocked'); return; }
+        var reg = await readyOrNull(5000);
+        var s = null;
+        try { s = reg ? await reg.pushManager.getSubscription() : null; } catch (e) {}
+        paint(s ? 'on' : 'off');
+        // The browser can hold a subscription the server has since lost (row pruned,
+        // table reset). Re-post it so "on" in the UI means on in the database.
+        if (s) {
+          lfg.api('/api/push-subscribe', {
+            method: 'POST', body: JSON.stringify({ subscription: s.toJSON() })
+          }).catch(function () {});
+        }
+      })();
+    })();
+
+    // Register the service worker - only on production-ish origins, never on file://.
+    // When a new SW activates we reload once so the user sees the new shell immediately,
+    // instead of seeing the previous cached version flash before the update lands.
+    if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+      var lfgReloaded = false;
+      navigator.serviceWorker.addEventListener('message', function (ev) {
+        if (ev.data && ev.data.type === 'SW_UPDATED' && !lfgReloaded) {
+          lfgReloaded = true;
+          location.reload();
+        }
+      });
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        if (lfgReloaded) return;
+        lfgReloaded = true;
+        location.reload();
+      });
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/sw.js').then(function (reg) {
+          if (reg && reg.waiting) reg.waiting.postMessage('SKIP_WAITING');
+          if (reg) reg.addEventListener('updatefound', function () {
+            var w = reg.installing;
+            if (!w) return;
+            w.addEventListener('statechange', function () {
+              if (w.state === 'installed' && navigator.serviceWorker.controller) {
+                w.postMessage('SKIP_WAITING');
+              }
+            });
+          });
+        }).catch(function (e) {
+          console.warn('[SW] registration failed:', e && e.message);
+        });
+      });
+    }
+  })();
+</script>
+</body>
+</html>

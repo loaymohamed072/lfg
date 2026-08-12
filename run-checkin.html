@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Check in · LFG Run</title>
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" href="/lfg-logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0A0A0A; color: #fff; font-family: 'Barlow', sans-serif;
+    min-height: 100vh; min-height: 100dvh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px; -webkit-font-smoothing: antialiased;
+    background: radial-gradient(ellipse 60% 40% at 50% 30%, rgba(153,153,102,0.12), transparent 70%), #0A0A0A;
+  }
+  .ci { width: 100%; max-width: 460px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.012));
+    border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 36px 28px 32px;
+    text-align: center; position: relative; }
+  .ci-logo { height: 28px; margin: 0 auto 28px; display: block; opacity: 0.7; }
+  .ci-eyebrow { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 0.32em; text-transform: uppercase; color: #999966; margin-bottom: 14px; }
+  .ci-h { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 36px; line-height: 1; letter-spacing: -0.01em; text-transform: uppercase; margin-bottom: 10px; }
+  .ci-h em { font-style: normal; color: #999966; }
+  .ci-sub { color: rgba(255,255,255,0.65); font-size: 15px; line-height: 1.55; margin-bottom: 24px; }
+  .ci-icon { width: 72px; height: 72px; margin: 0 auto 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; line-height: 1; }
+  .ci-icon.ok { color: #999966; border: 2px solid #999966; }
+  .ci-icon.err { color: #e58a8a; border: 2px solid rgba(220,80,80,0.5); }
+  .ci-icon.wait { color: rgba(255,255,255,0.5); border: 2px solid rgba(255,255,255,0.15); }
+  .ci-icon.wait::after { content: ''; width: 22px; height: 22px; border: 2px solid transparent; border-top-color: #999966; border-radius: 50%; animation: ciSpin 1s linear infinite; }
+  @keyframes ciSpin { to { transform: rotate(360deg); } }
+  .ci-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); padding: 16px 18px; margin-top: 12px; border-radius: 4px; }
+  .ci-card-l { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 0.26em; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 4px; }
+  .ci-card-v { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 600; letter-spacing: 0.02em; color: #fff; }
+  .ci-counter { margin-top: 18px; font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255,255,255,0.5); }
+  .ci-counter b { color: #fff; font-weight: 600; }
+  .ci-btn { display: inline-flex; align-items: center; gap: 8px; background: #999966; color: #0A0A0A; border: none;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase;
+    padding: 14px 26px; cursor: pointer; text-decoration: none; margin-top: 22px; transition: transform .2s, background .2s; }
+  .ci-btn:hover { transform: translateY(-2px); background: #fff; }
+  .ci-btn.ghost { background: transparent; color: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.15); }
+  .ci-btn.ghost:hover { color: #fff; border-color: #fff; background: transparent; }
+  .ci-foot { margin-top: 26px; font-size: 12px; color: rgba(255,255,255,0.35); letter-spacing: 0.04em; line-height: 1.5; }
+  /* Pay nudge on the success screen when a paid-run scanner hasn't paid. Uses the
+     file's existing #e0655e accent only - no new colours. */
+  .ci-pay { margin-top: 22px; padding: 16px 18px; border: 1px solid #e0655e; border-radius: 10px; background: rgba(224,101,94,0.08); }
+  .ci-pay-h { font-size: 14px; color: #e0655e; font-weight: 600; margin-bottom: 4px; }
+  .ci-btn.pay { background: #e0655e; color: #0A0A0A; margin-top: 12px; }
+  .ci-btn.pay:hover { background: #fff; }
+  /* Missing-contact capture on the success screen. Shell reuses .ci-card. */
+  .ci-more { text-align: left; }
+  .ci-more .ci-more-sub { font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.5; margin: 6px 0 12px; }
+  .ci-input { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.14);
+    color: inherit; font: inherit; font-size: 15px; padding: 11px 12px; border-radius: 4px; margin-bottom: 10px; }
+  .ci-input::placeholder { color: rgba(255,255,255,0.35); }
+  .ci-input:focus { outline: none; border-color: rgba(153,153,102,0.9); }
+  .ci-more .ci-btn { margin-top: 4px; }
+  .ci-more-msg { font-size: 12px; color: rgba(255,255,255,0.55); margin-top: 10px; line-height: 1.5; }
+  .ci-hidden { display: none !important; }
+</style>
+</head>
+<body>
+  <main class="ci" id="ci">
+    <img src="/LFG MAIN LOGO-Photoroom.png" alt="LFG" class="ci-logo">
+    <div class="ci-eyebrow">LFG Run · Check in</div>
+
+    <!-- Loading -->
+    <div id="state-loading">
+      <div class="ci-icon wait" aria-hidden="true"></div>
+      <h1 class="ci-h">Checking <em>you in</em>…</h1>
+      <p class="ci-sub">One sec - locking in your run.</p>
+    </div>
+
+    <!-- Success -->
+    <div id="state-ok" class="ci-hidden">
+      <div class="ci-icon ok" aria-hidden="true">&#10003;</div>
+      <h1 class="ci-h" id="ok-h">You're <em>in.</em></h1>
+      <p class="ci-sub" id="ok-sub">Logged for today's run.</p>
+      <div class="ci-card">
+        <div class="ci-card-l">Today's run</div>
+        <div class="ci-card-v" id="ok-run">—</div>
+      </div>
+      <div class="ci-counter" id="ok-counter"></div>
+      <div class="ci-pay ci-hidden" id="ok-pay">
+        <div class="ci-pay-h">We don't have your run payment yet.</div>
+        <a class="ci-btn pay" id="ok-pay-btn" href="/track">Pay now</a>
+      </div>
+      <div class="ci-card ci-more ci-hidden" id="ok-more">
+        <div class="ci-card-l">Stay in the loop</div>
+        <p class="ci-more-sub">Run details and photos go out on WhatsApp. Drop your handle and we will tag you.</p>
+        <input class="ci-input ci-hidden" type="tel" id="more-wa" inputmode="tel" autocomplete="tel" placeholder="05X XXX XXXX">
+        <input class="ci-input ci-hidden" type="text" id="more-ig" maxlength="40" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="@yourhandle">
+        <button type="button" class="ci-btn ghost" id="more-save">Save</button>
+        <div class="ci-more-msg" id="more-msg"></div>
+      </div>
+      <a class="ci-btn" id="ok-board-btn" href="/leaderboard">See the leaderboard</a>
+      <div class="ci-foot">Every run you check into climbs your rank and keeps your streak alive.</div>
+    </div>
+
+    <!-- Sign in needed -->
+    <div id="state-signin" class="ci-hidden">
+      <div class="ci-icon ok" aria-hidden="true">&rarr;</div>
+      <h1 class="ci-h">Sign in <em>first</em></h1>
+      <p class="ci-sub">Quick sign-in to check you in. You'll come straight back here.</p>
+      <a class="ci-btn" id="signin-btn" href="/login">Sign in</a>
+    </div>
+
+    <!-- Error -->
+    <div id="state-err" class="ci-hidden">
+      <div class="ci-icon err" aria-hidden="true">!</div>
+      <h1 class="ci-h" id="err-h">Heads up</h1>
+      <p class="ci-sub" id="err-sub">Something's not right.</p>
+      <a class="ci-btn ghost" href="/account">My account</a>
+    </div>
+  </main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.1"></script>
+<script src="/app-assets/lfg-supabase.js?v=3"></script>
+<script>
+(function () {
+  function show(id) {
+    ['loading', 'ok', 'signin', 'err'].forEach(function (k) {
+      document.getElementById('state-' + k).classList.toggle('ci-hidden', k !== id);
+    });
+  }
+  function fmtTime(iso) {
+    if (!iso) return '';
+    try { return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Dubai' }); }
+    catch (e) { return ''; }
+  }
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c];
+    });
+  }
+  function runLabel(t) { return t === 'saturday' ? 'Saturday run' : t === 'wednesday' ? 'Wednesday run' : 'LFG run'; }
+
+  (async function go() {
+    // Waits out the auth-redirect token race so a freshly signed-in member sticks.
+    var session = await window.lfg.getSettledSession();
+    if (!session) {
+      show('signin');
+      var here = window.location.pathname + window.location.search;
+      sessionStorage.setItem('lfg_book_return_path', here);
+      document.getElementById('signin-btn').href = '/login?next=' + encodeURIComponent(here);
+      return;
+    }
+
+    try {
+      var res = await window.lfg.api('/api/run-checkin', { method: 'POST', body: JSON.stringify({}) });
+      var data = res.data || {};
+      if (!data.ok) {
+        document.getElementById('err-sub').textContent = data.error || "We couldn't check you in just now. Try the QR again in a sec.";
+        show('err');
+        return;
+      }
+      var firstName = (data.full_name || '').split(/\s+/)[0] || 'You';
+      document.getElementById('ok-h').innerHTML = data.already
+        ? 'Already <em>in,</em> ' + escapeHtml(firstName) + '.'
+        : 'You\'re <em>in,</em> ' + escapeHtml(firstName) + '.';
+      document.getElementById('ok-sub').textContent = data.already
+        ? 'You checked in at ' + fmtTime(data.checked_in_at) + '. Enjoy the run.'
+        : 'Logged for today\'s run. Enjoy it.';
+      document.getElementById('ok-run').textContent = runLabel(data.run_type) + (data.location ? ' · ' + data.location : '');
+      if (data.total_checked_in != null) {
+        document.getElementById('ok-counter').innerHTML = '<b>' + data.total_checked_in + '</b> checked in today';
+      }
+      // Paid run + no payment on file → nudge them to settle now. They're still
+      // checked in; this only adds a Pay button to the success screen.
+      var payEl = document.getElementById('ok-pay');
+      if (data.owes) {
+        var price = data.price_aed ? ('Pay AED ' + data.price_aed + ' now') : 'Pay now';
+        var payBtn = document.getElementById('ok-pay-btn');
+        payBtn.textContent = price;
+        payBtn.href = data.pay_url || '/track';
+        document.getElementById('ok-sub').textContent = data.already
+          ? 'You checked in at ' + fmtTime(data.checked_in_at) + '.'
+          : 'You\'re logged for today\'s run.';
+        payEl.classList.remove('ci-hidden');
+      } else {
+        payEl.classList.add('ci-hidden');
+      }
+      show('ok');
+      askForMissingContact();
+    } catch (e) {
+      document.getElementById('err-sub').textContent = 'Network blip. Try the QR again in a second.';
+      show('err');
+    }
+  })();
+
+  // A first-timer who walks in and makes an account on the spot leaves us with an
+  // email and nothing else, and nobody reads email. Ask for the two channels the
+  // team actually follows up on, and only for whichever one is missing. Never
+  // blocks the check-in: the success screen is already up before this runs.
+  async function askForMissingContact() {
+    var box = document.getElementById('ok-more');
+    if (!box) return;
+    var prof;
+    try { prof = await window.lfg.api('/api/run-profile'); } catch (e) { return; }
+    if (!prof || !prof.ok || !prof.data) return;
+    var p = prof.data.profile || {};
+    var needWa = !p.whatsapp, needIg = !p.instagram_handle;
+    if (!needWa && !needIg) return;
+
+    var waEl = document.getElementById('more-wa');
+    var igEl = document.getElementById('more-ig');
+    var msgEl = document.getElementById('more-msg');
+    var btn = document.getElementById('more-save');
+    if (needWa) waEl.classList.remove('ci-hidden');
+    if (needIg) igEl.classList.remove('ci-hidden');
+    box.classList.remove('ci-hidden');
+
+    btn.addEventListener('click', async function () {
+      var body = {};
+      if (needWa && waEl.value.trim()) body.whatsapp = toE164(waEl.value);
+      if (needIg && igEl.value.trim()) body.instagram_handle = igEl.value.trim();
+      if (!body.whatsapp && !body.instagram_handle) { msgEl.textContent = 'Add a number or a handle first.'; return; }
+      btn.disabled = true;
+      msgEl.textContent = 'Saving…';
+      var r = await window.lfg.api('/api/run-profile', { method: 'POST', body: JSON.stringify(body) });
+      if (r && r.ok && r.data && r.data.ok) {
+        waEl.classList.add('ci-hidden');
+        igEl.classList.add('ci-hidden');
+        btn.classList.add('ci-hidden');
+        msgEl.textContent = 'Got it. See you out there.';
+      } else {
+        btn.disabled = false;
+        msgEl.textContent = (r && r.data && r.data.error) || 'Could not save that. Try again.';
+      }
+    });
+  }
+
+  // UAE default: a local 05X number becomes +9715X. Anything already typed in full
+  // international form passes through untouched.
+  function toE164(v) {
+    var s = String(v || '').trim();
+    if (s.charAt(0) === '+') return s;
+    var d = s.replace(/[^\d]/g, '').replace(/^0+/, '');
+    if (d.indexOf('971') === 0) return '+' + d;
+    return '+971' + d;
+  }
+})();
+</script>
+</body>
+</html>

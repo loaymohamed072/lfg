@@ -1,0 +1,235 @@
+{
+  "title": "Page Not Found",
+  "fonts": {
+    "primary": [
+      "Blender Pro"
+    ],
+    "googleFonts": [
+      "https://fonts.googleapis.com",
+      "https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap"
+    ],
+    "fontFaceFamilies": [
+      "Blender Pro",
+      "Designer",
+      "Blender Pro Regular",
+      "Blender Pro ExtraBold",
+      "Blender Pro Italic",
+      "Blender Pro BoldItalic",
+      "Blender Pro Bold",
+      "Blender Pro Medium",
+      "Blender Pro MediumItalic",
+      "Blender Pro Thin"
+    ]
+  },
+  "typeScale": [
+    {
+      "tag": "h1",
+      "fontSizePx": 74,
+      "lineHeight": "74px",
+      "fontWeight": "900",
+      "letterSpacing": "1.85px",
+      "textTransform": "uppercase",
+      "fontFamily": "Blender Pro"
+    },
+    {
+      "tag": "h4",
+      "fontSizePx": 30,
+      "lineHeight": "32px",
+      "fontWeight": "900",
+      "letterSpacing": "normal",
+      "textTransform": "uppercase",
+      "fontFamily": "Blender Pro"
+    },
+    {
+      "tag": "h2",
+      "fontSizePx": 24,
+      "lineHeight": "21.6px",
+      "fontWeight": "800",
+      "letterSpacing": "-0.6px",
+      "textTransform": "uppercase",
+      "fontFamily": "Blender Pro"
+    },
+    {
+      "tag": "span",
+      "fontSizePx": 24,
+      "lineHeight": "21.6px",
+      "fontWeight": "800",
+      "letterSpacing": "-0.6px",
+      "textTransform": "uppercase",
+      "fontFamily": "Blender Pro"
+    },
+    {
+      "tag": "p",
+      "fontSizePx": 20,
+      "lineHeight": "18px",
+      "fontWeight": "500",
+      "letterSpacing": "normal",
+      "textTransform": "none",
+      "fontFamily": "Blender Pro"
+    },
+    {
+      "tag": "a",
+      "fontSizePx": 20,
+      "lineHeight": "28px",
+      "fontWeight": "900",
+      "letterSpacing": "normal",
+      "textTransform": "uppercase",
+      "fontFamily": "Blender Pro"
+    },
+    {
+      "tag": "a",
+      "fontSizePx": 18,
+      "lineHeight": "28px",
+      "fontWeight": "600",
+      "letterSpacing": "normal",
+      "textTransform": "uppercase",
+      "fontFamily": "Blender Pro"
+    },
+    {
+      "tag": "button",
+      "fontSizePx": 18,
+      "lineHeight": "28px",
+      "fontWeight": "600",
+      "letterSpacing": "normal",
+      "textTransform": "uppercase",
+      "fontFamily": "Blender Pro"
+    },
+    {
+      "tag": "a",
+      "fontSizePx": 16,
+      "lineHeight": "24px",
+      "fontWeight": "400",
+      "letterSpacing": "normal",
+      "textTransform": "none",
+      "fontFamily": "Blender Pro"
+    },
+    {
+      "tag": "p",
+      "fontSizePx": 12,
+      "lineHeight": "16px",
+      "fontWeight": "400",
+      "letterSpacing": "normal",
+      "textTransform": "capitalize",
+      "fontFamily": "Blender Pro"
+    },
+    {
+      "tag": "span",
+      "fontSizePx": 12,
+      "lineHeight": "16px",
+      "fontWeight": "400",
+      "letterSpacing": "normal",
+      "textTransform": "uppercase",
+      "fontFamily": "Blender Pro"
+    }
+  ],
+  "colors": {
+    "text": [
+      "#000000",
+      "#ffffff"
+    ],
+    "background": [
+      "#ffffff"
+    ]
+  },
+  "layout": {
+    "containerWidthsPx": [
+      1440
+    ],
+    "sectionCount": 4,
+    "sections": [
+      {
+        "tag": "div",
+        "heightPx": 868,
+        "paddingTopPx": 0,
+        "paddingBottomPx": 0,
+        "display": "block",
+        "background": null,
+        "groundImage": null,
+        "groundLayers": 0,
+        "hasCanvas": false,
+        "hasVideoBg": false,
+        "headings": 0,
+        "hasImage": false
+      },
+      {
+        "tag": "div",
+        "heightPx": 133,
+        "paddingTopPx": 0,
+        "paddingBottomPx": 0,
+        "display": "block",
+        "background": null,
+        "groundImage": null,
+        "groundLayers": 0,
+        "hasCanvas": false,
+        "hasVideoBg": false,
+        "headings": 1,
+        "hasImage": true
+      },
+      {
+        "tag": "section",
+        "heightPx": 758,
+        "paddingTopPx": 0,
+        "paddingBottomPx": 0,
+        "display": "flex",
+        "background": null,
+        "groundImage": null,
+        "groundLayers": 0,
+        "hasCanvas": false,
+        "hasVideoBg": false,
+        "headings": 1,
+        "hasImage": true
+      },
+      {
+        "tag": "footer",
+        "heightPx": 477,
+        "paddingTopPx": 0,
+        "paddingBottomPx": 0,
+        "display": "block",
+        "background": "#ffffff",
+        "groundImage": null,
+        "groundLayers": 0,
+        "hasCanvas": false,
+        "hasVideoBg": false,
+        "headings": 0,
+        "hasImage": true
+      }
+    ]
+  },
+  "atmosphere": {
+    "gradients": [
+      "linear-gradient(in oklab, rgb(0, 0, 0) 0%, rgb(26, 26, 26) 50%, rgb(0, 0, 0) 100%)"
+    ],
+    "blends": [],
+    "filters": [],
+    "backdropFilters": [],
+    "masks": [],
+    "pseudoDecor": [
+      "section::before: bg=url(\"https://premierpadel.com/_next/static/media/header-border-img.3hstanitu_4uf.svg\") blend=normal opacity=1"
+    ],
+    "svgTurbulence": 0,
+    "webglCanvas": 0,
+    "videoBackgrounds": 0
+  },
+  "radii": [
+    "12px",
+    "14px"
+  ],
+  "shadows": [],
+  "motion": {
+    "gsap": false,
+    "scrollTrigger": false,
+    "lenis": false,
+    "locomotive": false,
+    "framerMotion": false,
+    "three": false,
+    "smoothScroll": false,
+    "transitionsCount": 42,
+    "observed": {
+      "animationsAtRest": 0,
+      "elementsChangedOnScroll": 0,
+      "smoothedScroll": false
+    }
+  },
+  "capturedAt": "2026-08-12T18:34:01.881Z",
+  "sourceUrl": "https://premierpadel.com/en/rankings"
+}

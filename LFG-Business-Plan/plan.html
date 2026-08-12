@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0A0A0A; --panel:#121210; --panel2:#17170f; --line:#2a2a20;
+    --off:#F4F1E9; --dim:#a6a69a; --dim2:#7d7d70;
+    --olive:#999966; --olive-hi:#C2C28A; --red:#b56a5a;
+    --head:'Barlow Condensed',sans-serif; --body:'Barlow',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  html{font-family:var(--body);}
+  body{background:var(--ink);color:var(--off);}
+  @page{size:A4 portrait;margin:0;}
+  .page{position:relative;width:210mm;height:297mm;overflow:hidden;background:var(--ink);page-break-after:always;padding:20mm 18mm;}
+  .page:last-child{page-break-after:auto;}
+  .full{padding:0;}
+  .graded{filter:grayscale(.28) contrast(1.06) brightness(.94) saturate(.9);}
+  .grain::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.10;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");}
+  h1,h2,h3,.kick,.stat-n,.big{font-family:var(--head);}
+  .kick{font-family:var(--head);text-transform:uppercase;letter-spacing:.34em;font-size:10px;font-weight:700;color:var(--olive-hi);margin-bottom:14px;}
+  h1{font-size:52px;font-weight:900;line-height:.94;letter-spacing:-.02em;text-transform:uppercase;}
+  h2{font-size:38px;font-weight:800;line-height:.98;letter-spacing:-.015em;text-transform:uppercase;margin-bottom:6px;}
+  h3{font-size:19px;font-weight:700;letter-spacing:.01em;text-transform:uppercase;color:var(--off);}
+  p{font-size:12.5px;line-height:1.62;color:var(--dim);font-weight:400;}
+  p.lead{font-size:15px;line-height:1.6;color:var(--off);font-weight:400;}
+  strong{color:var(--off);font-weight:600;}
+  .olive{color:var(--olive-hi);}
+  .rule{height:2px;width:54px;background:var(--olive);margin:0 0 20px;}
+  .foot{position:absolute;bottom:12mm;left:18mm;right:18mm;display:flex;justify-content:space-between;
+    font-family:var(--head);text-transform:uppercase;letter-spacing:.24em;font-size:8.5px;color:var(--dim2);
+    border-top:1px solid var(--line);padding-top:8px;}
+  .pgno{font-weight:700;color:var(--olive-hi);}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--line);border-radius:3px;overflow:hidden;}
+  .stats.tri{grid-template-columns:repeat(3,1fr);}
+  .stat{padding:18px 16px;border-right:1px solid var(--line);background:var(--panel);}
+  .stat:last-child{border-right:none;}
+  .stat-n{font-size:32px;font-weight:800;color:var(--olive-hi);line-height:1;letter-spacing:-.01em;}
+  .stat-l{font-size:9.5px;text-transform:uppercase;letter-spacing:.14em;color:var(--dim2);margin-top:7px;line-height:1.35;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:18px;}
+  .card h3{font-size:15px;margin-bottom:8px;}
+  .card .n{font-family:var(--head);font-size:26px;font-weight:800;color:var(--olive-hi);}
+  .card p{font-size:11.5px;line-height:1.5;}
+  .card .mod{font-family:var(--head);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--olive-hi);font-weight:700;}
+  img.chart{width:100%;display:block;}
+  .imgframe{border:1px solid var(--line);border-radius:3px;overflow:hidden;position:relative;}
+  .imgframe img{width:100%;display:block;}
+  table{width:100%;border-collapse:collapse;font-size:11.5px;}
+  th{font-family:var(--head);text-transform:uppercase;letter-spacing:.1em;font-size:10px;color:var(--dim2);text-align:left;padding:9px 10px;border-bottom:1px solid var(--olive);}
+  td{padding:9px 10px;border-bottom:1px solid var(--line);color:var(--dim);vertical-align:top;}
+  td strong{color:var(--off);}
+  tr.hi td{background:rgba(153,153,102,.10);}
+  td.r,th.r{text-align:right;}
+  td.win{color:var(--olive-hi);}
+  .tag{display:inline-block;font-family:var(--head);text-transform:uppercase;letter-spacing:.12em;font-size:9px;font-weight:700;color:var(--ink);background:var(--olive-hi);padding:3px 8px;border-radius:2px;}
+  .tag.out{background:none;color:var(--olive-hi);border:1px solid var(--olive);}
+  ul.clean{list-style:none;}
+  ul.clean li{position:relative;padding-left:18px;font-size:12px;line-height:1.55;color:var(--dim);margin-bottom:8px;}
+  ul.clean li::before{content:"";position:absolute;left:0;top:7px;width:6px;height:6px;background:var(--olive);border-radius:1px;}
+  ul.clean li strong{color:var(--off);}
+  .quote{font-family:var(--head);font-size:22px;font-weight:700;line-height:1.15;color:var(--off);letter-spacing:-.01em;}
+  .quote .olive{color:var(--olive-hi);}
+  .banner{background:var(--olive);color:var(--ink);padding:22px 24px;border-radius:3px;}
+  .banner .quote{color:var(--ink);}
+  .cover-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:60% 45%;}
+  .cover-scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,10,10,.55) 0%,rgba(10,10,10,.4) 40%,rgba(10,10,10,.93) 100%);}
+  .cover-in{position:absolute;inset:0;padding:22mm 18mm;display:flex;flex-direction:column;justify-content:space-between;z-index:2;}
+  .step{display:flex;gap:14px;margin-bottom:13px;}
+  .step .num{font-family:var(--head);font-size:21px;font-weight:800;color:var(--olive);line-height:1;min-width:92px;white-space:nowrap;padding-top:1px;}
+  .step h3{font-size:15px;margin-bottom:3px;}
+  .step p{font-size:11.5px;}
+  .split{display:grid;grid-template-columns:1.1fr .9fr;gap:0;height:100%;}
+</style>
+</head>
+<body>
+
+<!-- 1 COVER -->
+<div class="page full grain">
+  <img class="cover-bg graded" src="assets/cover_bg.png" alt="Runner at dawn on the Dubai waterfront">
+  <div class="cover-scrim"></div>
+  <div class="cover-in">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+      <img src="assets/logo.png" style="height:74px;" alt="LFG Dubai">
+      <div style="text-align:right;font-family:var(--head);text-transform:uppercase;letter-spacing:.24em;font-size:10px;color:var(--off);">
+        Komplete <span class="olive">&times;</span> LFG Dubai<br><span style="color:var(--dim);letter-spacing:.2em;">Coaching Platform Proposal</span>
+      </div>
+    </div>
+    <div>
+      <div class="kick" style="color:var(--olive-hi);">Private &middot; Prepared for Ahmed Sam &middot; July 2026</div>
+      <h1>The LFG<br>Coaching<br><span class="olive">Platform.</span></h1>
+      <p class="lead" style="max-width:150mm;margin-top:20px;">
+        The system that turns your 1,783-person community into a coaching business built to do
+        <strong>AED 109,000 a month</strong>. This is what we build, how it works, and what it makes you.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- 2 THE OPPORTUNITY -->
+<div class="page">
+  <div class="kick">01 &nbsp;/&nbsp; What you are sitting on</div>
+  <h2>You already built<br>the hard part.</h2>
+  <div class="rule" style="margin-top:14px;"></div>
+  <p class="lead" style="max-width:158mm;">
+    Building a large, trusting, affluent audience is the slow, expensive part of any business. You have done it.
+    The only thing missing is the machine to turn it into real coaching revenue.
+  </p>
+  <div class="stats" style="margin-top:24px;">
+    <div class="stat"><div class="stat-n">1,783</div><div class="stat-l">Warm members in the community</div></div>
+    <div class="stat"><div class="stat-n">888</div><div class="stat-l">Check-ins in the peak month (May 26)</div></div>
+    <div class="stat"><div class="stat-n">27</div><div class="stat-l">Median age, 88% under 35</div></div>
+    <div class="stat"><div class="stat-n">69%</div><div class="stat-l">Employed professionals</div></div>
+  </div>
+  <div class="grid2" style="margin-top:20px;align-items:center;">
+    <div>
+      <h3 style="margin-bottom:8px;">A crowd that already pays</h3>
+      <p>In its first month live, the platform collected <strong>AED 13,487</strong> from 110 payments at a
+      93% attendance rate. Members pre-buy credits (217 banked and unused). The demand is proven. The audience is
+      professional: sales leaders, engineers, architects, finance, <strong>15 CEOs and 12 founders</strong>.</p>
+      <p style="margin-top:10px;">This is the exact buyer for premium coaching: young, employed, time-poor, and willing to pay to remove effort.</p>
+    </div>
+    <img class="chart" src="assets/chart_growth.png" alt="Growth of check-ins">
+  </div>
+  <div class="imgframe grain" style="margin-top:16px;height:34mm;">
+    <img class="graded" src="assets/group.jpg" style="object-fit:cover;height:34mm;object-position:50% 32%;" alt="LFG community">
+  </div>
+  <div class="foot"><span>Komplete &times; LFG Dubai &middot; Coaching Platform</span><span class="pgno">02</span></div>
+</div>
+
+<!-- 3 THE PROBLEM -->
+<div class="page">
+  <div class="kick">02 &nbsp;/&nbsp; Why it is stuck</div>
+  <h2>You cannot run this<br>on WhatsApp.</h2>
+  <div class="rule" style="margin-top:14px;"></div>
+  <p style="max-width:158mm;">
+    The audience is ready. The offer is not, and there is no system to run it. Coaching today is a manual,
+    one-at-a-time job priced below the market floor. That ceiling is not your skill. It is the absence of a platform.
+  </p>
+  <div class="grid2" style="margin-top:20px;">
+    <div class="card"><h3>Priced below the floor</h3><p>AED 3,000 for 3 months is AED 1,000/mo, cheaper than an app charges for an automated plan in Dubai. Online coaching here starts at AED 1,500&ndash;3,000/mo; Embody runs AED 6,000&ndash;7,000; Ultimate Performance around AED 15,000.</p></div>
+    <div class="card"><h3>No recurring revenue</h3><p>Almost all income is one-off AED 100 drop-ins. Nothing renews, nothing compounds, and there is no membership to build a predictable base.</p></div>
+    <div class="card"><h3>No way to ascend the list</h3><p>1,783 people trust you and there is no system to move them from free run, to challenge, to coaching. The warm audience sits unmonetized.</p></div>
+    <div class="card"><h3>It does not scale by hand</h3><p>Programs, check-ins, payments, reminders and progress tracked manually cap you at a handful of clients and burn you out. You cannot grow coaching on spreadsheets and DMs.</p></div>
+  </div>
+  <div class="banner" style="margin-top:22px;background:var(--panel);border:1px solid var(--olive);">
+    <div class="quote" style="color:var(--off);font-size:20px;">You do not have a coaching problem. You have <span class="olive">no coaching machine</span>. That is exactly what we build.</div>
+  </div>
+  <div class="foot"><span>Komplete &times; LFG Dubai &middot; Coaching Platform</span><span class="pgno">03</span></div>
+</div>
+
+<!-- 4 THE SOLUTION -->
+<div class="page">
+  <div class="kick">03 &nbsp;/&nbsp; What we build</div>
+  <h2>The LFG Coaching<br>Platform.</h2>
+  <div class="rule" style="margin-top:14px;"></div>
+  <p class="lead" style="max-width:158mm;">
+    One system, on your own brand, that runs every part of a modern coaching business: sells the programs,
+    takes the money, delivers the coaching, keeps clients accountable, and shows you the numbers. Built on top of
+    the LFG platform you already own, so the whole community feeds it.
+  </p>
+  <div class="grid2" style="margin-top:20px;align-items:center;">
+    <div class="imgframe grain" style="height:78mm;">
+      <img class="graded" src="assets/bootcamp.jpg" style="object-fit:cover;height:78mm;object-position:50% 30%;" alt="LFG coaching in action">
+    </div>
+    <div>
+      <ul class="clean">
+        <li><strong>It sells for you.</strong> Programs, cohorts and challenges with checkout, so people buy without a single DM.</li>
+        <li><strong>It delivers for you.</strong> Client profiles, plans, check-ins and progress in one place, not scattered across chats.</li>
+        <li><strong>It keeps them.</strong> Accountability, streaks and reminders that make premium clients finish and renew.</li>
+        <li><strong>It grows itself.</strong> Every runner and buyer is captured and ascended up the ladder, automatically.</li>
+        <li><strong>It reports to you.</strong> Revenue, clients and lifetime value on one screen. You read the story, not the spreadsheet.</li>
+      </ul>
+    </div>
+  </div>
+  <p style="margin-top:18px;max-width:158mm;color:var(--off);font-family:var(--head);font-size:17px;font-weight:700;letter-spacing:-.01em;">
+    Your clients, your data, your brand. A coaching business that runs without you at the keyboard.
+  </p>
+  <div class="foot"><span>Komplete &times; LFG Dubai &middot; Coaching Platform</span><span class="pgno">04</span></div>
+</div>
+
+<!-- 5 WHATS INSIDE -->
+<div class="page">
+  <div class="kick">04 &nbsp;/&nbsp; The complete structure</div>
+  <h2>Six modules.<br>One machine.</h2>
+  <div class="rule" style="margin-top:14px;"></div>
+  <p style="max-width:158mm;">Every part of the coaching business, built as one connected system.</p>
+  <div class="grid3" style="margin-top:18px;">
+    <div class="card"><div class="mod">01 &middot; Programs</div><h3 style="margin-top:8px;">Coaching engine</h3><p>1:1 programs and small-group cohorts with start dates, capacity, plans and per-client tracking. The core of the coaching product.</p></div>
+    <div class="card"><div class="mod">02 &middot; Challenges</div><h3 style="margin-top:8px;">Challenge launcher</h3><p>Dated 6-week challenges with checkout and rosters, your low-cost front door that turns a member into a buyer.</p></div>
+    <div class="card"><div class="mod">03 &middot; Billing</div><h3 style="margin-top:8px;">Memberships &amp; payments</h3><p>Recurring AED 400/mo membership and program payments through Stripe. Money lands in your account, renewals run themselves.</p></div>
+    <div class="card"><div class="mod">04 &middot; Retention</div><h3 style="margin-top:8px;">Accountability</h3><p>Check-in, streaks, progress and reminders. The behaviour that makes premium programs deliver results and renew.</p></div>
+    <div class="card"><div class="mod">05 &middot; CRM</div><h3 style="margin-top:8px;">The warm list</h3><p>Every runner, member and buyer captured and synced to GoHighLevel, tagged and ready to sell to. Your 1,783 become a real asset.</p></div>
+    <div class="card"><div class="mod">06 &middot; Owner</div><h3 style="margin-top:8px;">The cockpit</h3><p>Revenue, active clients, lifetime value, lapsed-member alerts and a monthly report. Full view of the business at a glance.</p></div>
+  </div>
+  <div class="banner" style="margin-top:22px;background:var(--panel);border:1px solid var(--olive);">
+    <div class="quote" style="color:var(--off);font-size:19px;">The community earns the trust. The offers set the price. <span class="olive">The platform does the work.</span></div>
+  </div>
+  <div class="foot"><span>Komplete &times; LFG Dubai &middot; Coaching Platform</span><span class="pgno">05</span></div>
+</div>
+
+<!-- 6 SEPARATE VS COMBINED -->
+<div class="page">
+  <div class="kick">05 &nbsp;/&nbsp; The architecture decision</div>
+  <h2>Two ways to<br>build it.</h2>
+  <div class="rule" style="margin-top:14px;"></div>
+  <p style="max-width:158mm;">
+    One question shapes everything: should coaching live on its own separate site and brand, or inside the LFG
+    platform you already have? Both work, and we can build either. Here is how each plays out so you can choose.
+  </p>
+  <div class="grid2" style="margin-top:18px;align-items:start;">
+    <div class="card">
+      <span class="tag out">Option A</span>
+      <h3 style="margin-top:10px;">A separate coaching brand</h3>
+      <p style="margin-top:4px;">Coaching gets its own name, domain and login, standing apart from the run club.</p>
+      <p style="margin-top:12px;color:var(--olive-hi);font-family:var(--head);letter-spacing:.1em;font-size:11px;text-transform:uppercase;">Advantages</p>
+      <ul class="clean" style="margin-top:6px;">
+        <li>Clean, standalone premium positioning, not tied to a free run club.</li>
+        <li>Becomes its own asset you could grow or sell separately later.</li>
+        <li>Freedom to target a different audience beyond the LFG crowd.</li>
+      </ul>
+      <p style="margin-top:10px;color:var(--dim2);font-family:var(--head);letter-spacing:.1em;font-size:11px;text-transform:uppercase;">Disadvantages</p>
+      <ul class="clean" style="margin-top:6px;">
+        <li>You start the audience from zero, the 1,783 do not flow in.</li>
+        <li>A second brand and login for members to learn and trust.</li>
+        <li>Data and CRM split across two systems; slower and costlier to build and run.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="tag">Option B</span>
+      <h3 style="margin-top:10px;">Built inside LFG</h3>
+      <p style="margin-top:4px;">Coaching lives in the LFG platform with its own dedicated <strong>/coaching</strong> space, on one engine.</p>
+      <p style="margin-top:12px;color:var(--olive-hi);font-family:var(--head);letter-spacing:.1em;font-size:11px;text-transform:uppercase;">Advantages</p>
+      <ul class="clean" style="margin-top:6px;">
+        <li>The 1,783 members flow straight into coaching, no rebuild.</li>
+        <li>One account, one brand they already know; cross-sell on rails.</li>
+        <li>One list and CRM; faster to launch and cheaper to run.</li>
+      </ul>
+      <p style="margin-top:10px;color:var(--dim2);font-family:var(--head);letter-spacing:.1em;font-size:11px;text-transform:uppercase;">Disadvantages</p>
+      <ul class="clean" style="margin-top:6px;">
+        <li>Coaching shares identity with the free run-club brand.</li>
+        <li>Harder to spin coaching out as a fully separate business later.</li>
+        <li>Premium tier leans on LFG's positioning rather than its own.</li>
+      </ul>
+    </div>
+  </div>
+  <p style="margin-top:16px;max-width:158mm;color:var(--dim);font-size:12px;">
+    Either way it runs on the same engine we build. The choice is positioning: a standalone coaching brand,
+    or coaching powered by the community you already own. We will build whichever you decide.
+  </p>
+  <div class="foot"><span>Komplete &times; LFG Dubai &middot; Coaching Platform</span><span class="pgno">06</span></div>
+</div>
+
+<!-- 7 HOW IT MAKES THE MONEY -->
+<div class="page">
+  <div class="kick">06 &nbsp;/&nbsp; How it makes the money</div>
+  <h2>The platform runs<br>every rung.</h2>
+  <div class="rule" style="margin-top:14px;"></div>
+  <p style="max-width:158mm;">
+    The growth does not come from working harder. It comes from a ladder the platform runs for you: each step is a
+    small yes that pre-qualifies the next. Your free run club stays exactly as it is, the lead magnet that feeds everything.
+  </p>
+  <div class="grid2" style="margin-top:16px;align-items:center;">
+    <img class="chart" src="assets/chart_ladder.png" alt="The offer ladder">
+    <div>
+      <ul class="clean">
+        <li><strong>Free run club.</strong> The 1,783 warm list, captured by the CRM module.</li>
+        <li><strong>Membership, AED 400/mo.</strong> Recurring income, billed automatically. A relationship, not a drop-in.</li>
+        <li><strong>6-week challenge, AED 300&ndash;500.</strong> The tripwire, launched and sold by the challenge module.</li>
+        <li><strong>Small-group coaching, AED 3,500&ndash;5,000.</strong> The scale engine, run by the program module.</li>
+        <li><strong>Premium 1:1, AED 8,500&ndash;15,000.</strong> Capped, the anchor, delivered and tracked in-platform.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="stats tri" style="margin-top:18px;">
+    <div class="stat"><div class="stat-n">AED 400</div><div class="stat-l">Membership, recurring base</div></div>
+    <div class="stat"><div class="stat-n">AED 4k</div><div class="stat-l">Small-group, the profit engine</div></div>
+    <div class="stat"><div class="stat-n">AED 8.5k+</div><div class="stat-l">1:1, the premium anchor</div></div>
+  </div>
+  <div class="foot"><span>Komplete &times; LFG Dubai &middot; Coaching Platform</span><span class="pgno">07</span></div>
+</div>
+
+<!-- 8 THE PREMIUM OFFER IT RUNS -->
+<div class="page">
+  <div class="kick">07 &nbsp;/&nbsp; The offer it lets you sell</div>
+  <h2>Charge AED 8,500.<br>Make it feel cheap.</h2>
+  <div class="rule" style="margin-top:14px;"></div>
+  <p style="max-width:158mm;">
+    The platform lets you retire "3-month coaching" and sell a named program with a stacked value and a real guarantee.
+    The buyer stops comparing you to a gym and starts comparing your price to the value in front of them.
+  </p>
+  <div class="grid2" style="margin-top:16px;align-items:start;">
+    <div>
+      <h3 style="margin-bottom:10px;">The 90-Day Transformation Protocol</h3>
+      <table>
+        <tr><th>What is in it</th><th class="r">Value</th></tr>
+        <tr><td>12 weeks 1:1 programming + weekly adjustments</td><td class="r">AED 6,000</td></tr>
+        <tr><td>Done-for-you meal plans via WhatsApp</td><td class="r">AED 2,000</td></tr>
+        <tr><td>Body-composition scans (start / mid / end)</td><td class="r">AED 900</td></tr>
+        <tr><td>Daily WhatsApp accountability</td><td class="r">AED 3,000</td></tr>
+        <tr><td>Private run-club perks + community</td><td class="r">AED 1,000</td></tr>
+        <tr class="hi"><td><strong>Total stacked value</strong></td><td class="r"><strong>AED 12,900</strong></td></tr>
+        <tr class="hi"><td><strong>Your price</strong></td><td class="r"><strong>AED 8,500</strong></td></tr>
+      </table>
+    </div>
+    <div>
+      <div class="card"><h3>The guarantee that closes</h3>
+        <p>"Follow the protocol, hit your sessions, log your meals, show up to check-ins, and if you do not see a
+        measurable body-composition change in 90 days, you train with me free until you do." Conditional on effort,
+        so it removes the buyer's risk without exposing your cash flow.</p></div>
+      <div class="card" style="margin-top:12px;"><h3>The platform runs it</h3>
+        <p>Checkout, capacity caps, client plans, check-ins and progress are all handled in-platform. Real scarcity
+        ("3 spots open") is enforced by the system, not a fake timer your community would smell.</p></div>
+    </div>
+  </div>
+  <p style="margin-top:14px;max-width:158mm;color:var(--off);font-family:var(--head);font-size:16px;font-weight:700;letter-spacing:-.01em;">
+    Make the offer so good they feel stupid saying no.
+  </p>
+  <div class="foot"><span>Komplete &times; LFG Dubai &middot; Coaching Platform</span><span class="pgno">08</span></div>
+</div>
+
+<!-- 9 THE NUMBERS IT PRODUCES -->
+<div class="page">
+  <div class="kick">08 &nbsp;/&nbsp; What it produces</div>
+  <h2>From AED 13k<br>to AED 109k a month.</h2>
+  <div class="rule" style="margin-top:14px;"></div>
+  <p style="max-width:158mm;">
+    No new audience required. The same 1,783 people, moved up the ladder by the platform. Conservative take rates
+    on the community you already have reach roughly <strong>8x</strong> today's revenue within a year of launch.
+  </p>
+  <img class="chart" src="assets/chart_projection.png" style="margin-top:12px;" alt="Revenue projection">
+  <img class="chart" src="assets/chart_build.png" style="margin-top:10px;" alt="Revenue build">
+  <table style="margin-top:14px;">
+    <tr><th>Revenue stream</th><th class="r">Assumption</th><th class="r">Monthly</th></tr>
+    <tr><td>Bootcamp membership</td><td class="r">100 members &times; AED 400</td><td class="r"><strong>AED 40,000</strong></td></tr>
+    <tr><td>Small-group coaching</td><td class="r">3 cohorts &times; 10 &times; AED 4,000 / qtr</td><td class="r"><strong>AED 40,000</strong></td></tr>
+    <tr><td>Premium 1:1</td><td class="r">6 clients &times; AED 8,500 / qtr</td><td class="r"><strong>AED 17,000</strong></td></tr>
+    <tr><td>Bootcamp drop-ins</td><td class="r">current run-rate</td><td class="r">AED 12,000</td></tr>
+    <tr class="hi"><td><strong>Total monthly</strong></td><td class="r"><strong>~8x today</strong></td><td class="r"><strong>AED 109,000</strong></td></tr>
+  </table>
+  <div class="foot"><span>Komplete &times; LFG Dubai &middot; Coaching Platform</span><span class="pgno">09</span></div>
+</div>
+
+<!-- 10 PRICING MATH -->
+<div class="page">
+  <div class="kick">09 &nbsp;/&nbsp; Fewer clients, more money</div>
+  <h2>Why the price<br>goes up.</h2>
+  <div class="rule" style="margin-top:14px;"></div>
+  <p style="max-width:158mm;">
+    Raising the price is not squeezing people. It is what lets you over-deliver and stop chasing 30 clients at once.
+    The platform makes the premium price credible: named programs, scans, tracking and a real guarantee.
+  </p>
+  <table style="margin-top:18px;">
+    <tr><th>Model</th><th class="r">Price / 3 mo</th><th class="r">Clients for AED 90k/qtr</th><th class="r">Delivery load</th></tr>
+    <tr><td>Current offer</td><td class="r">AED 3,000</td><td class="r"><strong>30</strong></td><td class="r">Brutal, unscalable</td></tr>
+    <tr class="hi"><td><strong>Repriced program</strong></td><td class="r"><strong>AED 8,500</strong></td><td class="r"><strong>~11</strong></td><td class="r">Manageable, premium</td></tr>
+    <tr><td>Premium 1:1</td><td class="r">AED 15,000</td><td class="r"><strong>6</strong></td><td class="r">Light, white-glove</td></tr>
+  </table>
+  <div class="grid2" style="margin-top:22px;">
+    <div class="card"><h3>The virtuous cycle</h3><p>Higher price, more committed clients, better results, stronger testimonials, easier next sale at a higher price. The platform captures the proof that fuels it.</p></div>
+    <div class="card"><h3>Small-group is the engine</h3><p>Three cohorts of 10 at AED 4,000 is AED 120,000 a quarter from about nine hours a week, and results often improve because the group holds each other accountable. The platform runs all three at once.</p></div>
+  </div>
+  <div class="foot"><span>Komplete &times; LFG Dubai &middot; Coaching Platform</span><span class="pgno">10</span></div>
+</div>
+
+<!-- 11 HOW WE BUILD IT -->
+<div class="page">
+  <div class="kick">10 &nbsp;/&nbsp; How we build it</div>
+  <h2>Live in<br>two weeks.</h2>
+  <div class="rule" style="margin-top:14px;"></div>
+  <p style="max-width:158mm;">Built fast so revenue starts almost immediately. You stay on the field. We build, test, deploy and maintain.</p>
+  <div style="margin-top:18px;">
+    <div class="step"><div class="num">DAY 1&ndash;7</div><div><h3>Coaching core live</h3><p>The 1:1 and cohort program system, client profiles, payments and the branded coaching space. You can sell and deliver premium coaching by the end of week one.</p></div></div>
+    <div class="step"><div class="num">DAY 8&ndash;14</div><div><h3>The rest of the machine</h3><p>Membership billing, the challenge launcher, accountability (check-in, streaks, progress), CRM sync and the owner dashboard. The full 1,783 list consolidated and broadcast-ready.</p></div></div>
+    <div class="step"><div class="num">LIVE</div><div><h3>Launch</h3><p>The platform is live on your domain, taking payments and running the ladder. First challenge or cohort can open the same week.</p></div></div>
+    <div class="step"><div class="num">ONGOING</div><div><h3>Care</h3><p>Hosting, monitoring, fixes, new features, lapsed-member alerts and the monthly owner report. The system stays fast, live and current.</p></div></div>
+  </div>
+  <div class="banner" style="margin-top:20px;background:var(--panel);border:1px solid var(--olive);">
+    <div class="quote" style="color:var(--off);font-size:18px;">Komplete builds, tests, deploys and maintains everything. <span class="olive">You run your coaching. The system runs the business.</span></div>
+  </div>
+  <div class="foot"><span>Komplete &times; LFG Dubai &middot; Coaching Platform</span><span class="pgno">11</span></div>
+</div>
+
+<!-- 12 THE ASK (price hidden) -->
+<div class="page full">
+  <div class="split">
+    <div style="padding:20mm 15mm;display:flex;flex-direction:column;justify-content:space-between;">
+      <div>
+        <div class="kick">11 &nbsp;/&nbsp; The next step</div>
+        <h2 style="font-size:42px;">Let's build<br>the machine.</h2>
+        <div class="rule" style="margin-top:16px;"></div>
+        <p class="lead" style="max-width:none;">
+          You did the hard part already. You built a community almost nobody manages to build.
+          The plan from here is not more work on the field, it is the machine that turns that community into
+          a coaching business, built on your own brand.
+        </p>
+        <h3 style="margin-top:20px;font-size:16px;">What you get</h3>
+        <ul class="clean" style="margin-top:10px;">
+          <li>The full LFG Coaching Platform, all six modules, live in two weeks</li>
+          <li>Coaching programs, cohorts and the challenge engine</li>
+          <li>Membership + payments + accountability + CRM + dashboard</li>
+          <li>A branded coaching space on your own domain</li>
+          <li>Built, tested, deployed and maintained by Komplete</li>
+        </ul>
+        <p style="margin-top:18px;color:var(--off);font-family:var(--head);font-size:16px;font-weight:700;letter-spacing:-.01em;line-height:1.25;">
+          The build pays for itself with a single premium client. The full numbers, in our walkthrough.
+        </p>
+      </div>
+      <div>
+        <p style="font-family:var(--head);text-transform:uppercase;letter-spacing:.2em;font-size:11px;color:var(--olive-hi);">Book the 20-minute walkthrough</p>
+        <p style="margin-top:6px;color:var(--dim2);font-size:11px;">Komplete &middot; Conversion Systems &middot; Loay Mohamed &middot; komplete.tech</p>
+      </div>
+    </div>
+    <div style="position:relative;" class="grain">
+      <img class="graded" src="assets/community.jpg" style="width:100%;height:100%;object-fit:cover;object-position:50% 30%;" alt="LFG Dubai community">
+      <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(10,10,10,.94),rgba(10,10,10,0) 36%);"></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -46,7 +46,7 @@
 <meta name="theme-color" content="#0A0A0A">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/app-assets/lfg-padel-page.css?v=11">
+<link rel="stylesheet" href="/app-assets/lfg-padel-page.css?v=12">
 </head>
 <body>
 
@@ -380,13 +380,16 @@
   <div class="pd-dstep" id="pdStepSoldout" hidden>
     <h3>This night is sold out.</h3>
     <p id="pdSoldoutBody">Every spot for this week went.</p>
-    <p class="pd-dfoot"><a id="pdSoldoutWa" href="https://wa.me/971504264410">Message us</a> and we'll ping you if a spot opens.</p>
+    <p class="pd-waitnote">Get on the waiting list. People drop before 2pm most weeks, and the list is who we call first. Nothing to pay unless a spot opens.</p>
+    <button type="button" class="pd-btn" id="pdWaitBtn">Join the waiting list</button>
+    <p class="pd-waitstate" id="pdWaitState" hidden></p>
+    <p class="pd-dfoot"><a id="pdSoldoutWa" href="https://wa.me/971504264410">Message us</a> if you'd rather sort it on WhatsApp.</p>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.1"></script>
 <script src="/app-assets/lfg-supabase.js?v=3"></script>
-<script src="/app-assets/lfg-padel-page.js?v=11" defer></script>
+<script src="/app-assets/lfg-padel-page.js?v=12" defer></script>
 <script>
   // keep the drawer's date in sync with the booking strip
   window.addEventListener('DOMContentLoaded', function () {

@@ -919,10 +919,74 @@
     el('pdSuccessEmailLine').hidden = already;
     el('pdSuccessWa').href = WA + encodeURIComponent("Hey, I'm booked for padel night, quick question");
   }
+  // A sold-out night is the moment demand is highest, so it ends in an action
+  // rather than an apology. The list is real: drops happen most weeks before the
+  // 2pm cutoff, and it decides who gets called first.
+  // Same auth path the pay call uses: window.lfg.api attaches the bearer token
+  // when the shared client is present, plain fetch otherwise (server 401s and
+  // the drawer routes to login, which is the correct signed-out behaviour).
+  function authedJson(url, body, method) {
+    var verb = method || 'POST';
+    var opts = { method: verb };
+    if (body) { opts.headers = { 'Content-Type': 'application/json' }; opts.body = JSON.stringify(body); }
+    if (window.lfg && window.lfg.api) {
+      return window.lfg.api(url, opts).then(function (r) {
+        return { ok: r.status >= 200 && r.status < 300, status: r.status, data: r.data };
+      });
+    }
+    return fetch(url, opts).then(function (res) {
+      return res.json().catch(function () { return null; }).then(function (data) {
+        return { ok: res.ok, status: res.status, data: data };
+      });
+    });
+  }
+
+  var waitBusy = false;
+  function waitState(msg, onList) {
+    var s = el('pdWaitState'), b = el('pdWaitBtn');
+    if (s) { s.textContent = msg || ''; s.hidden = !msg; }
+    if (b) {
+      b.disabled = waitBusy;
+      b.textContent = waitBusy ? 'Saving…' : onList ? 'Leave the waiting list' : 'Join the waiting list';
+      b.classList.toggle('pd-btn-quiet', !!onList);
+    }
+  }
+  async function waitToggle(leaving) {
+    if (waitBusy) return;
+    waitBusy = true; waitState('', leaving);
+    try {
+      var r = await authedJson('/api/padel-waitlist', { action: leaving ? 'leave' : 'join' });
+      waitBusy = false;
+      var d = r.data || {};
+      if (r.status === 401 || d.login_required) { pushStep('login'); return; }
+      if (d.spot_open) { waitState('A spot just opened. Close this and book it.', false); return; }
+      if (d.already_in) { waitState("You're already in for this night.", false); return; }
+      if (!r.ok) { waitState(d.error || 'That did not save. Try again.', leaving); return; }
+      if (d.on_list) waitState('You are number ' + d.position + ' on the list. We call the list first.', true);
+      else waitState('Off the list. You can rejoin any time.', false);
+    } catch (e) {
+      waitBusy = false;
+      waitState('That did not save. Try again.', leaving);
+    }
+  }
   function renderSoldout() {
     showPanel('pdStepSoldout');
-    el('pdSoldoutBody').textContent = 'All ' + STATUS.capacity + ' spots for ' + NIGHT.day + ' are taken. No waitlist theatre — when a spot opens, we say so.';
+    el('pdSoldoutBody').textContent = 'All ' + STATUS.capacity + ' spots for ' + NIGHT.day + ' are taken.';
     el('pdSoldoutWa').href = WA + encodeURIComponent("Hey, padel night is sold out, ping me if a spot opens");
+    var b = el('pdWaitBtn');
+    if (b && !b._wired) {
+      b._wired = true;
+      b.addEventListener('click', function () { waitToggle(b.textContent.indexOf('Leave') === 0); });
+    }
+    waitState('', false);
+    // Signed-out players see the plain invitation; signed-in ones see where they
+    // already stand, so the button never lies about their position.
+    if (session) {
+      authedJson('/api/padel-waitlist', null, 'GET').then(function (r) {
+        var d = (r && r.data) || {};
+        if (d.on_list) waitState('You are number ' + d.position + ' on the list. We call the list first.', true);
+      }).catch(function () {});
+    }
   }
 })();
 

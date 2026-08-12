@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signing in - LFG Dubai</title>
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" href="/lfg-logo.png">
+<link rel="stylesheet" href="/app-assets/lfg-app.css">
+</head>
+<body>
+<div class="lfg-shell">
+  <div class="lfg-card">
+    <img src="/LFG MAIN LOGO-Photoroom.png" alt="LFG" class="lfg-logo">
+    <div class="lfg-eyebrow">LFG Dubai</div>
+    <h1 class="lfg-title">Confirm <em>sign-in</em></h1>
+    <p class="lfg-sub" id="sub">Tap the button to finish signing in to your account.</p>
+
+    <button id="goBtn" class="lfg-btn lfg-btn-google">Sign me in</button>
+
+    <div id="msg" class="lfg-msg"></div>
+
+    <div class="lfg-foot">
+      <a href="/" class="lfg-back">&larr; Back to site</a>
+      <div style="margin-top:12px;">Trouble signing in? <a href="https://wa.me/971504264410" target="_blank" rel="noopener">Message us on WhatsApp</a></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.1"></script>
+<script src="/app-assets/lfg-supabase.js?v=3"></script>
+<script>
+  (function () {
+    var msg = document.getElementById('msg');
+    var goBtn = document.getElementById('goBtn');
+    var sub = document.getElementById('sub');
+    function show(type, text) { msg.className = 'lfg-msg show ' + type; msg.textContent = text; }
+
+    var qs = new URLSearchParams(location.search);
+    var tokenHash = qs.get('token_hash');
+    var type = qs.get('type') || 'email';
+    var rawNext = qs.get('next') || '/account';
+
+    // Only ever redirect to a known internal path (no open redirects).
+    function safeReturn(p) {
+      if (!p || typeof p !== 'string') return '/account';
+      if (!p.startsWith('/') || p.startsWith('//')) return '/account';
+      var base = p.split('?')[0].split('#')[0];
+      var allowed = ['/', '/bootcamp.html', '/bootcamp', '/checkin', '/checkin.html',
+        '/run-checkin', '/run-checkin.html', '/leaderboard', '/leaderboard.html', '/account', '/shop'];
+      return allowed.indexOf(base) >= 0 ? p : '/account';
+    }
+    var dest = safeReturn(rawNext);
+
+    function expired() {
+      goBtn.style.display = 'none';
+      sub.textContent = 'This sign-in link is invalid, expired, or already used.';
+      show('err', 'Request a fresh link from the login page.');
+      var a = document.createElement('a');
+      a.href = '/login'; a.className = 'lfg-btn lfg-btn-ghost'; a.textContent = 'Get a new link';
+      a.style.display = 'inline-block'; a.style.marginTop = '14px';
+      msg.parentNode.insertBefore(a, msg.nextSibling);
+    }
+
+    // No token in the link. If they already have a session, just go in; otherwise it's a dud link.
+    if (!tokenHash) {
+      lfg.getSession().then(function (s) { if (s) window.location.replace(dest); else expired(); });
+      return;
+    }
+
+    // Token present. We require a tap (not auto-verify) so email security scanners that
+    // pre-fetch the link can't silently consume the one-time token before the real user.
+    goBtn.addEventListener('click', async function () {
+      goBtn.disabled = true; goBtn.textContent = 'Signing you in…';
+      try {
+        var r = await lfg.sb.auth.verifyOtp({ token_hash: tokenHash, type: type });
+        if (r.error || !r.data || !r.data.session) {
+          // Maybe they already got signed in on a previous tap - check before failing.
+          var s = await lfg.getSession();
+          if (s) { window.location.replace(dest); return; }
+          goBtn.disabled = false; goBtn.textContent = 'Sign me in';
+          expired();
+          return;
+        }
+        sub.textContent = 'You’re in. Taking you to your account…';
+        show('ok', 'Signed in.');
+        window.location.replace(dest);
+      } catch (e) {
+        goBtn.disabled = false; goBtn.textContent = 'Sign me in';
+        expired();
+      }
+    });
+  })();
+</script>
+</body>
+</html>

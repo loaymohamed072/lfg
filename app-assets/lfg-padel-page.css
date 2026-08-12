@@ -791,6 +791,29 @@ html.pd-js .pd-reveal.in { opacity: 1; transform: none; }
   .pd-payload-busy::before { animation: none; }
 }
 
+/* Waiting list — the sold-out step's action. Framed as a real queue with a
+   real position, so the note reads as information, not consolation. */
+.pd-waitnote {
+  margin: 14px 0 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--pd-line);
+  border-radius: 10px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--pd-dim);
+}
+.pd-waitstate {
+  margin: 12px 0 0;
+  font-size: 13.5px;
+  color: var(--pd-olive-text);
+}
+.pd-btn-quiet {
+  background: transparent;
+  color: var(--pd-dim);
+  border: 1px solid var(--pd-line);
+}
+.pd-btn-quiet:hover { color: var(--pd-olive-text); }
+
 /* text links inside the drawer: the .pd-close-alt pattern */
 .pd-dfoot { margin: 16px 0 0; font-size: 14px; color: var(--pd-dim-2); }
 .pd-dfoot a { color: var(--pd-dim); position: relative; text-decoration: none; }

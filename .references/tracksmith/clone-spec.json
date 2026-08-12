@@ -1,0 +1,188 @@
+{
+  "title": "Performance Running Gear, Apparel, and Accessories | Tracksmith",
+  "fonts": {
+    "primary": [
+      "akzidenz-grotesk-extended",
+      "SainteColombe"
+    ],
+    "googleFonts": [],
+    "fontFaceFamilies": [
+      "Didot",
+      "Kanit-Klaviyo-Hosted",
+      "Saint Colombe",
+      "Sainte Colombe Tracksmith"
+    ]
+  },
+  "typeScale": [
+    {
+      "tag": "li",
+      "fontSizePx": 16,
+      "lineHeight": "24px",
+      "fontWeight": "400",
+      "letterSpacing": "normal",
+      "textTransform": "none",
+      "fontFamily": "akzidenz-grotesk-extended"
+    },
+    {
+      "tag": "p",
+      "fontSizePx": 13,
+      "lineHeight": "20.02px",
+      "fontWeight": "400",
+      "letterSpacing": "normal",
+      "textTransform": "none",
+      "fontFamily": "SainteColombe"
+    },
+    {
+      "tag": "a",
+      "fontSizePx": 13,
+      "lineHeight": "20.02px",
+      "fontWeight": "400",
+      "letterSpacing": "normal",
+      "textTransform": "none",
+      "fontFamily": "SainteColombe"
+    },
+    {
+      "tag": "span",
+      "fontSizePx": 13,
+      "lineHeight": "20.02px",
+      "fontWeight": "400",
+      "letterSpacing": "normal",
+      "textTransform": "none",
+      "fontFamily": "SainteColombe"
+    },
+    {
+      "tag": "a",
+      "fontSizePx": 12,
+      "lineHeight": "24px",
+      "fontWeight": "400",
+      "letterSpacing": "1.2px",
+      "textTransform": "uppercase",
+      "fontFamily": "akzidenz-grotesk-extended"
+    },
+    {
+      "tag": "button",
+      "fontSizePx": 10,
+      "lineHeight": "16px",
+      "fontWeight": "500",
+      "letterSpacing": "1px",
+      "textTransform": "uppercase",
+      "fontFamily": "akzidenz-grotesk-extended"
+    },
+    {
+      "tag": "span",
+      "fontSizePx": 10,
+      "lineHeight": "16px",
+      "fontWeight": "500",
+      "letterSpacing": "1px",
+      "textTransform": "uppercase",
+      "fontFamily": "akzidenz-grotesk-extended"
+    }
+  ],
+  "colors": {
+    "text": [
+      "#0a1e32",
+      "#ffffff",
+      "#6c7884",
+      "#857151",
+      "#000000",
+      "#606a72",
+      "#6e7680",
+      "#9a825c"
+    ],
+    "background": [
+      "#ffffff",
+      "#857151",
+      "#0a1e32",
+      "#cbd5e1",
+      "#000000",
+      "#141414",
+      "#9a825c"
+    ]
+  },
+  "layout": {
+    "containerWidthsPx": [
+      1800
+    ],
+    "sectionCount": 3,
+    "sections": [
+      {
+        "tag": "div",
+        "heightPx": 4283,
+        "paddingTopPx": 0,
+        "paddingBottomPx": 0,
+        "display": "block",
+        "background": null,
+        "groundImage": null,
+        "groundLayers": 0,
+        "hasCanvas": false,
+        "hasVideoBg": false,
+        "headings": 11,
+        "hasImage": true
+      },
+      {
+        "tag": "footer",
+        "heightPx": 984,
+        "paddingTopPx": 0,
+        "paddingBottomPx": 0,
+        "display": "block",
+        "background": "#0a1e32",
+        "groundImage": null,
+        "groundLayers": 0,
+        "hasCanvas": false,
+        "hasVideoBg": false,
+        "headings": 0,
+        "hasImage": false
+      },
+      {
+        "tag": "iframe",
+        "heightPx": 150,
+        "paddingTopPx": 0,
+        "paddingBottomPx": 0,
+        "display": "block",
+        "background": null,
+        "groundImage": null,
+        "groundLayers": 0,
+        "hasCanvas": false,
+        "hasVideoBg": false,
+        "headings": 0,
+        "hasImage": false
+      }
+    ]
+  },
+  "atmosphere": {
+    "gradients": [],
+    "blends": [],
+    "filters": [],
+    "backdropFilters": [],
+    "masks": [],
+    "pseudoDecor": [
+      "a::after: bg=none blend=normal opacity=0.2",
+      "div::after: bg=none blend=normal opacity=0.3"
+    ],
+    "svgTurbulence": 0,
+    "webglCanvas": 0,
+    "videoBackgrounds": 0
+  },
+  "radii": [
+    "2px",
+    "3px"
+  ],
+  "shadows": [],
+  "motion": {
+    "gsap": false,
+    "scrollTrigger": false,
+    "lenis": false,
+    "locomotive": false,
+    "framerMotion": false,
+    "three": false,
+    "smoothScroll": false,
+    "transitionsCount": 173,
+    "observed": {
+      "animationsAtRest": 2,
+      "elementsChangedOnScroll": 0,
+      "smoothedScroll": false
+    }
+  },
+  "capturedAt": "2026-08-05T09:54:14.647Z",
+  "sourceUrl": "https://www.tracksmith.com/"
+}

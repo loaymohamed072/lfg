@@ -3,16 +3,48 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="google-site-verification" content="YP5c4XPr9T4Sb7aOcwQqxcYMJiZ5btzmWOZKHyPZwrQ" />
 <title>LFG Dubai | Running Club in Dubai &amp; Coaching with Ahmed Sam</title>
-<meta name="description" content="Join LFG Dubai, one of the fastest growing running clubs in Dubai with 1000+ members, weekly Wednesday runs, and private coaching with Ahmed Sam.">
-<meta name="robots" content="index, follow">
+<meta name="description" content="LFG Dubai is one of Dubai's fastest-growing running clubs. Create a free account to book your Sunday Bootcamp, sign up for weekly runs, check in at sessions, and manage your membership with coach Ahmed Sam.">
+<meta name="robots" content="index, follow, max-image-preview:large">
 <link rel="canonical" href="https://lfgdubai.com/">
-<link rel="icon" type="image/png" href="lfg-logo.png">
-<link rel="apple-touch-icon" href="lfg-logo.png">
+
+<!-- Favicons / icons -->
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#0A0A0A">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="LFG Dubai">
+<meta property="og:locale" content="en_AE">
+<meta property="og:url" content="https://lfgdubai.com/">
+<meta property="og:title" content="LFG Dubai | Running Club in Dubai & Coaching with Ahmed Sam">
+<meta property="og:description" content="Join LFG Dubai, one of the fastest growing running clubs in Dubai with 1000+ members, weekly Wednesday & Saturday runs, and private coaching with Ahmed Sam.">
+<meta property="og:image" content="https://lfgdubai.com/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="LFG Dubai run club community group photo">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="LFG Dubai | Running Club in Dubai & Coaching with Ahmed Sam">
+<meta name="twitter:description" content="One of the fastest growing running clubs in Dubai - 1000+ members, weekly runs, and private coaching with Ahmed Sam.">
+<meta name="twitter:image" content="https://lfgdubai.com/og-image.jpg">
+
+<link rel="stylesheet" href="/app-assets/lfg-booking-widget.css?v=7">
+<link rel="stylesheet" href="/app-assets/lfg-runs-form.css?v=3">
 
 <!-- Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Stripe (embedded checkout) - warm the connections early to cut payment load time -->
+<link rel="preconnect" href="https://js.stripe.com">
+<link rel="preconnect" href="https://api.stripe.com">
+<link rel="preconnect" href="https://m.stripe.network">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700;1,800;1,900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
@@ -232,6 +264,52 @@ nav.scrolled {
   transform: translateY(-1px) !important;
 }
 .nav-cta::after { display: none !important; }
+
+/* Right-side cluster: nav-links + profile + burger live together so they all
+   anchor to the right of the bar. On mobile, nav-links hides and the profile
+   button stays visible next to the hamburger. */
+.nav-right { display: flex; align-items: center; gap: 14px; }
+
+/* Profile / My Account icon button - always visible on every viewport so members
+   have a one-tap path back to /account from anywhere on the site. */
+.nav-account {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  border: 1px solid rgba(153,153,102,0.5);
+  background: rgba(153,153,102,0.06);
+  color: var(--green);
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: background 0.25s, border-color 0.25s, color 0.25s, transform 0.25s, box-shadow 0.25s;
+}
+.nav-account:hover, .nav-account:focus-visible {
+  background: var(--green);
+  color: var(--black);
+  border-color: var(--green);
+  transform: translateY(-1px);
+  box-shadow: 0 0 22px var(--green-glow);
+}
+.nav-account:focus-visible { outline: none; }
+
+/* Hamburger + mobile menu */
+.nav-burger { display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 8px; z-index: 1001; }
+.nav-burger span { display: block; width: 26px; height: 2px; background: var(--green); transition: transform 0.25s, opacity 0.2s; }
+.nav-burger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav-burger.open span:nth-child(2) { opacity: 0; }
+.nav-burger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+.mobile-menu { position: fixed; inset: 0; background: rgba(10,10,10,0.98); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; opacity: 0; visibility: hidden; transition: opacity 0.3s; padding: 24px; }
+.mobile-menu.open { opacity: 1; visibility: visible; }
+.mobile-menu a { font-family: var(--font-head); font-size: 26px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255,255,255,0.85); text-decoration: none; padding: 13px 16px; transition: color 0.2s; }
+.mobile-menu a:active, .mobile-menu a:hover { color: var(--green); }
+.mobile-menu .mm-cta { background: var(--green); color: var(--black); padding: 14px 40px; margin-top: 10px; }
+.mm-auth { margin-top: 10px; }
+.mm-auth a { color: var(--green); border: 1px solid rgba(153,153,102,0.6); padding: 12px 30px; font-size: 18px; }
+.mm-close { position: absolute; top: 22px; right: 24px; background: none; border: none; color: #fff; font-size: 38px; line-height: 1; cursor: pointer; padding: 4px 10px; }
+
+@media (max-width: 768px) {
+  .nav-burger { display: flex; }
+}
 
 /* ============================================================
    HERO
@@ -1248,46 +1326,42 @@ nav.scrolled {
    SECTION: SPONSOR
    ============================================================ */
 #sponsor {
-  padding: 44px 64px;
+  padding: 56px 0;
   border-top: 1px solid rgba(255,255,255,0.05);
-  display: flex;
-  align-items: center;
-  gap: 36px;
-  flex-wrap: wrap;
+  overflow: hidden;
 }
 
 .sponsor-label {
+  display: block;
+  text-align: center;
   font-family: var(--font-head);
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 700;
-  letter-spacing: 0.3em;
+  letter-spacing: 0.32em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.18);
-  white-space: nowrap;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 38px;
 }
 
-.sponsor-divider {
-  width: 1px;
-  height: 20px;
-  background: rgba(255,255,255,0.08);
-}
-
-.sponsor-logo-link {
+/* Static, centered partner logos. Not clickable - presence credit only.
+   Per-logo heights because the marks have different shapes (PUMA is a wide
+   wordmark, Everybodies + Lifter Life are stacked lockups). */
+.sponsor-row {
   display: flex;
   align-items: center;
-  text-decoration: none;
-  transition: filter 0.3s;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 64px;
+  padding: 0 24px;
 }
-.sponsor-logo-link:hover .sponsor-logo-img {
-  opacity: 0.85;
-}
-
 .sponsor-logo-img {
-  height: 26px;
   width: auto;
   display: block;
-  opacity: 0.55;
+  opacity: 0.92;
 }
+.sponsor-logo-img.sp-puma { height: 46px; }
+.sponsor-logo-img.sp-eb   { height: 62px; }
+.sponsor-logo-img.sp-ll   { height: 96px; }
 
 /* ============================================================
    SECTION: SPLIT DECISION
@@ -1343,7 +1417,7 @@ nav.scrolled {
   transition: filter 0.5s;
 }
 
-/* Ahmed portrait — ensure head/face is never cropped */
+/* Ahmed portrait - ensure head/face is never cropped */
 .split-panel.right .split-panel-bg img {
   object-position: center 8%;
 }
@@ -1833,16 +1907,20 @@ footer {
   .coaching-card { padding: 40px 32px; }
   #founder { padding: 80px 32px; }
   footer { padding: 40px 32px; }
-  #sponsor { padding: 48px 32px; }
+  #sponsor { padding: 48px 24px; }
+  .sponsor-row { gap: clamp(28px, 9vw, 44px); }
+  .sponsor-logo-img.sp-puma { height: 34px; }
+  .sponsor-logo-img.sp-eb   { height: 46px; }
+  .sponsor-logo-img.sp-ll   { height: 70px; }
   .split-panel { padding: 48px 32px; }
 }
 
 @media (max-width: 768px) {
   :root {
-    --mobile-top-fill: max(env(safe-area-inset-top, 0px), 44px);
+    --mobile-top-fill: env(safe-area-inset-top, 0px);
   }
 
-  /* TOP SEAL — fixed black layer that fills the safe-area zone */
+  /* TOP SEAL - fixed black layer that fills the safe-area zone */
   #top-seal {
     display: block;
     position: fixed;
@@ -1853,7 +1931,7 @@ footer {
     pointer-events: none;
   }
 
-  /* NAV — sits directly below the seal, always black on mobile */
+  /* NAV - sits directly below the seal, always black on mobile */
   nav {
     position: fixed;
     top: 0; left: 0; right: 0;
@@ -2170,7 +2248,7 @@ footer {
 }
 
 /* ============================================================
-   STICKY CTAs — DESKTOP/MOBILE SPLIT
+   STICKY CTAs - DESKTOP/MOBILE SPLIT
    ============================================================ */
 .sticky-ctas-desktop {
   display: flex;
@@ -2188,6 +2266,18 @@ footer {
   border-top: 1px solid rgba(153,153,102,0.2);
   gap: 8px;
   align-items: stretch;
+}
+/* Paint solid black below the bar so no page content shows through under it.
+   On Safari the bar is flush to the physical bottom, so this extension is
+   off-screen (invisible). On Chrome iOS, where a fixed bottom:0 bar can sit
+   above the home-indicator strip, this fills that gap black to match. */
+.mobile-sticky-bar::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: 100%;
+  height: 140px;
+  background: #0A0A0A;
+  pointer-events: none;
 }
 .mobile-sticky-btn {
   flex: 1;
@@ -2216,7 +2306,7 @@ footer {
   color: var(--white);
   border: 1.5px solid rgba(255,255,255,0.25);
 }
-/* Dock offset spacer — invisible, creates scroll space on mobile only */
+/* Dock offset spacer - invisible, creates scroll space on mobile only */
 #dock-offset {
   display: none;
 }
@@ -2227,20 +2317,20 @@ footer {
   .sticky-ctas-desktop { display: none; }
   .mobile-sticky-bar { display: flex; }
 
-  /* Reserve bottom space — body padding + structural spacer match dock height */
-  body {
-    padding-bottom: calc(106px + env(safe-area-inset-bottom, 0px));
-  }
+  /* Reserve bottom space for the fixed mobile CTA bar - ONE reservation, sized to
+     the bar's actual height (12 + 62 button + 12 = 86px) plus the safe-area inset.
+     Previously this was double-counted (body padding-bottom AND this spacer), which
+     left ~126px of empty space under the footer on phones. */
   #dock-offset {
     display: block;
-    height: calc(106px + env(safe-area-inset-bottom, 0px));
+    height: calc(100px + env(safe-area-inset-bottom, 0px));
     pointer-events: none;
     flex-shrink: 0;
   }
 }
 
 /* ============================================================
-   HERO ACTIONS — DESKTOP/MOBILE
+   HERO ACTIONS - DESKTOP/MOBILE
    ============================================================ */
 .hero-actions-desktop {
   display: flex;
@@ -2255,7 +2345,7 @@ footer {
 }
 
 /* ============================================================
-   WHAT IS LFG — INTRO BLOCK
+   WHAT IS LFG - INTRO BLOCK
    ============================================================ */
 .what-lfg-intro {
   max-width: 860px;
@@ -2658,15 +2748,76 @@ footer {
 
 <body>
 
-<!-- Mobile top seal — fills safe-area zone above nav -->
+<!-- Mobile top seal - fills safe-area zone above nav -->
 <div id="top-seal" aria-hidden="true"></div>
+
+<!-- Paid-run banner (config-driven: shows only when the next run is flagged paid) -->
+<style>
+:root { --prb-h: 42px; --nav-h: 96px; }
+/* Slim, persistent announcement strip pinned directly UNDER the fixed nav (its top is set to
+   the nav's live height via the --nav-h var, kept in sync by JS on load/resize/scroll). Sits
+   below the header, stays visible on scroll, and never overlaps the nav. */
+.paid-run-banner { position:fixed; top:var(--nav-h); left:0; right:0; z-index:490; box-sizing:border-box;
+  display:flex; align-items:center; justify-content:center; gap:14px; flex-wrap:nowrap; min-height:var(--prb-h);
+  background:linear-gradient(90deg,#999966,#b3b380); color:#0A0A0A; text-decoration:none;
+  padding:8px 22px; font-family:'Barlow Condensed',sans-serif; text-align:center; line-height:1.2;
+  border-bottom:1px solid rgba(0,0,0,0.18); box-shadow:0 6px 18px rgba(0,0,0,0.22); transition:filter .2s; }
+.paid-run-banner[hidden] { display:none; }
+.paid-run-banner:hover { filter:brightness(1.06); }
+.paid-run-banner .prb-tag { font-weight:800; letter-spacing:0.14em; text-transform:uppercase; font-size:12px;
+  background:#0A0A0A; color:#999966; padding:3px 10px; white-space:nowrap; flex-shrink:0; }
+.paid-run-banner .prb-text { font-weight:600; font-size:15px; letter-spacing:0.01em;
+  min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.paid-run-banner .prb-text b { font-weight:800; }
+.paid-run-banner .prb-cta { font-weight:800; letter-spacing:0.08em; text-transform:uppercase; font-size:13px;
+  border-bottom:2px solid #0A0A0A; padding-bottom:1px; white-space:nowrap; flex-shrink:0; }
+@media (max-width:768px){
+  :root { --prb-h: 38px; }
+  /* One compact line, sitting right under the mobile nav (below the notch, above the hero). */
+  .paid-run-banner { z-index:990; gap:9px; padding:7px 14px; }
+  .paid-run-banner .prb-loc-wrap { display:none; }
+  .paid-run-banner .prb-tag { font-size:10px; padding:2px 7px; letter-spacing:0.1em; }
+  .paid-run-banner .prb-text { font-size:12px; }
+  .paid-run-banner .prb-cta { font-size:11px; }
+}
+</style>
+<a href="/track" class="paid-run-banner" id="paid-run-banner" hidden>
+  <span class="prb-tag">This Wednesday</span>
+  <span class="prb-text">Paid intervals session<span class="prb-loc-wrap"> at <b id="prb-loc">Gems World Academy</b></span> · <b id="prb-price">AED 30</b></span>
+  <span class="prb-cta">Reserve your spot →</span>
+</a>
+<script>
+// Keep the announcement strip sitting exactly under the fixed nav: mirror the nav's live
+// height into --nav-h. The nav changes height when it gains the .scrolled state, so re-sync
+// on scroll/resize too.
+(function () {
+  function syncNavH() {
+    var n = document.querySelector('nav');
+    if (n) document.documentElement.style.setProperty('--nav-h', n.getBoundingClientRect().height + 'px');
+  }
+  window.__syncNavH = syncNavH;
+  function schedule() { requestAnimationFrame(syncNavH); }
+  function init() {
+    var n = document.querySelector('nav');
+    syncNavH();
+    // The nav shrinks via a padding transition when it gains .scrolled. Track it during the
+    // scroll (rAF) and re-sync once the shrink animation settles (transitionend) so the strip
+    // stays glued right under the nav with no gap.
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule, { passive: true });
+    if (n) n.addEventListener('transitionend', syncNavH);
+  }
+  if (document.readyState !== 'loading') init(); else document.addEventListener('DOMContentLoaded', init);
+  window.addEventListener('load', syncNavH);
+})();
+</script>
 
 <!-- ============================================================
      STICKY FLOATING CTAs
      ============================================================ -->
 <!-- Desktop sticky CTAs -->
 <div class="sticky-ctas sticky-ctas-desktop">
-  <a href="#runs" class="sticky-btn run">
+  <a href="#register-form" class="sticky-btn run">
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
     Join Next Run
   </a>
@@ -2676,15 +2827,15 @@ footer {
   </a>
 </div>
 
-<!-- Mobile sticky bar — shows after scrolling past hero, 3 CTAs -->
+<!-- Mobile sticky bar - shows after scrolling past hero, 3 CTAs -->
 <div class="mobile-sticky-bar" id="mobile-sticky-bar">
   <a href="#register-form" class="mobile-sticky-btn mobile-sticky-primary" id="mobile-run-btn">
     Join the Run
   </a>
-  <a href="#bootcamps" class="mobile-sticky-btn mobile-sticky-secondary">
-    Next Workout
+  <a href="/bootcamp.html" class="mobile-sticky-btn mobile-sticky-secondary">
+    Bootcamp
   </a>
-  <a href="#coaching" class="mobile-sticky-btn mobile-sticky-secondary" id="mobile-book-btn">
+  <a href="#booking" class="mobile-sticky-btn mobile-sticky-secondary" id="mobile-book-btn">
     Coaching
   </a>
 </div>
@@ -2693,15 +2844,36 @@ footer {
      NAV
      ============================================================ -->
 <nav id="nav">
-  <img src="LFG MAIN LOGO-Photoroom.png" alt="LFG" class="nav-logo">
-  <ul class="nav-links">
-    <li><a href="#what-lfg">What We Are</a></li>
-    <li><a href="#runs">Runs</a></li>
-    <li><a href="#bootcamps">Bootcamps</a></li>
-    <li><a href="#coaching">Coaching</a></li>
-    <li><a href="#register-form" class="nav-cta">Join Now</a></li>
-  </ul>
+  <img src="LFG MAIN LOGO-Photoroom.png" alt="LFG Dubai" class="nav-logo">
+  <div class="nav-right">
+    <ul class="nav-links">
+      <li><a href="#what-lfg">What We Are</a></li>
+      <li><a href="#runs">Runs</a></li>
+      <li><a href="/bootcamp.html">Bootcamp</a></li>
+      <li><a href="/padel">Padel</a></li>
+      <li><a href="https://coaching.lfgdubai.com?utm_source=lfgdubai&utm_medium=site&utm_content=nav">Coaching</a></li>
+      <li><a href="/shop">Shop</a></li>
+      <li><a href="#register-form" class="nav-cta">Join Now</a></li>
+    </ul>
+    <a class="nav-account" href="/account" aria-label="My account" title="My account">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6"/></svg>
+    </a>
+    <button class="nav-burger" id="navBurger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+  </div>
 </nav>
+
+<!-- Mobile menu (opened by the hamburger) -->
+<div class="mobile-menu" id="mobileMenu" role="dialog" aria-label="Menu">
+  <button class="mm-close" id="mmClose" aria-label="Close menu">&times;</button>
+  <a href="#what-lfg" data-mm>What We Are</a>
+  <a href="#runs" data-mm>Runs</a>
+  <a href="/bootcamp.html" data-mm>Bootcamp</a>
+  <a href="/padel" data-mm>Padel</a>
+  <a href="https://coaching.lfgdubai.com?utm_source=lfgdubai&utm_medium=site&utm_content=nav" data-mm>Coaching</a>
+  <a href="/shop" data-mm>Shop</a>
+  <div class="mm-auth" id="mmAuth"></div>
+  <a href="#register-form" class="mm-cta" data-mm>Join Now</a>
+</div>
 
 <!-- ============================================================
      HERO
@@ -2714,19 +2886,19 @@ footer {
   <div class="hero-streak"></div>
 
   <div class="hero-content">
-    <p class="hero-label">Dubai Fitness Community</p>
-    <h1 class="hero-headline">
+    <h1 class="hero-label">LFG Dubai</h1>
+    <p class="hero-headline">
       Built For<br>
       <span>Every Level</span>
-    </h1>
+    </p>
     <p class="hero-sub">We Take You From Zero To Performance</p>
     <div class="hero-actions hero-actions-desktop">
       <a href="#register-form" class="btn-primary">
         Join Our Next Run
         <svg class="arrow-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
       </a>
-      <a href="#bootcamps" class="btn-secondary">
-        Join Our Next Workout
+      <a href="/bootcamp.html" class="btn-secondary">
+        Join Our Bootcamp
         <svg class="arrow-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
       </a>
       <a href="#coaching" class="btn-secondary">
@@ -2753,7 +2925,7 @@ footer {
      SECTION: AUTHORITY
      ============================================================ -->
 <section id="authority">
-  <img src="main group photo.jpeg" alt="LFG Dubai running club — 1000+ members weekly group run" class="authority-img" id="parallax-img">
+  <img src="main group photo.jpeg" alt="LFG Dubai running club - 1000+ members weekly group run" class="authority-img" id="parallax-img">
   <div class="authority-overlay"></div>
   <div class="authority-content">
     <span class="authority-number reveal">1000+</span>
@@ -2769,10 +2941,11 @@ footer {
      ============================================================ -->
 <section id="what-lfg">
   <div class="gradient-orb" style="width:600px;height:600px;background:var(--green);top:-200px;right:-200px;"></div>
-  <p class="section-tag reveal">What Is LFG</p>
+  <p class="section-tag reveal">What Is LFG Dubai</p>
   <div class="what-lfg-intro reveal delay-1">
-    <h2 class="what-lfg-headline">WHAT IS LFG</h2>
-    <p class="what-lfg-body">LFG is a Dubai-born FitSocial coaching platform where community meets performance. We bring people together through weekly runs, group training, events, and structured programs designed to take you from zero to competition. No matter your level, you will be supported, challenged, and pushed to grow inside a community that shows up and puts in the work. Powered by our partnership with PUMA Middle East and backed by certified NASM coaching, we are here to help you build your strongest body and mindset.</p>
+    <h2 class="what-lfg-headline">WHAT IS LFG DUBAI</h2>
+    <p class="what-lfg-body">LFG Dubai is a Dubai-born running club and fitness community where community meets performance. We bring people together through weekly runs, group training, events, and structured programs designed to take you from zero to competition. No matter your level, you will be supported, challenged, and pushed to grow inside a community that shows up and puts in the work. Powered by our partnership with PUMA Middle East and backed by certified NASM coaching, we are here to help you build your strongest body and mindset.</p>
+    <p class="what-lfg-body" style="margin-top:18px;">LFG Dubai is also a members platform: create a free account to reserve your spot at our Sunday Bootcamp, sign up for weekly runs, check in at sessions with a QR code, track your attendance and points, and manage your bookings and credits. You can sign in securely with your Google account or an email login link.</p>
   </div>
   <div class="lfg-blocks" style="margin-top: 64px;">
     <a href="#runs" class="lfg-block reveal delay-1" style="text-decoration:none;color:inherit;cursor:pointer;">
@@ -2817,6 +2990,7 @@ footer {
           <p class="activity-slot-day" id="run-slot-day">Wednesday</p>
           <p class="activity-slot-time" id="run-slot-time">7:30 PM</p>
           <p class="activity-slot-loc" id="run-slot-loc">Dubai Autodrome</p>
+          <span class="run-paid-badge" id="run-paid-badge" hidden>Paid intervals · <b id="run-paid-badge-price">AED 30</b></span>
           <p class="activity-slot-desc">All fitness levels welcome. You can run, jog or walk. No pressure, just come and stay active.</p>
         </div>
         <div class="activity-slot-divider" id="sat-divider"></div>
@@ -2836,16 +3010,263 @@ footer {
 
       <div id="register-form" class="activity-form-wrap reveal delay-2">
         <p class="activity-form-label">Register for the next run</p>
-        <div class="activity-embed-frame" style="background:#111;padding:2px;">
-          <div style="background:#111;padding:12px 12px 0;">
-            <p style="font-family:var(--font-head);font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--green);margin-bottom:12px;">LFG Run Registration</p>
+
+        <!-- Paid-run takeover: shown by fetchEventConfig when the next run is flagged paid.
+             Replaces the free sign-up form with a CTA to the /track payment page. -->
+        <style>
+        .run-paid-badge { display:inline-block; margin-top:8px; font-family:var(--font-head); font-weight:700;
+          font-size:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--green);
+          border:1px solid var(--green); padding:4px 10px; }
+        .run-paid-badge b { font-weight:800; }
+        .run-paid-cta { text-align:left; }
+        .run-paid-cta .rpc-eyebrow { font-family:var(--font-head); font-size:11px; font-weight:700;
+          letter-spacing:0.22em; text-transform:uppercase; color:var(--green); margin-bottom:10px; }
+        .run-paid-cta .rpc-title { font-family:var(--font-head); font-weight:800; font-size:clamp(26px,4vw,34px);
+          text-transform:uppercase; line-height:1.02; letter-spacing:0.01em; color:#fff; margin-bottom:12px; }
+        .run-paid-cta .rpc-title span { color:var(--green); }
+        .run-paid-cta .rpc-sub { color:rgba(255,255,255,0.66); font-size:15px; line-height:1.55; margin-bottom:20px; }
+        .run-paid-cta .rpc-sub b { color:#fff; font-weight:700; }
+        .run-paid-cta .rpc-btn { display:inline-flex; align-items:center; gap:10px; font-family:var(--font-head);
+          font-weight:700; font-size:15px; letter-spacing:0.14em; text-transform:uppercase; padding:15px 28px;
+          background:var(--green); color:var(--black); border:1px solid var(--green); box-shadow:0 0 20px var(--green-glow);
+          transition:box-shadow .25s, transform .15s; text-decoration:none; }
+        .run-paid-cta .rpc-btn:hover { box-shadow:0 0 40px var(--green-glow); transform:translateY(-1px); }
+        .run-paid-cta .rpc-note { margin-top:14px; font-size:12.5px; color:rgba(255,255,255,0.5); }
+        </style>
+        <div id="run-paid-cta" class="run-paid-cta" hidden>
+          <p class="rpc-eyebrow">This Wednesday · Paid session</p>
+          <h3 class="rpc-title">Intervals at <span id="rpc-loc">Gems World Academy</span></h3>
+          <p class="rpc-sub">This week's run is a paid intervals session. Reserve your spot and pay online — <b id="rpc-price">AED 30</b> per person.</p>
+          <a href="/track" class="rpc-btn">Reserve your spot · <span id="rpc-price2">AED 30</span> →</a>
+          <p class="rpc-note">Spots are limited. You'll get an email confirmation.</p>
+        </div>
+
+        <div class="lfgrf" id="lfgrf-root">
+
+          <div class="lfgrf-progress" id="lfgrf-progress">
+            <span class="active" data-pstep="1"></span>
+            <span data-pstep="2"></span>
+            <span data-pstep="3"></span>
           </div>
-          <iframe
-            src="https://lfgdubai.fillout.com/t/p3buYsaQMvus"
-            style="width:100%;border:none;min-height:460px;display:block;"
-            title="Join LFG Runs — Register"
-            loading="lazy">
-          </iframe>
+
+          <form id="lfgrf-form" novalidate>
+            <div class="lfgrf-error" id="lfgrf-error" hidden></div>
+
+            <!-- Step 1 - commit -->
+            <div class="lfgrf-step active" data-step="1">
+              <h3 class="lfgrf-h">Run with <em>LFG.</em></h3>
+              <p class="lfgrf-sub">Two minutes. Three short steps. We'll email you the next run details.</p>
+
+              <div class="lfgrf-row-2">
+                <div class="lfgrf-row">
+                  <label class="lfgrf-label req">First name</label>
+                  <input type="text" name="first_name" id="lfgrf-first" maxlength="80" autocomplete="given-name" required>
+                </div>
+                <div class="lfgrf-row">
+                  <label class="lfgrf-label req">Last name</label>
+                  <input type="text" name="last_name" id="lfgrf-last" maxlength="80" autocomplete="family-name" required>
+                </div>
+              </div>
+              <div class="lfgrf-row">
+                <label class="lfgrf-label req">Email</label>
+                <input type="email" name="email" id="lfgrf-email" autocomplete="email" required>
+              </div>
+              <div class="lfgrf-row">
+                <label class="lfgrf-label req">WhatsApp</label>
+                <div class="lfgrf-phone">
+                  <select id="lfgrf-cc">
+                    <option value="+971" selected>🇦🇪 +971</option>
+                    <option value="+966">🇸🇦 +966</option>
+                    <option value="+965">🇰🇼 +965</option>
+                    <option value="+974">🇶🇦 +974</option>
+                    <option value="+973">🇧🇭 +973</option>
+                    <option value="+968">🇴🇲 +968</option>
+                    <option value="+962">🇯🇴 +962</option>
+                    <option value="+961">🇱🇧 +961</option>
+                    <option value="+20">🇪🇬 +20</option>
+                    <option value="+91">🇮🇳 +91</option>
+                    <option value="+92">🇵🇰 +92</option>
+                    <option value="+63">🇵🇭 +63</option>
+                    <option value="+44">🇬🇧 +44</option>
+                    <option value="+1">🇺🇸 +1</option>
+                    <option value="+61">🇦🇺 +61</option>
+                    <option value="+27">🇿🇦 +27</option>
+                    <option value="+49">🇩🇪 +49</option>
+                    <option value="+33">🇫🇷 +33</option>
+                  </select>
+                  <input type="tel" id="lfgrf-phone" autocomplete="tel-national" inputmode="tel" placeholder="50 123 4567" required>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 2 - qualify -->
+            <div class="lfgrf-step" data-step="2">
+              <h3 class="lfgrf-h">Tell us about <em>your runs.</em></h3>
+              <p class="lfgrf-sub">Honest answers help us pair you with the right pace group.</p>
+
+              <div class="lfgrf-row">
+                <label class="lfgrf-label req">Your level</label>
+                <div class="lfgrf-radio-group" id="lfgrf-level-group">
+                  <label class="lfgrf-radio" data-val="beginner">
+                    <input type="radio" name="level" value="beginner">
+                    <div class="lr-h">Beginner</div><div class="lr-sub">0–3 km. Starting out.</div>
+                  </label>
+                  <label class="lfgrf-radio" data-val="occasional">
+                    <input type="radio" name="level" value="occasional">
+                    <div class="lr-h">Occasional</div><div class="lr-sub">3–5 km. Run when you can.</div>
+                  </label>
+                  <label class="lfgrf-radio" data-val="advanced">
+                    <input type="radio" name="level" value="advanced">
+                    <div class="lr-h">Advanced</div><div class="lr-sub">5 km+. Pushing pace.</div>
+                  </label>
+                </div>
+              </div>
+
+              <div class="lfgrf-row-2">
+                <div class="lfgrf-row">
+                  <label class="lfgrf-label req">Date of birth</label>
+                  <div class="lfgrf-dob">
+                    <select id="lfgrf-dob-d" aria-label="Day"><option value="">Day</option></select>
+                    <select id="lfgrf-dob-m" aria-label="Month">
+                      <option value="">Month</option>
+                      <option value="1">Jan</option><option value="2">Feb</option><option value="3">Mar</option>
+                      <option value="4">Apr</option><option value="5">May</option><option value="6">Jun</option>
+                      <option value="7">Jul</option><option value="8">Aug</option><option value="9">Sep</option>
+                      <option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option>
+                    </select>
+                    <select id="lfgrf-dob-y" aria-label="Year"><option value="">Year</option></select>
+                  </div>
+                </div>
+                <div class="lfgrf-row">
+                  <label class="lfgrf-label req">Nationality</label>
+                  <input type="text" id="lfgrf-nationality" list="lfgrf-nationality-list" autocomplete="off" placeholder="Start typing your nationality…">
+                  <datalist id="lfgrf-nationality-list">
+                    <option>Afghan</option><option>Albanian</option><option>Algerian</option><option>American</option><option>Andorran</option><option>Angolan</option><option>Antiguan</option><option>Argentine</option><option>Armenian</option><option>Australian</option><option>Austrian</option><option>Azerbaijani</option>
+                    <option>Bahamian</option><option>Bahraini</option><option>Bangladeshi</option><option>Barbadian</option><option>Belarusian</option><option>Belgian</option><option>Belizean</option><option>Beninese</option><option>Bhutanese</option><option>Bolivian</option><option>Bosnian</option><option>Botswanan</option><option>Brazilian</option><option>British</option><option>Bruneian</option><option>Bulgarian</option><option>Burkinabé</option><option>Burmese</option><option>Burundian</option>
+                    <option>Cambodian</option><option>Cameroonian</option><option>Canadian</option><option>Cape Verdean</option><option>Central African</option><option>Chadian</option><option>Chilean</option><option>Chinese</option><option>Colombian</option><option>Comoran</option><option>Congolese</option><option>Costa Rican</option><option>Croatian</option><option>Cuban</option><option>Cypriot</option><option>Czech</option>
+                    <option>Danish</option><option>Djiboutian</option><option>Dominican</option><option>Dutch</option>
+                    <option>East Timorese</option><option>Ecuadorian</option><option>Egyptian</option><option>Emirati</option><option>English</option><option>Equatorial Guinean</option><option>Eritrean</option><option>Estonian</option><option>Ethiopian</option>
+                    <option>Fijian</option><option>Filipino</option><option>Finnish</option><option>French</option>
+                    <option>Gabonese</option><option>Gambian</option><option>Georgian</option><option>German</option><option>Ghanaian</option><option>Greek</option><option>Grenadian</option><option>Guatemalan</option><option>Guinean</option><option>Guyanese</option>
+                    <option>Haitian</option><option>Honduran</option><option>Hungarian</option>
+                    <option>Icelandic</option><option>Indian</option><option>Indonesian</option><option>Iranian</option><option>Iraqi</option><option>Irish</option><option>Israeli</option><option>Italian</option><option>Ivorian</option>
+                    <option>Jamaican</option><option>Japanese</option><option>Jordanian</option>
+                    <option>Kazakh</option><option>Kenyan</option><option>Kiribati</option><option>Kuwaiti</option><option>Kyrgyz</option>
+                    <option>Lao</option><option>Latvian</option><option>Lebanese</option><option>Liberian</option><option>Libyan</option><option>Liechtensteiner</option><option>Lithuanian</option><option>Luxembourgish</option>
+                    <option>Macedonian</option><option>Malagasy</option><option>Malawian</option><option>Malaysian</option><option>Maldivian</option><option>Malian</option><option>Maltese</option><option>Marshallese</option><option>Mauritanian</option><option>Mauritian</option><option>Mexican</option><option>Micronesian</option><option>Moldovan</option><option>Monégasque</option><option>Mongolian</option><option>Montenegrin</option><option>Moroccan</option><option>Mozambican</option>
+                    <option>Namibian</option><option>Nauruan</option><option>Nepali</option><option>New Zealander</option><option>Nicaraguan</option><option>Nigerien</option><option>Nigerian</option><option>North Korean</option><option>Norwegian</option>
+                    <option>Omani</option>
+                    <option>Pakistani</option><option>Palauan</option><option>Palestinian</option><option>Panamanian</option><option>Papua New Guinean</option><option>Paraguayan</option><option>Peruvian</option><option>Polish</option><option>Portuguese</option>
+                    <option>Qatari</option>
+                    <option>Romanian</option><option>Russian</option><option>Rwandan</option>
+                    <option>Saint Lucian</option><option>Salvadoran</option><option>Samoan</option><option>San Marinese</option><option>Saudi</option><option>Scottish</option><option>Senegalese</option><option>Serbian</option><option>Seychellois</option><option>Sierra Leonean</option><option>Singaporean</option><option>Slovak</option><option>Slovenian</option><option>Solomon Islander</option><option>Somali</option><option>South African</option><option>South Korean</option><option>South Sudanese</option><option>Spanish</option><option>Sri Lankan</option><option>Sudanese</option><option>Surinamese</option><option>Swazi</option><option>Swedish</option><option>Swiss</option><option>Syrian</option>
+                    <option>Taiwanese</option><option>Tajik</option><option>Tanzanian</option><option>Thai</option><option>Togolese</option><option>Tongan</option><option>Trinidadian</option><option>Tunisian</option><option>Turkish</option><option>Turkmen</option><option>Tuvaluan</option>
+                    <option>Ugandan</option><option>Ukrainian</option><option>Uruguayan</option><option>Uzbek</option>
+                    <option>Vanuatuan</option><option>Venezuelan</option><option>Vietnamese</option>
+                    <option>Welsh</option><option>Yemeni</option><option>Zambian</option><option>Zimbabwean</option><option>Other</option>
+                  </datalist>
+                </div>
+              </div>
+
+              <div class="lfgrf-row">
+                <label class="lfgrf-label req">How long have you lived in the UAE?</label>
+                <select id="lfgrf-tenure">
+                  <option value="">Select…</option>
+                  <option value="lt1">Less than 1 year</option>
+                  <option value="1to5">1 – 5 years</option>
+                  <option value="5to10">5 – 10 years</option>
+                  <option value="10plus">10+ years</option>
+                  <option value="born">Born here</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Step 3 - color -->
+            <div class="lfgrf-step" data-step="3">
+              <h3 class="lfgrf-h">A bit more <em>about you.</em></h3>
+              <p class="lfgrf-sub">Helps us connect you with the right people in the room.</p>
+
+              <div class="lfgrf-row-2">
+                <div class="lfgrf-row">
+                  <label class="lfgrf-label req">Currently</label>
+                  <select id="lfgrf-occupation">
+                    <option value="">Select…</option>
+                    <option value="student">Student</option>
+                    <option value="working_pro">Working professional</option>
+                    <option value="freelancer">Freelancer</option>
+                    <option value="business_owner">Business owner</option>
+                    <option value="visiting">Visiting</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div class="lfgrf-row">
+                  <label class="lfgrf-label req">Instagram</label>
+                  <div class="lfgrf-ig-wrap">
+                    <input type="text" id="lfgrf-ig" maxlength="30" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="@yourhandle">
+                  </div>
+                </div>
+              </div>
+
+              <div class="lfgrf-row" id="lfgrf-occupation-detail-row" hidden>
+                <label class="lfgrf-label req">What do you do? <span class="lfgrf-hint">(your role / field)</span></label>
+                <input type="text" id="lfgrf-occupation-detail" maxlength="120" autocomplete="off" placeholder="e.g. Software Engineer, Doctor, Marketing Manager">
+              </div>
+
+              <div class="lfgrf-row">
+                <label class="lfgrf-label">Interests, passions, hobbies <span class="lfgrf-hint">(optional)</span></label>
+                <textarea id="lfgrf-interests" maxlength="400" placeholder="Padel, photography, swimming, reading…"></textarea>
+              </div>
+
+              <div class="lfgrf-row">
+                <label class="lfgrf-label">How did you hear about us?</label>
+                <select id="lfgrf-hear">
+                  <option value="">Pick one (optional)</option>
+                  <option value="instagram">Instagram</option>
+                  <option value="friend">A friend told me</option>
+                  <option value="tobys">Toby's Estate</option>
+                  <option value="search">Google search</option>
+                  <option value="event">At an event</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <label class="lfgrf-consent">
+                <input type="checkbox" id="lfgrf-consent">
+                <span>It's cool if LFG WhatsApps me about runs, bootcamps, and events. (You can unsubscribe anytime.)</span>
+              </label>
+            </div>
+
+            <!-- Honeypot - invisible to humans -->
+            <div class="lfgrf-hp">
+              <label>Website
+                <input type="text" name="website_url" id="lfgrf-hp" autocomplete="off" tabindex="-1">
+              </label>
+            </div>
+
+            <div class="lfgrf-nav">
+              <button type="button" class="lfgrf-back" id="lfgrf-back" hidden>← Back</button>
+              <button type="button" class="lfgrf-next" id="lfgrf-next">Next →</button>
+              <button type="submit" class="lfgrf-submit" id="lfgrf-submit" hidden>Submit</button>
+            </div>
+          </form>
+
+          <!-- Success state -->
+          <div class="lfgrf-success" id="lfgrf-success" hidden>
+            <div class="lfgrf-success-icon">✓</div>
+            <h3 class="lfgrf-success-h">You're <em>in,</em> <span id="lfgrf-success-name">runner</span>.</h3>
+            <p class="lfgrf-success-sub">We saved your details. We'll email you before the next run with everything you need.</p>
+
+            <div class="lfgrf-upsell">
+              <div class="lfgrf-upsell-tag">One more thing</div>
+              <div class="lfgrf-upsell-h">Sunday Bootcamp · <span class="bdc-time">12:45 PM</span></div>
+              <p class="lfgrf-upsell-sub"><span id="bootcamp-upsell-loc">CrossFit Alioth</span>. Sixty minutes, four stations, the work scales to where you are. First session 99 AED - or grab a credit pack and train cheaper.</p>
+              <a href="/bootcamp.html#bootcamps">
+                Reserve a bootcamp
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+              </a>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -2871,7 +3292,7 @@ footer {
       <div class="activity-schedule reveal">
         <div class="activity-slot">
           <p class="activity-slot-day">Sunday</p>
-          <p class="activity-slot-time" id="bootcamp-slot-time">12:30 PM</p>
+          <p class="activity-slot-time" id="bootcamp-slot-time">12:45 PM</p>
           <p class="activity-slot-loc" id="bootcamp-slot-loc">CrossFit Alioth</p>
           <p class="activity-slot-desc">Hyrox-focused group workout session tailored to cater for all fitness levels. Builds muscle strength and endurance.</p>
         </div>
@@ -2885,7 +3306,7 @@ footer {
         <div class="bootcamp-session-meta">
           <span>Every Sunday</span>
           <span class="bsm-dot">·</span>
-          <span id="bootcamp-meta-time">12:30 PM</span>
+          <span id="bootcamp-meta-time">12:45 PM</span>
           <span class="bsm-dot">·</span>
           <span id="bootcamp-meta-loc">CrossFit Alioth</span>
         </div>
@@ -2894,22 +3315,22 @@ footer {
           <button class="bootcamp-date-card active" type="button" data-url="https://meetntrain.com/event/lfg-bootcamp-v5ys">
             <span class="bdc-day">SUN</span>
             <span class="bdc-date">APR 26</span>
-            <span class="bdc-time">12:30 PM</span>
+            <span class="bdc-time">12:45 PM</span>
           </button>
           <button class="bootcamp-date-card" type="button" data-url="https://meetntrain.com/event/lfg-bootcamp-lucl">
             <span class="bdc-day">SUN</span>
             <span class="bdc-date">MAY 3</span>
-            <span class="bdc-time">12:30 PM</span>
+            <span class="bdc-time">12:45 PM</span>
           </button>
           <button class="bootcamp-date-card" type="button" data-url="https://meetntrain.com/event/lfg-bootcamp-z6lk">
             <span class="bdc-day">SUN</span>
             <span class="bdc-date">MAY 10</span>
-            <span class="bdc-time">12:30 PM</span>
+            <span class="bdc-time">12:45 PM</span>
           </button>
           <button class="bootcamp-date-card" type="button" data-url="https://meetntrain.com/event/lfg-bootcamp-medd">
             <span class="bdc-day">SUN</span>
             <span class="bdc-date">MAY 17</span>
-            <span class="bdc-time">12:30 PM</span>
+            <span class="bdc-time">12:45 PM</span>
           </button>
         </div>
 
@@ -2918,6 +3339,10 @@ footer {
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
         </a>
         <p class="bootcamp-book-note">You'll complete your reservation through Meet &amp; Train.</p>
+        <a href="/bootcamp.html" class="bootcamp-fullpage-link" style="display:inline-flex;align-items:center;gap:8px;margin-top:18px;font-family:var(--font-head);font-size:13px;letter-spacing:0.18em;text-transform:uppercase;color:var(--green);border-bottom:1px solid rgba(153,153,102,0.35);padding-bottom:4px;transition:color .2s,border-color .2s;">
+          View full bootcamp page
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+        </a>
       </div>
     </div>
   </div>
@@ -2929,7 +3354,7 @@ footer {
 <section id="movement">
   <p class="movement-tag">The Movement</p>
 
-  <!-- Row 1 — mix of images + new videos (mp4 only) -->
+  <!-- Row 1 - mix of images + new videos (mp4 only) -->
   <div style="overflow:hidden;width:100%;">
     <div class="marquee-track">
       <div class="marquee-item">
@@ -2943,24 +3368,24 @@ footer {
           <source src="https://lfgdubai.b-cdn.net/padel.mp4" type="video/mp4">
         </video>
       </div>
-      <div class="marquee-item"><img src="new videos to check/RUN GROUP PIC.jpeg" alt="LFG Run" loading="lazy"></div>
+      <div class="marquee-item"><img src="RUN GROUP PIC.jpeg" alt="LFG Run" loading="lazy"></div>
       <div class="marquee-item">
         <video autoplay muted loop playsinline preload="none" style="width:100%;height:100%;object-fit:cover;">
           <source src="https://lfgdubai.b-cdn.net/evening-run.mp4" type="video/mp4">
         </video>
       </div>
       <div class="marquee-item"><img src="commuinty and brand.jpeg" alt="LFG Community" loading="lazy"></div>
-      <!-- Duplicate for seamless loop — images only to avoid double video load -->
-      <div class="marquee-item"><img src="new videos to check/RUN GROUP PIC.jpeg" alt="LFG Morning Run" loading="lazy" style="width:100%;height:100%;object-fit:cover;"></div>
+      <!-- Duplicate for seamless loop - images only to avoid double video load -->
+      <div class="marquee-item"><img src="RUN GROUP PIC.jpeg" alt="LFG Morning Run" loading="lazy" style="width:100%;height:100%;object-fit:cover;"></div>
       <div class="marquee-item"><img src="main group photo.jpeg" alt="LFG Group Run" loading="lazy"></div>
       <div class="marquee-item"><img src="commuinty and brand.jpeg" alt="LFG Padel" loading="lazy" style="width:100%;height:100%;object-fit:cover;"></div>
-      <div class="marquee-item"><img src="new videos to check/RUN GROUP PIC.jpeg" alt="LFG Run" loading="lazy"></div>
+      <div class="marquee-item"><img src="RUN GROUP PIC.jpeg" alt="LFG Run" loading="lazy"></div>
       <div class="marquee-item"><img src="bootcamp member.jpeg" alt="LFG Evening Run" loading="lazy" style="width:100%;height:100%;object-fit:cover;"></div>
       <div class="marquee-item"><img src="commuinty and brand.jpeg" alt="LFG Community" loading="lazy"></div>
     </div>
   </div>
 
-  <!-- Row 2 (reverse) — bootcamp + ahmed + group -->
+  <!-- Row 2 (reverse) - bootcamp + ahmed + group -->
   <div style="overflow:hidden;width:100%;margin-top:4px;">
     <div class="marquee-track" style="animation-direction:reverse;">
       <div class="marquee-item">
@@ -2973,13 +3398,13 @@ footer {
       <div class="marquee-item"><img src="ahmed sam.jpeg" alt="Ahmed Sam" loading="lazy"></div>
       <div class="marquee-item"><img src="main group photo.jpeg" alt="Group" loading="lazy"></div>
       <div class="marquee-item"><img src="commuinty and brand.jpeg" alt="Community" loading="lazy"></div>
-      <!-- Duplicate — image-only to avoid double video load -->
+      <!-- Duplicate - image-only to avoid double video load -->
       <div class="marquee-item"><img src="selfie in bootcamp.jpeg" alt="Bootcamp" loading="lazy" style="width:100%;height:100%;object-fit:cover;"></div>
       <div class="marquee-item"><img src="bootcamp member.jpeg" alt="Bootcamp" loading="lazy"></div>
       <div class="marquee-item"><img src="commuinty and brand.jpeg" alt="Bootcamp Selfie" loading="lazy"></div>
       <div class="marquee-item"><img src="ahmed sam.jpeg" alt="Ahmed Sam" loading="lazy"></div>
       <div class="marquee-item"><img src="main group photo.jpeg" alt="Group" loading="lazy"></div>
-      <div class="marquee-item"><img src="new videos to check/RUN GROUP PIC.jpeg" alt="Community" loading="lazy"></div>
+      <div class="marquee-item"><img src="RUN GROUP PIC.jpeg" alt="Community" loading="lazy"></div>
     </div>
   </div>
 </section>
@@ -2991,7 +3416,7 @@ footer {
   <div class="founder-img-wrap reveal-left">
     <div class="founder-img-accent"></div>
     <div class="founder-img-accent-br"></div>
-    <img src="ahmed sam.jpeg" alt="Ahmed Sam — founder of LFG Dubai and performance coach in Dubai" class="founder-img">
+    <img src="ahmed sam.jpeg" alt="Ahmed Sam - founder of LFG Dubai and performance coach in Dubai" class="founder-img">
   </div>
   <div class="founder-content reveal-right">
     <p class="founder-eyebrow">The Founder</p>
@@ -3025,7 +3450,7 @@ footer {
     </div>
     <div style="margin-top: 40px;">
       <a href="#coaching" class="btn-secondary">
-        Train with Ahmed
+        Start private coaching
         <svg class="arrow-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
       </a>
     </div>
@@ -3065,12 +3490,22 @@ footer {
           <p style="font-family:var(--font-head);font-size:13px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--green);margin-bottom:12px;">How to Apply</p>
           <p style="font-size:15px;color:rgba(255,255,255,0.55);line-height:1.7;">Fill out the form and book your 30-minute roadmapping session. We will understand your goals, identify what is holding you back, and map out exactly how to get you from where you are to where you want to be.</p>
         </div>
+        <div style="margin-top:32px;display:flex;flex-wrap:wrap;gap:16px;">
+          <a href="https://coaching.lfgdubai.com?utm_source=lfgdubai&utm_medium=site&utm_content=coaching_section" class="btn-primary">
+            Explore LFG Coaching
+            <svg class="arrow-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+          </a>
+          <a href="https://coaching.lfgdubai.com/book?utm_source=lfgdubai&utm_medium=site&utm_content=coaching_section" class="btn-secondary">
+            Book a Consultation Call
+            <svg class="arrow-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+          </a>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Transformation cards — real testimonial images -->
-  <!-- Transformation marquee carousel — correct path: Coaching testimonials/Coaching testimonials/ -->
+  <!-- Transformation cards - real testimonial images -->
+  <!-- Transformation marquee carousel - correct path: Coaching testimonials/Coaching testimonials/ -->
   <div class="transformations-wrap" style="padding: 0 0 80px;">
     <div style="padding: 0 64px; margin-bottom: 40px;">
       <p class="section-tag reveal">Member Transformations</p>
@@ -3117,22 +3552,16 @@ footer {
     </div>
   </div>
 
-  <!-- Booking embed — preserved -->
+  <!-- Booking embed - preserved -->
   <div id="booking" style="padding: 20px 64px 100px; border-top: 1px solid rgba(255,255,255,0.06);">
     <div class="booking-section-head reveal">
       <p class="booking-section-tag">Book Your Session</p>
-      <h2 class="booking-section-headline">Train With<br><em>Ahmed.</em></h2>
-      <p class="booking-section-sub">30 minutes. He maps out exactly where you are and what you need to get there.</p>
+      <h2 class="booking-section-headline">Private<br><em>Coaching.</em></h2>
+      <p class="booking-section-sub">30 minutes. Your coach maps out exactly where you are and what you need to get there.</p>
     </div>
-    <div class="booking-embed-wrap reveal">
-      <iframe
-        src="https://link.lfgdubai.com/widget/bookings/lfg-consultation-call?utm_source=ig&utm_medium=social&utm_content=link_in_bio"
-        class="booking-iframe"
-        title="Book a Consultation with Ahmed Sam — LFG Dubai"
-        allow="payment"
-        loading="lazy"
-        id="booking-frame">
-      </iframe>
+    <div class="booking-embed-wrap reveal" style="background: transparent; padding: 48px 32px; text-align: center;">
+      <p style="color: rgba(244,241,233,0.7); margin: 0 0 24px; font-size: 16px;">Pick a time on the coaching calendar. Free call, no commitment. We confirm on WhatsApp.</p>
+      <a href="https://coaching.lfgdubai.com/book?utm_source=lfgdubai&utm_medium=site&utm_content=coaching_section" class="btn-primary" id="booking-frame">Book Your Consultation Call</a>
     </div>
   </div>
 </section>
@@ -3142,14 +3571,11 @@ footer {
      ============================================================ -->
 <section id="sponsor">
   <span class="sponsor-label">Official Partners</span>
-  <div class="sponsor-divider"></div>
-  <a href="https://www.puma.com" target="_blank" class="sponsor-logo-link">
-    <img src="puma-logo-clean.webp" alt="PUMA" class="sponsor-logo-img">
-  </a>
-  <div class="sponsor-divider"></div>
-  <a href="https://www.tobysestatedubai.com" target="_blank" class="sponsor-logo-link">
-    <img src="tobys-estate-logo-clean.webp" alt="Toby's Estate" class="sponsor-logo-img" style="height:22px;">
-  </a>
+  <div class="sponsor-row">
+    <img src="/app-assets/sponsors/puma-white.png" alt="PUMA" class="sponsor-logo-img sp-puma" loading="lazy">
+    <img src="/app-assets/sponsors/everybodies-white.png" alt="Everybodies" class="sponsor-logo-img sp-eb" loading="lazy">
+    <img src="/app-assets/sponsors/lifterlife-white.png" alt="Lifter Life" class="sponsor-logo-img sp-ll" loading="lazy">
+  </div>
 </section>
 
 <!-- ============================================================
@@ -3174,16 +3600,16 @@ footer {
     </div>
   </a>
 
-  <!-- RIGHT: Train with Ahmed -->
+  <!-- RIGHT: Private coaching -->
   <a href="#booking" class="split-panel right">
     <div class="split-panel-bg">
-      <img src="ahmed sam.jpeg" alt="Ahmed Sam — private coach and founder of LFG Dubai running club">
+      <img src="ahmed sam.jpeg" alt="Ahmed Sam - private coach and founder of LFG Dubai running club">
     </div>
     <div class="split-panel-overlay"></div>
     <div class="split-panel-content">
       <p class="split-direction">Private Coaching</p>
       <h2 class="split-headline">
-        Train With<br>Ahmed.
+        One To<br>One.
       </h2>
       <span class="split-cta">
         Change Your Life
@@ -3355,9 +3781,11 @@ footer {
   <img src="LFG MAIN LOGO-Photoroom.png" alt="LFG" class="footer-logo" style="object-fit:contain;background:none;">
   <p class="footer-copy">&copy; 2025 LFG Dubai &mdash; Lift. Focus. Grind.</p>
   <ul class="footer-links">
-    <li><a href="https://wa.me/?text=I%20want%20to%20join%20the%20next%20LFG%20run" target="_blank">Join Us</a></li>
-    <li><a href="#coaching">Coaching</a></li>
+    <li><a href="https://wa.me/971504264410?text=I%20want%20to%20join%20the%20next%20LFG%20run" target="_blank">Join Us</a></li>
+    <li><a href="https://coaching.lfgdubai.com?utm_source=lfgdubai&utm_medium=site&utm_content=nav">Coaching</a></li>
     <li><a href="#founder">About</a></li>
+    <li><a href="/privacy">Privacy Policy</a></li>
+    <li><a href="/terms">Terms</a></li>
   </ul>
 </footer>
 
@@ -3371,9 +3799,9 @@ window.addEventListener('scroll', () => {
   nav.classList.toggle('scrolled', window.scrollY > 60);
 }, { passive: true });
 
-// ---- SUPABASE — live event config ----
-const _SB_URL  = 'https://ykpnnqkoqgmwuwdrfmbe.supabase.co';
-const _SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlrcG5ucWtvcWdtd3V3ZHJmbWJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5ODg0MDAsImV4cCI6MjA5MTU2NDQwMH0.dOow-n6Tyf_RInlClFjXSUcTM8_RIg9WL7vzVtI53iU';
+// ---- SUPABASE - live event config ----
+const _SB_URL  = 'https://mqhrjliqjxcxtzorapiy.supabase.co';
+const _SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xaHJqbGlxanhjeHR6b3JhcGl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3ODc3NzAsImV4cCI6MjA5NTM2Mzc3MH0.bj4EqOUQDGo-f-Qpmz4l1_ADXxhnSEaTuaQ6jsJe-Kw';
 
 // ---- VISITOR TRACKING (fire-and-forget) ----
 (function trackVisit() {
@@ -3386,12 +3814,14 @@ const _SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
     }
     const w = window.innerWidth;
     const device = w < 768 ? 'mobile' : (w < 1024 ? 'tablet' : 'desktop');
-    fetch(`${_SB_URL}/rest/v1/lfg_visits`, {
+    fetch(`${_SB_URL}/rest/v1/visits`, {
       method: 'POST',
       headers: {
         apikey: _SB_ANON,
         Authorization: `Bearer ${_SB_ANON}`,
         'Content-Type': 'application/json',
+        'Content-Profile': 'public',
+        'Accept-Profile': 'public',
         Prefer: 'return=minimal'
       },
       body: JSON.stringify({
@@ -3411,7 +3841,8 @@ function _advanceIfPast(iso) {
   if (!iso) return null;
   let dt = new Date(iso);
   const now = new Date();
-  while (dt < now) {
+  // 1-hour grace: a run stays "current" until 1h after start (matches the pay page).
+  while (dt.getTime() + 3600000 < now.getTime()) {
     dt = new Date(dt.getTime() + 7 * 86400000);
   }
   return dt;
@@ -3420,8 +3851,8 @@ function _advanceIfPast(iso) {
 async function fetchEventConfig() {
   try {
     const r = await fetch(
-      `${_SB_URL}/rest/v1/lfg_event_config?id=eq.1&select=location,event_datetime,bootcamp_location,bootcamp_datetime,saturday_location,saturday_datetime,saturday_enabled`,
-      { headers: { apikey: _SB_ANON, Authorization: `Bearer ${_SB_ANON}` } }
+      `${_SB_URL}/rest/v1/event_config?id=eq.1&select=location,event_datetime,bootcamp_location,bootcamp_datetime,saturday_location,saturday_datetime,saturday_enabled,run_paid,run_price_aed`,
+      { headers: { apikey: _SB_ANON, Authorization: `Bearer ${_SB_ANON}`, 'Accept-Profile': 'public' } }
     );
     const rows = await r.json();
     if (rows[0]) {
@@ -3429,13 +3860,58 @@ async function fetchEventConfig() {
       const wedTarget = _advanceIfPast(row.event_datetime);
       _eventOverrides = [{ target: wedTarget, location: row.location }];
 
+      // Paid-run integration: when the owner flags the next run as paid, the whole run
+      // funnel switches over — top banner, schedule badge, and the register section becomes
+      // a CTA to the /track payment page (instead of the free sign-up form). All reversible
+      // by toggling run_paid off in the admin portal.
+      const _isPaidRun = !!row.run_paid;
+      const _runPrice = 'AED ' + (row.run_price_aed != null ? row.run_price_aed : 30);
+
+      const paidBanner = document.getElementById('paid-run-banner');
+      if (paidBanner) {
+        if (_isPaidRun) {
+          const pl = document.getElementById('prb-loc'); if (pl && row.location) pl.textContent = row.location;
+          const pp = document.getElementById('prb-price'); if (pp) pp.textContent = _runPrice;
+          paidBanner.hidden = false;
+          if (window.__syncNavH) window.__syncNavH();
+        } else { paidBanner.hidden = true; }
+      }
+
+      // Schedule slot badge
+      const runBadge = document.getElementById('run-paid-badge');
+      if (runBadge) {
+        if (_isPaidRun) {
+          const bp = document.getElementById('run-paid-badge-price'); if (bp) bp.textContent = _runPrice;
+          runBadge.hidden = false;
+        } else { runBadge.hidden = true; }
+      }
+
+      // Register section: swap the free form for the paid CTA (→ /track) when paid.
+      const runForm = document.getElementById('lfgrf-root');
+      const runPaidCta = document.getElementById('run-paid-cta');
+      const formLabel = document.querySelector('#register-form .activity-form-label');
+      if (runForm && runPaidCta) {
+        if (_isPaidRun) {
+          const rl = document.getElementById('rpc-loc'); if (rl && row.location) rl.textContent = row.location;
+          const r1 = document.getElementById('rpc-price'); if (r1) r1.textContent = _runPrice;
+          const r2 = document.getElementById('rpc-price2'); if (r2) r2.textContent = _runPrice;
+          runForm.style.display = 'none';
+          runPaidCta.hidden = false;
+          if (formLabel) formLabel.textContent = 'Reserve the next run';
+        } else {
+          runPaidCta.hidden = true;
+          runForm.style.display = '';
+          if (formLabel) formLabel.textContent = 'Register for the next run';
+        }
+      }
+
       const wedDay    = wedTarget.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'Asia/Dubai' });
       const wedTime   = wedTarget.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Dubai' });
 
       const bcDate = _advanceIfPast(row.bootcamp_datetime);
       const bcTime = bcDate ? bcDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Dubai' }) : null;
 
-      // Saturday — toggle hides/shows entire slot
+      // Saturday - toggle hides/shows entire slot
       const satDivider = document.getElementById('sat-divider');
       const satSlot    = document.getElementById('sat-slot');
       if (row.saturday_enabled) {
@@ -3462,18 +3938,21 @@ async function fetchEventConfig() {
         'bootcamp-slot-time': bcTime,
         'bootcamp-slot-loc':  row.bootcamp_location,
         'bootcamp-meta-time': bcTime,
-        'bootcamp-meta-loc':  row.bootcamp_location
+        'bootcamp-meta-loc':  row.bootcamp_location,
+        'bootcamp-upsell-loc': row.bootcamp_location
       };
       Object.entries(els).forEach(([id, val]) => {
         const el = document.getElementById(id);
         if (el && val != null) el.textContent = val;
       });
+      // Any remaining bootcamp-time labels (calendar rows + upsell header) follow config too.
+      if (bcTime) document.querySelectorAll('.bdc-time').forEach(el => { el.textContent = bcTime; });
     }
   } catch (_) {}
   updateTimers();
 }
 
-// ---- COUNTDOWN TIMER — next run ----
+// ---- COUNTDOWN TIMER - next run ----
 function getNextRunDubai() {
   if (_eventOverrides.length > 0) {
     const now = new Date();
@@ -3482,7 +3961,7 @@ function getNextRunDubai() {
     const closest = pool.reduce((a, b) => Math.abs(a.target - now) < Math.abs(b.target - now) ? a : b);
     const day  = closest.target.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'Asia/Dubai' });
     const time = closest.target.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Dubai' });
-    return { targetLocal: closest.target, label: `${day} — ${closest.location}, ${time}` };
+    return { targetLocal: closest.target, label: `${day} - ${closest.location}, ${time}` };
   }
 
   const now = new Date();
@@ -3493,8 +3972,8 @@ function getNextRunDubai() {
 
   // Fallback schedule: Wed=3 at 19:30, Sat=6 at 06:30
   const sessions = [
-    { day: 3, hour: 19, min: 30, label: 'Wednesday — Dubai Autodrome, 7:30 PM' },
-    { day: 6, hour: 6,  min: 30, label: 'Saturday — Kite Beach, 6:30 AM' }
+    { day: 3, hour: 19, min: 30, label: 'Wednesday - Dubai Autodrome, 7:30 PM' },
+    { day: 6, hour: 6,  min: 30, label: 'Saturday - Kite Beach, 6:30 AM' }
   ];
 
   let closest = null;
@@ -3613,31 +4092,27 @@ function animateGlow() {
 }
 animateGlow();
 
-// ---- STICKY RUN BUTTON — scroll directly to registration form ----
-document.querySelectorAll('.sticky-btn.run').forEach(btn => {
-  btn.addEventListener('click', e => {
-    e.preventDefault();
-    document.getElementById('register-form').scrollIntoView({ behavior: 'smooth' });
-  });
-});
+// ---- ROBUST IN-PAGE SCROLL ----
+// The root has `overflow: clip` (anti horizontal-scroll), which makes
+// element.scrollIntoView({behavior:'smooth'}) silently no-op in some browsers -
+// the desktop sticky CTAs relied on it and appeared dead. Scroll the viewport
+// directly with window.scrollTo, which is unaffected, and offset for the fixed nav.
+function lfgScrollToTarget(target) {
+  if (!target) return;
+  const navH = (document.getElementById('nav') || {}).offsetHeight || 72;
+  const y = target.getBoundingClientRect().top + window.pageYOffset - navH - 12;
+  window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+}
 
-// ---- STICKY BOOK BUTTON — scroll to booking section ----
-document.querySelectorAll('.sticky-btn.book').forEach(btn => {
-  btn.addEventListener('click', e => {
-    e.preventDefault();
-    document.getElementById('booking').scrollIntoView({ behavior: 'smooth' });
-  });
-});
-
-// ---- MOBILE STICKY BAR — smooth scroll for anchor buttons ----
-document.querySelectorAll('.mobile-sticky-btn[href^="#"]').forEach(btn => {
+// Sticky CTAs (desktop) + mobile sticky bar - any in-page anchor uses the robust scroll.
+document.querySelectorAll('.sticky-btn[href^="#"], .mobile-sticky-btn[href^="#"]').forEach(btn => {
   btn.addEventListener('click', e => {
     const target = document.querySelector(btn.getAttribute('href'));
-    if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth' }); }
+    if (target) { e.preventDefault(); lfgScrollToTarget(target); }
   });
 });
 
-// Mobile dock is always visible via CSS on mobile — no JS toggle needed
+// Mobile dock is always visible via CSS on mobile - no JS toggle needed
 
 // ---- BOOTCAMP DATE SELECTOR ----
 const bootcampBookBtn = document.querySelector('.bootcamp-book-btn');
@@ -3657,7 +4132,7 @@ document.querySelectorAll('.marquee-track').forEach(track => {
   track.addEventListener('mouseleave', () => track.style.animationPlayState = 'running');
 });
 
-// ---- LAZY VIDEO PLAY — only play videos when in viewport ----
+// ---- LAZY VIDEO PLAY - only play videos when in viewport ----
 const videoObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     const video = entry.target;
@@ -3724,9 +4199,20 @@ document.querySelectorAll('.faq-question').forEach(btn => {
       "@id": "https://lfgdubai.com/#organization",
       "name": "LFG Dubai",
       "alternateName": "Lift Focus Grind",
-      "description": "LFG is one of the fastest growing running clubs in Dubai with a community of over 1000 members, meeting every Wednesday at 7:30 PM.",
+      "description": "LFG is one of the fastest growing running clubs in Dubai with a community of over 1000 members, with weekly group runs every Wednesday at 7:30 PM and Saturday at 6:30 AM. Founded by coach Ahmed Sam.",
       "url": "https://lfgdubai.com/",
       "sport": "Running",
+      "logo": "https://lfgdubai.com/icon-512.png",
+      "image": "https://lfgdubai.com/og-image.jpg",
+      "slogan": "Lift. Focus. Grind.",
+      "sameAs": [
+        "https://www.instagram.com/lfg_squad/"
+      ],
+      "areaServed": {
+        "@type": "City",
+        "name": "Dubai",
+        "containedInPlace": { "@type": "Country", "name": "United Arab Emirates" }
+      },
       "location": {
         "@type": "Place",
         "name": "Dubai",
@@ -3736,28 +4222,55 @@ document.querySelectorAll('.faq-question').forEach(btn => {
           "addressCountry": "AE"
         }
       },
+      "sponsor": {
+        "@type": "Organization",
+        "name": "PUMA Middle East"
+      },
       "founder": {
         "@id": "https://lfgdubai.com/#ahmed-sam"
       },
-      "event": {
-        "@type": "SportsEvent",
-        "name": "LFG Weekly Group Run",
-        "description": "Weekly group run open to all levels, every Wednesday at 7:30 PM in Dubai.",
-        "eventSchedule": {
-          "@type": "Schedule",
-          "byDay": "https://schema.org/Wednesday",
-          "startTime": "19:30"
+      "event": [
+        {
+          "@type": "SportsEvent",
+          "name": "LFG Weekly Group Run (Wednesday)",
+          "description": "Weekly group run open to all levels, every Wednesday at 7:30 PM in Dubai.",
+          "eventSchedule": {
+            "@type": "Schedule",
+            "byDay": "https://schema.org/Wednesday",
+            "startTime": "19:30"
+          },
+          "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+          "location": {
+            "@type": "Place",
+            "name": "Dubai",
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": "Dubai",
+              "addressCountry": "AE"
+            }
+          }
         },
-        "location": {
-          "@type": "Place",
-          "name": "Dubai",
-          "address": {
-            "@type": "PostalAddress",
-            "addressLocality": "Dubai",
-            "addressCountry": "AE"
+        {
+          "@type": "SportsEvent",
+          "name": "LFG Weekly Group Run (Saturday)",
+          "description": "Weekly morning group run open to all levels, every Saturday at 6:30 AM in Dubai.",
+          "eventSchedule": {
+            "@type": "Schedule",
+            "byDay": "https://schema.org/Saturday",
+            "startTime": "06:30"
+          },
+          "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+          "location": {
+            "@type": "Place",
+            "name": "Dubai",
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": "Dubai",
+              "addressCountry": "AE"
+            }
           }
         }
-      }
+      ]
     },
     {
       "@type": "Person",
@@ -3765,6 +4278,9 @@ document.querySelectorAll('.faq-question').forEach(btn => {
       "name": "Ahmed Sam",
       "jobTitle": "Founder & Performance Coach",
       "description": "Ahmed Sam is the founder of LFG Dubai and a performance-focused coach offering private coaching, consultation calls, and bootcamp training in Dubai.",
+      "sameAs": [
+        "https://www.linkedin.com/in/ahmed-yacout/"
+      ],
       "worksFor": {
         "@id": "https://lfgdubai.com/#organization"
       },
@@ -3790,7 +4306,7 @@ document.querySelectorAll('.faq-question').forEach(btn => {
           "name": "When does LFG run each week?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "LFG runs every Wednesday at 7:30 PM. The weekly run is designed to bring the community together through movement, accountability, and energy."
+            "text": "LFG runs every Wednesday at 7:30 PM and every Saturday at 6:30 AM in Dubai. The weekly runs bring the community together through movement, accountability, and energy."
           }
         },
         {
@@ -3846,7 +4362,7 @@ document.querySelectorAll('.faq-question').forEach(btn => {
           "name": "What is included in the consultation call?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "The consultation call is designed to help you understand the coaching process, your goals, and the best next step if you want to train with Ahmed Sam."
+            "text": "The consultation call is designed to help you understand the coaching process, your goals, and the best next step if you want to train with Ahmed Sam and his coaching team."
           }
         },
         {
@@ -3879,9 +4395,38 @@ document.querySelectorAll('.faq-question').forEach(btn => {
 }
 </script>
 
-<!-- Mobile dock scroll offset — invisible structural spacer, prevents content hiding under fixed dock -->
+<!-- Mobile dock scroll offset - invisible structural spacer, prevents content hiding under fixed dock -->
 <div id="dock-offset" aria-hidden="true"></div>
 
 <script defer src="/_vercel/insights/script.js"></script>
+
+<!-- LFG bootcamp booking flow (rewires #bootcamp-booking; replaces Meet & Train) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.1"></script>
+<script src="/app-assets/lfg-supabase.js?v=3"></script>
+<script src="https://js.stripe.com/v3/"></script>
+<script src="/app-assets/lfg-home-booking.js?v=12"></script>
+<script src="/app-assets/lfg-runs-form.js?v=7"></script>
+<script>
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+    var lfgReloaded = false;
+    navigator.serviceWorker.addEventListener('message', function (ev) {
+      if (ev.data && ev.data.type === 'SW_UPDATED' && !lfgReloaded) { lfgReloaded = true; location.reload(); }
+    });
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      if (lfgReloaded) return; lfgReloaded = true; location.reload();
+    });
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('/sw.js').then(function (reg) {
+        if (reg && reg.waiting) reg.waiting.postMessage('SKIP_WAITING');
+        if (reg) reg.addEventListener('updatefound', function () {
+          var w = reg.installing; if (!w) return;
+          w.addEventListener('statechange', function () {
+            if (w.state === 'installed' && navigator.serviceWorker.controller) w.postMessage('SKIP_WAITING');
+          });
+        });
+      }).catch(function () {});
+    });
+  }
+</script>
 </body>
 </html>
