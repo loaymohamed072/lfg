@@ -180,8 +180,16 @@
   }
 
   // ---- Poll --------------------------------------------------------------
+  // ?date=YYYY-MM-DD replays a past night on the TV (and is how the board gets
+  // QA'd without touching the live night). Defaults to tonight.
+  var qsDate = (function () {
+    var m = /[?&]date=(\d{4}-\d{2}-\d{2})/.exec(window.location.search);
+    return m ? m[1] : null;
+  })();
+  var BOARD_URL = '/api/padel-board' + (qsDate ? '?date=' + qsDate : '');
+
   function load() {
-    fetch('/api/padel-board', { cache: 'no-store' })
+    fetch(BOARD_URL, { cache: 'no-store' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
         if (!d) return;                       // keep the last good board up
