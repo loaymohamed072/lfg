@@ -235,12 +235,15 @@ body {
 .pb-wins { font-size: 2vh; color: var(--pb-dim); }
 
 /* --- Courts ------------------------------------------------------------ */
+/* Throne across the top, the three challenger courts in one row beneath it.
+   A 2-column grid orphaned Court 4 on its own row next to an empty cell, which
+   read as a missing court rather than a composition. */
 .pb-courts {
   flex: 1;
   display: grid;
-  grid-template-rows: 1.55fr 1fr 1fr;   /* the Throne takes the top weight */
-  grid-template-columns: 1fr 1fr;
-  gap: 1.1vh 1.1vw;
+  grid-template-rows: 1.5fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.2vh 1.1vw;
   min-height: 0;
 }
 
