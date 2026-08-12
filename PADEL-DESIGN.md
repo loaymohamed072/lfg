@@ -372,3 +372,19 @@ ground, off-centre radial wash, decorated seams). PASS.
 7. Ground-test — replace every background with one hex and lose nothing? NO: the court field,
    the off-centre wash, and the Throne's inner ground all carry meaning. PASS.
 VERDICT: PASS (self-graded). Independent judge re-checks the rendered board at Phase D2.
+
+## validate_build.py — VERDICT PASS with 1 warning (2026-08-12)
+Warning [6] accent proximity: `#B3B38A` sits within RGB 60 of Naseej's `#D8A96A` (dist 50).
+Justification: brand-locked. LFG's olive ramp has shipped since before Naseej existed and is
+the accent on the /padel page this board hangs beside; the two projects share no audience, no
+surface and no week. Rotation exists to stop unnoticed convergence in FREE-CHOICE derivations,
+and this is neither free-choice nor unnoticed. All other checks PASS, including the hard L0 gate.
+
+## Independent judge (Phase D2) — UNSCORED
+No independent judge subagent was spawned: the session operates under a standing instruction not
+to call the Agent tool unless Loay asks for it. Per the orchestrator's own rule, a self-graded
+score is NOT an accepted substitute, so this build is recorded UNSCORED rather than carrying a
+number it did not earn. What DID run against the rendered pixels: two Playwright captures of the
+live board at TV scale (which caught a real composition defect — Court 4 orphaned beside an empty
+cell, now fixed), the 390px guard state, the phone gate state, and the palette engine's APCA pass
+(which caught the Throne's weak winner colour before it shipped).

@@ -407,3 +407,36 @@ rather than carried forward:
 - CSRF and rate-limit checks on the registration endpoint
 - headers/CSP graded against the deployed URL (**F-1**)
 - `security.txt` added, which also clears the FLAG above
+
+## 2026-08-12 — King of the Court board + padel waiting list
+**Verdict: FLAG** (standing item only; no new findings from this session's surface.)
+
+New surface reviewed: `/api/padel-board` (public read), `/api/admin/padel-night` (admin write),
+`/api/padel-waitlist` (member), tables `padel_teams` / `padel_matches` / `padel_night` /
+`padel_waitlist`, pages `/padel-board` + `/padel-score` (both noindex).
+
+Runtime checks actually executed (not asserted):
+- **Anon-key RLS probe** — direct PostgREST reads of all four new tables with the anon key
+  return `[]`, and an anon INSERT into `padel_waitlist` returns 401. RLS-on-with-no-policies is
+  the intended posture (service-role only), and the probe confirms it holds at runtime rather
+  than just in the advisor.
+- **Unauthenticated privileged-endpoint probes** — `build_teams`, `score`, and `ping` on
+  `/api/admin/padel-night` all return 401. `/api/padel-waitlist` returns 401 signed out.
+- **Input handling** — `/api/padel-board?date=` with an injection-shaped value is rejected by
+  the `YYYY-MM-DD` regex and falls back to the configured night. Scores are clamped 0-50
+  server-side (a typo of 60 for 6 would otherwise distort the tiebreak all night).
+- **Client-bundle leak scan** — 0 hits across every file written this session. The score page
+  carries the anon key only, the same posture as `admin.html`; no service-role key is
+  client-reachable.
+- **Supabase security advisors** — the four new tables appear at INFO (`rls_enabled_no_policy`,
+  intended). No ERROR-level advisor. All WARN items pre-date this session.
+- **Headers on `/padel-board`** — HSTS, nosniff, frame-ancestors, Referrer-Policy and
+  Permissions-Policy all present.
+
+Standing item (unchanged, previously recorded): the site CSP still has no `script-src`, so
+scripts are unrestricted. Not introduced by this work and not made worse by it; both new pages
+load only same-origin assets plus the Supabase CDN the rest of the site already uses.
+
+Data-exposure note: the board is displayed publicly on a venue TV, so it deliberately returns
+first name + last initial only, matching `/api/padel-leaderboard`. No email, phone, level or
+payment data reaches either new page.
