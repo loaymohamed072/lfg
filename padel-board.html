@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en" class="pb-page">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>King of the Court · LFG Padel Nights</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" type="image/png" href="/lfg-logo.png">
+<meta name="theme-color" content="#0A0A0A">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/app-assets/lfg-padel-board.css?v=1">
+</head>
+<body>
+
+<!-- Grain: the same generative overlay /padel carries, so the board and the site
+     read as one material rather than two products. -->
+<svg class="pb-grain" aria-hidden="true">
+  <filter id="pbNoise"><feTurbulence type="fractalNoise" baseFrequency="0.72" numOctaves="2" stitchTiles="stitch"/></filter>
+  <rect width="100%" height="100%" filter="url(#pbNoise)"/>
+</svg>
+
+<!-- The board sits ON a court, not on a panel colour: service boxes and the net,
+     scaled across the whole canvas. -->
+<svg class="pb-court" viewBox="0 0 1920 1080" preserveAspectRatio="none" aria-hidden="true">
+  <g stroke="rgba(255,255,255,0.055)" stroke-width="3" fill="none">
+    <rect x="120" y="150" width="1680" height="800"/>
+    <line x1="120" y1="550" x2="1800" y2="550"/>
+    <line x1="620" y1="150" x2="620" y2="950"/>
+    <line x1="1300" y1="150" x2="1300" y2="950"/>
+  </g>
+  <g stroke="rgba(153,153,102,0.20)" stroke-width="5" fill="none">
+    <line x1="960" y1="150" x2="960" y2="950" stroke-dasharray="14 20"/>
+  </g>
+</svg>
+
+<!-- Below 900px this is not a board. Say so, instead of shrinking a TV surface
+     onto a phone and pretending it works there. -->
+<div class="pb-toosmall">
+  <p class="pb-toosmall-mark">LFG</p>
+  <p>This screen is built for the TV.</p>
+  <p class="pb-toosmall-sub">Score the night from <a href="/padel-score">/padel-score</a>.</p>
+</div>
+
+<main class="pb-shell">
+
+  <!-- RAIL: lockup left, night meta centre, clock right -->
+  <header class="pb-rail">
+    <div class="pb-lockup">
+      <img src="/LFG MAIN LOGO-Photoroom.png" alt="LFG" class="pb-logo">
+      <div class="pb-lockup-text">
+        <p class="pb-lockup-sub">Padel Nights</p>
+        <p class="pb-lockup-main">King of the Court</p>
+      </div>
+    </div>
+
+    <div class="pb-meta">
+      <div class="pb-meta-item"><span class="k">Players</span><span class="v" id="pbPlayers">&mdash;</span></div>
+      <div class="pb-meta-item"><span class="k">Teams</span><span class="v" id="pbTeams">&mdash;</span></div>
+      <div class="pb-meta-item"><span class="k">Round</span><span class="v" id="pbRound">&mdash;</span></div>
+    </div>
+
+    <div class="pb-clock">
+      <p class="pb-clock-label" id="pbClockLabel">Round ends in</p>
+      <p class="pb-clock-time" id="pbClock">--:--</p>
+    </div>
+  </header>
+
+  <div class="pb-body">
+
+    <section class="pb-col pb-col-board" aria-label="Leaderboard">
+      <p class="pb-zone">Leaderboard</p>
+      <div class="pb-table" id="pbTable">
+        <p class="pb-empty">Teams go up when the night starts.</p>
+      </div>
+    </section>
+
+    <!-- The Throne is a different object, not a badged card. -->
+    <section class="pb-col pb-col-courts" aria-label="Court status">
+      <p class="pb-zone">Court status</p>
+      <div class="pb-courts" id="pbCourts">
+        <p class="pb-empty">Courts appear when the first round is drawn.</p>
+      </div>
+    </section>
+
+  </div>
+
+  <footer class="pb-foot">
+    <span>LFG &middot; Lift. Focus. Grind.</span>
+    <span class="pb-foot-mid" id="pbWhere">&mdash;</span>
+    <span>One night. One throne.</span>
+  </footer>
+
+</main>
+
+<script src="/app-assets/lfg-padel-board.js?v=1" defer></script>
+</body>
+</html>

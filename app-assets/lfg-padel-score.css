@@ -1,0 +1,254 @@
+/* ==========================================================================
+   LFG King of the Court — scoring page (/padel-score).
+   The opposite surface to the board: one hand, one thumb, 11pm, courtside,
+   between rounds. It inherits the board's tokens (lfg-padel-board.css) and
+   overrides only what a phone needs.
+
+   Sizing here is px, not vh: a phone is a known viewing distance, and vh
+   units on a mobile browser move when the address bar hides.
+   ========================================================================== */
+
+html.ps-page,
+body {
+  height: auto;
+  min-height: 100%;
+  overflow: auto;                 /* unlike the board, this one scrolls */
+  background:
+    radial-gradient(90% 40% at 20% 0%, var(--pb-olive-soft) 0%, transparent 70%),
+    var(--pb-ink);
+  color: var(--pb-paper);
+  font-family: var(--pb-text);
+  -webkit-text-size-adjust: 100%;
+}
+
+.ps-shell {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 20px 16px calc(28px + env(safe-area-inset-bottom));
+}
+
+/* --- Head -------------------------------------------------------------- */
+.ps-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--pb-line);
+}
+.ps-eyebrow {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--pb-olive-text);
+}
+.ps-title {
+  margin: 0;
+  font-family: var(--pb-display);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+.ps-boardlink {
+  flex: none;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px;
+  border: 1px solid var(--pb-line-strong);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--pb-olive-text);
+}
+
+.ps-gate {
+  margin: 28px 0;
+  font-size: 15px;
+  color: var(--pb-dim);
+}
+.ps-gate a { color: var(--pb-olive-text); }
+
+/* --- Round control ----------------------------------------------------- */
+.ps-round {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 16px 0 20px;
+}
+.ps-round-now { display: flex; align-items: baseline; gap: 8px; }
+.ps-round-now .k {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--pb-dim-2);
+}
+.ps-round-now .v {
+  font-family: var(--pb-display);
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1;
+}
+.ps-round-actions { display: flex; gap: 8px; }
+
+/* --- Buttons: 44px floor everywhere, thumb-sized primaries -------------- */
+.ps-btn {
+  min-height: 48px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--pb-olive-cta);
+  color: var(--pb-ink);
+  font-family: var(--pb-text);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 180ms ease;
+}
+.ps-btn:active { opacity: 0.82; }
+.ps-btn:disabled { opacity: 0.45; cursor: default; }
+.ps-btn-quiet {
+  background: transparent;
+  color: var(--pb-dim);
+  border: 1px solid var(--pb-line-strong);
+}
+.ps-btn-danger {
+  background: transparent;
+  color: #E8A5A5;
+  border: 1px solid rgba(232, 165, 165, 0.35);
+}
+
+/* --- Match cards ------------------------------------------------------- */
+.ps-match {
+  margin-bottom: 14px;
+  padding: 14px;
+  border: 1px solid var(--pb-line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.015);
+}
+.ps-match.is-throne {
+  border-color: rgba(153, 153, 102, 0.45);
+  background:
+    radial-gradient(90% 140% at 12% 0%, rgba(153, 153, 102, 0.14) 0%, transparent 70%),
+    rgba(58, 58, 38, 0.35);
+}
+.ps-match.is-saved { border-color: var(--pb-olive-cta); }
+
+.ps-match-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.ps-court {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--pb-dim-2);
+}
+.ps-match.is-throne .ps-court { color: var(--pb-olive-cta); }
+.ps-state {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--pb-dim-2);
+}
+.ps-match.is-saved .ps-state { color: var(--pb-olive-text); }
+
+.ps-line {
+  display: grid;
+  grid-template-columns: 1fr 84px;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.ps-name {
+  font-family: var(--pb-display);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+/* 56px tall, 20px type: big enough to hit without looking, big enough to read
+   without glasses, and inputmode=numeric so the number pad opens straight up. */
+.ps-input {
+  width: 100%;
+  height: 56px;
+  padding: 0 10px;
+  border: 1px solid var(--pb-line-strong);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--pb-paper);
+  font-family: var(--pb-display);
+  font-size: 26px;
+  font-weight: 700;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.ps-input:focus {
+  outline: 2px solid var(--pb-olive-cta);
+  outline-offset: 2px;
+  border-color: transparent;
+}
+
+.ps-save { width: 100%; margin-top: 4px; }
+
+.ps-msg {
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  border: 1px solid var(--pb-line-strong);
+  border-radius: 10px;
+  font-size: 14px;
+  color: var(--pb-olive-text);
+}
+.ps-msg.is-error { color: #E8A5A5; border-color: rgba(232, 165, 165, 0.35); }
+
+.ps-empty {
+  margin: 28px 0;
+  font-size: 15px;
+  color: var(--pb-dim);
+}
+
+/* --- Setup (collapsed by default) -------------------------------------- */
+.ps-setup {
+  margin-top: 28px;
+  padding-top: 18px;
+  border-top: 1px solid var(--pb-line);
+}
+.ps-setup summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--pb-dim-2);
+  cursor: pointer;
+}
+.ps-setup-note {
+  margin: 8px 0 12px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--pb-dim);
+}
+.ps-danger-note { margin-top: 22px; color: var(--pb-dim-2); }
+.ps-setup .ps-btn { width: 100%; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-btn { transition: none; }
+}

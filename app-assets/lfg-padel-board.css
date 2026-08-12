@@ -1,0 +1,409 @@
+/* ==========================================================================
+   LFG King of the Court — TV board (/padel-board)
+   Contract: PADEL-DESIGN.md → BOARD-DESIGN. Register: RESTRAINT (declared).
+   Signature of stillness: THE THRONE — Court 1 is a different object, not a
+   badged card. Its authority is scale, material and position, never motion.
+
+   Sized in vh/vmin, never px: one build has to fit a 43" TV and a 75" one.
+   Nothing here scrolls and nothing is hoverable — this canvas is READ, at
+   3-8 metres, for 2-3 seconds at a time.
+
+   Palette is the brand-locked /padel ramp, re-verified for THIS surface
+   (build_palettes.py --check, 2026-08-12). The check killed one idea: olive
+   #B3B38A on the Throne's #3A3A26 ground is APCA 52, too weak for the most
+   important number on the board. So the Throne signals its winner with
+   LUMINANCE (winner stays white, loser dims), never hue.
+   ========================================================================== */
+
+:root {
+  --pb-ink: #0A0A0A;
+  --pb-line: rgba(255, 255, 255, 0.09);
+  --pb-line-strong: rgba(255, 255, 255, 0.17);
+  --pb-paper: #FFFFFF;
+  --pb-dim: rgba(255, 255, 255, 0.62);
+  --pb-dim-2: rgba(255, 255, 255, 0.40);
+  --pb-olive: #999966;         /* fills, hairlines, SVG court lines — never text (APCA 46) */
+  --pb-olive-deep: #3A3A26;    /* Throne ground only */
+  --pb-olive-cta: #B3B38A;     /* large display numerals on ink only (APCA 60) */
+  --pb-olive-text: #C9C9A8;    /* text-safe olive on ink (APCA 72) */
+  --pb-olive-soft: rgba(153, 153, 102, 0.14);
+
+  --pb-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --pb-text: "Barlow", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html.pb-page,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;              /* a board never scrolls */
+  color: var(--pb-paper);
+  font-family: var(--pb-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Ground: a stack, never a hex. Vignette → off-centre wash → base. Light comes
+   FROM somewhere (22% 0%), which is what separates art-directed from generated. */
+body {
+  background:
+    radial-gradient(130% 90% at 50% 100%, transparent 42%, rgba(0, 0, 0, 0.72) 100%),
+    radial-gradient(70% 55% at 22% 0%, var(--pb-olive-soft) 0%, transparent 68%),
+    var(--pb-ink);
+}
+
+.pb-court {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.pb-grain {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.045;
+  pointer-events: none;
+  z-index: 1;
+  mix-blend-mode: overlay;
+}
+
+/* --- Shell ------------------------------------------------------------- */
+.pb-shell {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 2.2vh 2.4vw;
+  gap: 1.8vh;
+}
+
+/* --- Rail: the seam is a hairline, never a filled bar ------------------- */
+.pb-rail {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 3vw;
+  padding-bottom: 1.6vh;
+  border-bottom: 1px solid var(--pb-line);
+}
+
+.pb-lockup { display: flex; align-items: center; gap: 1.1vw; }
+.pb-logo { height: 5.4vh; width: auto; display: block; }
+.pb-lockup-text { line-height: 1; }
+.pb-lockup-sub {
+  margin: 0 0 0.3vh;
+  font-size: 1.15vh;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--pb-olive-text);
+}
+.pb-lockup-main {
+  margin: 0;
+  font-family: var(--pb-display);
+  font-size: 3.4vh;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 0.9;
+  text-transform: uppercase;
+}
+
+.pb-meta { display: flex; justify-content: center; gap: 2.6vw; }
+.pb-meta-item { display: flex; flex-direction: column; align-items: center; gap: 0.4vh; }
+.pb-meta-item .k {
+  font-size: 1.05vh;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--pb-dim-2);
+}
+.pb-meta-item .v {
+  font-family: var(--pb-display);
+  font-size: 2.5vh;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.pb-clock { text-align: right; }
+.pb-clock-label {
+  margin: 0 0 0.4vh;
+  font-size: 1.05vh;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--pb-dim-2);
+}
+.pb-clock-time {
+  margin: 0;
+  font-family: var(--pb-display);
+  font-size: clamp(2.6rem, 8vh, 7rem);
+  font-weight: 700;
+  line-height: 0.86;               /* display leading inverts with size */
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+/* The last minute is the only state change the clock is allowed. */
+.pb-clock.is-urgent .pb-clock-time { color: var(--pb-olive-cta); }
+.pb-clock.is-break .pb-clock-label { color: var(--pb-olive-text); }
+
+/* --- Body: asymmetric index pair, 38 / 62 ------------------------------ */
+.pb-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 38fr 62fr;
+  gap: 2.2vw;
+  min-height: 0;
+}
+.pb-col { display: flex; flex-direction: column; min-height: 0; }
+
+.pb-zone {
+  margin: 0 0 1.2vh;
+  font-size: 1.2vh;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--pb-dim-2);
+}
+
+/* --- Leaderboard ------------------------------------------------------- */
+.pb-table { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+
+.pb-thead,
+.pb-row {
+  display: grid;
+  grid-template-columns: 3.2vw 1fr 4vw 3vw;
+  align-items: center;
+  gap: 1.2vw;
+}
+
+.pb-thead {
+  padding-bottom: 0.8vh;
+  border-bottom: 1px solid var(--pb-line-strong);
+  font-size: 1.05vh;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--pb-dim-2);
+}
+.pb-thead span:nth-child(3),
+.pb-thead span:nth-child(4) { text-align: right; }
+
+.pb-row {
+  min-height: 6.4vh;              /* legibility floor at 8 metres */
+  padding: 0.5vh 0;
+  border-bottom: 1px solid var(--pb-line);
+}
+.pb-row:last-child { border-bottom: 0; }
+
+.pb-rank {
+  font-family: var(--pb-display);
+  font-size: 2.4vh;
+  font-weight: 600;
+  color: var(--pb-dim-2);
+  font-variant-numeric: tabular-nums;
+}
+.pb-row.is-top .pb-rank { color: var(--pb-olive-cta); }
+
+.pb-team {
+  font-family: var(--pb-display);
+  font-size: 2.6vh;
+  font-weight: 600;
+  line-height: 1.02;
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pb-row.is-top .pb-team { color: var(--pb-olive-text); }
+
+.pb-pts,
+.pb-wins {
+  font-family: var(--pb-display);
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.pb-pts { font-size: 3vh; }
+.pb-wins { font-size: 2vh; color: var(--pb-dim); }
+
+/* --- Courts ------------------------------------------------------------ */
+.pb-courts {
+  flex: 1;
+  display: grid;
+  grid-template-rows: 1.55fr 1fr 1fr;   /* the Throne takes the top weight */
+  grid-template-columns: 1fr 1fr;
+  gap: 1.1vh 1.1vw;
+  min-height: 0;
+}
+
+.pb-court-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.8vh;
+  padding: 1.4vh 1.4vw;
+  border: 1px solid var(--pb-line);
+  border-radius: 0.9vh;
+  background: rgba(255, 255, 255, 0.014);
+  min-height: 0;
+  /* The one motion event: a score landing flashes the card's edge once. */
+  transition: border-color 420ms cubic-bezier(0.22, 1, 0.36, 1),
+              background-color 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.pb-court-card.is-fresh {
+  border-color: var(--pb-olive-cta);
+  background: var(--pb-olive-soft);
+}
+
+.pb-court-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1vw;
+}
+.pb-court-no,
+.pb-court-state {
+  font-size: 1.15vh;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--pb-dim-2);
+}
+.pb-court-card.is-done .pb-court-state { color: var(--pb-olive-text); }
+
+.pb-side {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 1vw;
+}
+.pb-side-name {
+  font-family: var(--pb-display);
+  font-size: 2.2vh;
+  font-weight: 600;
+  line-height: 1.04;
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pb-side-score {
+  font-family: var(--pb-display);
+  font-size: 3.2vh;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--pb-dim);
+}
+.pb-side.is-winner .pb-side-name { color: var(--pb-olive-text); }
+.pb-side.is-winner .pb-side-score { color: var(--pb-olive-cta); }
+
+.pb-vs {
+  align-self: center;
+  font-size: 1.05vh;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--pb-dim-2);
+}
+
+/* THE THRONE — the signature of stillness. A different object: it spans both
+   columns, carries its own ground with the court geometry showing through, and
+   sets its names at nearly double the other courts. It never animates. */
+.pb-court-card.is-throne {
+  grid-column: 1 / -1;
+  gap: 1.2vh;
+  border-color: rgba(153, 153, 102, 0.45);
+  background:
+    radial-gradient(90% 140% at 12% 0%, rgba(153, 153, 102, 0.16) 0%, transparent 70%),
+    linear-gradient(180deg, var(--pb-olive-deep) 0%, rgba(58, 58, 38, 0.28) 100%);
+}
+/* The crown is a hairline, not an icon: a rule only the Throne carries. */
+.pb-court-card.is-throne::before {
+  content: "";
+  position: absolute;
+  left: 1.4vw;
+  right: 1.4vw;
+  top: 0;
+  height: 2px;
+  background: var(--pb-olive-cta);
+  opacity: 0.75;
+}
+.pb-court-card.is-throne .pb-court-no { color: var(--pb-olive-cta); }
+.pb-court-card.is-throne .pb-side-name { font-size: 4.4vh; }
+.pb-court-card.is-throne .pb-side-score { font-size: 5.2vh; }
+/* On the Throne the signal is LUMINANCE, not hue: olive on this ground measures
+   APCA 52 and would be the weakest number on the board. The winner keeps full
+   white (APCA 100) and the loser recedes. */
+.pb-court-card.is-throne .pb-side .pb-side-name,
+.pb-court-card.is-throne .pb-side .pb-side-score { color: var(--pb-dim); }
+.pb-court-card.is-throne .pb-side.is-winner .pb-side-name,
+.pb-court-card.is-throne .pb-side.is-winner .pb-side-score { color: var(--pb-paper); }
+.pb-court-card.is-throne.is-pending .pb-side-name,
+.pb-court-card.is-throne.is-pending .pb-side-score { color: var(--pb-paper); }
+
+/* --- Footer ------------------------------------------------------------ */
+.pb-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 2vw;
+  padding-top: 1.2vh;
+  border-top: 1px solid var(--pb-line);
+  font-size: 1.05vh;
+  font-weight: 500;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--pb-dim-2);
+}
+.pb-foot-mid { color: var(--pb-dim); }
+
+.pb-empty {
+  margin: auto;
+  font-family: var(--pb-display);
+  font-size: 2.4vh;
+  font-weight: 500;
+  text-transform: uppercase;
+  color: var(--pb-dim-2);
+}
+
+/* --- Not a phone surface ---------------------------------------------- */
+.pb-toosmall { display: none; }
+
+@media (max-width: 900px), (max-height: 420px) {
+  .pb-shell { display: none; }
+  .pb-toosmall {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    height: 100vh;
+    padding: 24px;
+    text-align: center;
+  }
+  .pb-toosmall-mark {
+    margin: 0 0 8px;
+    font-family: var(--pb-display);
+    font-size: 44px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--pb-olive-text);
+  }
+  .pb-toosmall p { margin: 0; font-size: 17px; color: var(--pb-dim); }
+  .pb-toosmall-sub a { color: var(--pb-olive-text); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pb-court-card { transition: none; }
+}

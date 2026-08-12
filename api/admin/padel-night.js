@@ -57,6 +57,13 @@ module.exports = async (req, res) => {
       : (current && current.ymd);
     if (!date) return res.status(400).json({ error: 'No padel night configured.' });
 
+    // Read-only: lets the scoring page ask "am I allowed to run tonight?" without
+    // writing anything. The first version probed with start_round, which stamped
+    // a real clock every time the page loaded.
+    if (body.action === 'ping') {
+      return res.status(200).json({ ok: true, event_date: date });
+    }
+
     if (body.action === 'reset') {
       await db.from('padel_matches').delete().eq('event_date', date);
       await db.from('padel_teams').delete().eq('event_date', date);

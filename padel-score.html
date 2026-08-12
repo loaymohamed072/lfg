@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en" class="ps-page">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Score the night · LFG Padel</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" type="image/png" href="/lfg-logo.png">
+<meta name="theme-color" content="#0A0A0A">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/app-assets/lfg-padel-board.css?v=1">
+<link rel="stylesheet" href="/app-assets/lfg-padel-score.css?v=1">
+</head>
+<body>
+
+<main class="ps-shell">
+
+  <header class="ps-head">
+    <div>
+      <p class="ps-eyebrow">King of the Court</p>
+      <h1 class="ps-title">Score the night</h1>
+    </div>
+    <a class="ps-boardlink" href="/padel-board" target="_blank" rel="noopener">Board &#8599;</a>
+  </header>
+
+  <p class="ps-gate" id="psGate">Checking your access&hellip;</p>
+
+  <div id="psApp" hidden>
+
+    <!-- Round control: the only thing above the first match -->
+    <section class="ps-round">
+      <div class="ps-round-now">
+        <span class="k">Round</span>
+        <span class="v" id="psRound">&mdash;</span>
+      </div>
+      <div class="ps-round-actions">
+        <button type="button" class="ps-btn ps-btn-quiet" id="psStart">Restart clock</button>
+        <button type="button" class="ps-btn" id="psNext">Draw next round</button>
+      </div>
+    </section>
+
+    <div id="psMatches"></div>
+
+    <p class="ps-msg" id="psMsg" hidden></p>
+
+    <!-- Setup lives at the bottom: it runs once, at the start of the night,
+         and must never sit between Ahmed and the scores for the other 2 hours. -->
+    <details class="ps-setup">
+      <summary>Set up the night</summary>
+      <p class="ps-setup-note">
+        Builds the teams from everyone who paid, pairing the strongest with the
+        weakest so the eight teams start level. Do this once, before round one.
+      </p>
+      <button type="button" class="ps-btn ps-btn-quiet" id="psBuild">Build teams &amp; draw round 1</button>
+      <p class="ps-setup-note ps-danger-note">
+        Resetting clears every team and score for tonight. There is no undo.
+      </p>
+      <button type="button" class="ps-btn ps-btn-danger" id="psReset">Reset the night</button>
+    </details>
+
+  </div>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.1"></script>
+<script src="/app-assets/lfg-padel-score.js?v=1" defer></script>
+</body>
+</html>
