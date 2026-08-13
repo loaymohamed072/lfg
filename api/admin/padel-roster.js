@@ -43,6 +43,49 @@ module.exports = async (req, res) => {
         return res.status(200).json({ ok: true, points });
       }
 
+      // Roll a spot forward a week. The published policy is "tell us by 2pm and
+      // your payment rolls to next week" — no refund, the money follows the
+      // player. Moving the signup AND its payment row keeps the two in step, so
+      // revenue still reconciles against the night it was actually played.
+      //
+      // Frees this week's spot as a side effect: capacity counts paid signups on
+      // a date, so the moment the row moves, the waiting list can take the seat.
+      if (body.action === 'roll_forward') {
+        const from = /^\d{4}-\d{2}-\d{2}$/.test(String(body.event_date || '')) ? body.event_date : null;
+        if (!from) return res.status(400).json({ error: 'event_date required' });
+        const to = new Date(new Date(from + 'T12:00:00Z').getTime() + 7 * 86400000)
+          .toISOString().slice(0, 10);
+
+        const { data: row } = await db.from('padel_signups')
+          .select('member_id, paid').eq('member_id', memberId).eq('event_date', from).maybeSingle();
+        if (!row) return res.status(404).json({ error: 'No signup for that player on this night.' });
+
+        // Already booked next week? Moving would collide on the primary key and
+        // silently swallow one of the two payments.
+        const { data: clash } = await db.from('padel_signups')
+          .select('member_id').eq('member_id', memberId).eq('event_date', to).maybeSingle();
+        if (clash) {
+          return res.status(409).json({ error: 'They are already booked for ' + to + '. Cancel one of the two by hand.' });
+        }
+
+        const { error: sErr } = await db.from('padel_signups')
+          .update({ event_date: to, points: 0, updated_at: new Date().toISOString() })
+          .eq('member_id', memberId).eq('event_date', from);
+        if (sErr) return safeError(res, 'padel-roster', sErr, 'Could not move the spot.');
+
+        await db.from('payments')
+          .update({ run_date: to })
+          .eq('member_id', memberId).eq('kind', 'padel').eq('run_date', from).eq('status', 'paid');
+
+        // Teams and fixtures are built per night from the paid list. A player who
+        // is no longer playing must not stay on a court, so drop them from any
+        // team already drawn for the night they left.
+        await db.from('padel_teams').delete().eq('event_date', from).eq('player_a', memberId);
+        await db.from('padel_teams').delete().eq('event_date', from).eq('player_b', memberId);
+
+        return res.status(200).json({ ok: true, moved_to: to });
+      }
+
       const { data: prof } = await db.from('padel_profiles')
         .select('level').eq('member_id', memberId).maybeSingle();
       if (!prof) return res.status(404).json({ error: 'No padel profile for that member' });

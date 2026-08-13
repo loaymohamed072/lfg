@@ -2350,6 +2350,7 @@
         + (p.paid
           ? '<button class="mini" type="button" data-pts="1" data-mid="' + esc(p.member_id) + '" title="Bank a round win">+1 pt</button>'
             + '<button class="mini" type="button" data-pts="-1" data-mid="' + esc(p.member_id) + '" title="Undo a point">−1 pt</button>'
+            + '<button class="mini" type="button" data-roll="1" data-mid="' + esc(p.member_id) + '" data-name="' + esc(padelName(p)) + '" title="Cancelled before 2pm: move their paid spot to next week">Next week →</button>'
           : '')
         + '</span></div>';
     }).join('');
@@ -2359,6 +2360,23 @@
     listEl.querySelectorAll('[data-pts]').forEach(function (b) {
       b.addEventListener('click', function () { bankPadelPoints(b.getAttribute('data-mid'), parseInt(b.getAttribute('data-pts'), 10)); });
     });
+    listEl.querySelectorAll('[data-roll]').forEach(function (b) {
+      b.addEventListener('click', function () { rollPadelForward(b.getAttribute('data-mid'), b.getAttribute('data-name')); });
+    });
+  }
+
+  // Cancelled before the 2pm cutoff: the published policy rolls their payment to
+  // next week rather than refunding it. Confirms first — it moves money between
+  // nights and frees a spot the waiting list may take within minutes.
+  async function rollPadelForward(mid, name) {
+    var date = el('padel-date').value || padelCurDate;
+    if (!date) { alert('Pick a night first.'); return; }
+    var next = new Date(new Date(date + 'T12:00:00Z').getTime() + 7 * 86400000).toISOString().slice(0, 10);
+    var nextLabel = new Date(next + 'T12:00:00Z').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+    if (!confirm('Move ' + (name || 'this player') + ' to ' + nextLabel + '?\n\nTheir payment moves with them, no refund. Tonight\'s spot opens up for the waiting list.')) return;
+    var r = await api('/api/admin/padel-roster', 'POST', { member_id: mid, event_date: date, action: 'roll_forward' });
+    if (!r.ok || !r.data) { alert((r.data && r.data.error) || 'Could not move them.'); return; }
+    loadPadelRoster(date);
   }
 
   async function bankPadelPoints(mid, delta) {
