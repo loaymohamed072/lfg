@@ -9,6 +9,11 @@
 <link rel="icon" type="image/png" href="/lfg-logo.png">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.1"></script>
+<!-- Cloudflare Turnstile. Supabase enforces the CAPTCHA server-side on the auth
+     endpoints, which is the only layer that helps: the signup bots hit
+     /auth/v1/signup directly with the public anon key and never load this site.
+     The site key is public by design; the secret lives in Supabase only. -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
@@ -486,6 +491,7 @@
       <input type="email" id="email" autocomplete="email" placeholder="you@lfgdubai.com" required>
       <label for="password">Password</label>
       <input type="password" id="password" autocomplete="current-password" placeholder="••••••••" required>
+      <div class="cf-turnstile" data-sitekey="0x4AAAAAAEQNP0jYIG7CYUL7" data-theme="dark"></div>
       <p id="login-error" class="msg-error"></p>
       <button type="submit" id="login-btn" class="btn-gold">Sign In</button>
     </form>
@@ -1430,11 +1436,34 @@
     if (e === 'SIGNED_OUT') { el('app').classList.add('hidden'); el('denied').classList.add('hidden'); el('login').classList.remove('hidden'); }
   });
 
+  // A Turnstile token is single-use, so every attempt takes a fresh one and the
+  // widget is reset after a failure. Returns '' while the challenge is still
+  // running, and null if the script never loaded (ad blocker, offline): in that
+  // case sign-in proceeds without a token, which Supabase accepts while the
+  // CAPTCHA setting is off and rejects with a clear message once it is on.
+  function captchaToken() {
+    if (typeof window.turnstile === 'undefined') return null;
+    try { return window.turnstile.getResponse() || ''; } catch (e) { return null; }
+  }
+
   el('login-form').addEventListener('submit', async function (e) {
     e.preventDefault();
+    var token = captchaToken();
+    if (token === '') {
+      el('login-error').textContent = 'Just a moment, the security check is still running. Try again in a second.';
+      return;
+    }
     var btn = el('login-btn'); btn.disabled = true; btn.textContent = 'Signing in…'; el('login-error').textContent = '';
-    var { error } = await sb.auth.signInWithPassword({ email: el('email').value.trim(), password: el('password').value });
-    if (error) { el('login-error').textContent = error.message; btn.disabled = false; btn.textContent = 'Sign In'; }
+    var { error } = await sb.auth.signInWithPassword({
+      email: el('email').value.trim(),
+      password: el('password').value,
+      options: token ? { captchaToken: token } : undefined
+    });
+    if (error) {
+      el('login-error').textContent = error.message;
+      btn.disabled = false; btn.textContent = 'Sign In';
+      if (window.turnstile) { try { window.turnstile.reset(); } catch (e2) {} }
+    }
   });
   el('logout-btn').addEventListener('click', function () { sb.auth.signOut({ scope: 'local' }); });
   el('denied-logout').addEventListener('click', function () { sb.auth.signOut({ scope: 'local' }); });
