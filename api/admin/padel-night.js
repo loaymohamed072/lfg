@@ -1,44 +1,65 @@
 // Admin: run a King of the Court padel night. The write half of /api/padel-board.
 //
-//   POST { action: 'build_teams' }              -> pair the paid players into 8 teams
-//   POST { action: 'draw_round', round }        -> seed a round's 4 court fixtures
+//   POST { action: 'build_teams' }              -> seed 16 players onto 4 courts, pair round 1
+//   POST { action: 'draw_round', round }        -> rotate winners up / losers down, re-pair
 //   POST { action: 'score', round, court, a, b }-> save one match's FINAL score
 //   POST { action: 'start_round', round }       -> stamp the clock both screens read
-//   POST { action: 'reset' }                    -> wipe the night's teams + matches
+//   POST { action: 'reset' }                    -> wipe the night's pairings + matches
 //
-// Two rules carry the format:
+// THE FORMAT (Ahmed, 2026-08-13 — this replaced the fixed-team version):
 //
-// 1. TEAMS ARE SNAKE-SEEDED by the skill level the roster already tracks
-//    (1-8, 2-7, 3-6, 4-5). Pairing the two best players together produces one
-//    unbeatable team and seven pointless matches; snake seeding makes every
-//    team's combined level near-identical, which is the whole point of a level
-//    system nobody would otherwise use.
+// 1. PARTNERS ROTATE EVERY ROUND. There is no team for the night, only a pairing
+//    for the round, so `padel_teams` is written fresh per round and team_no is
+//    scoped to (event_date, round).
 //
-// 2. ROUND 2+ IS DRAWN FROM THE STANDINGS, which is what "King of the Court"
-//    means here: re-rank after every round, then play 1v2 on Court 1 (The
-//    Throne), 3v4 on Court 2, and so on. Winners climb toward the Throne and
-//    losers fall away from it without anyone tracking who moves where by hand.
-//    Every fixture stays editable, so Ahmed can always overrule the draw.
+// 2. WINNERS CLIMB, LOSERS DROP, ONE COURT AT A TIME. Court 1 is The Throne:
+//    its winners stay, its losers fall to court 2. Court 4 is the bottom: its
+//    losers stay, its winners climb to court 3. Everyone else moves one court in
+//    the direction of their result. Each court therefore receives exactly two
+//    players from each side and always holds four.
+//
+// 3. THE PAIR THAT TRAVELS TOGETHER IS SPLIT. "you and ur partner will go up a
+//    court but will be against each other." So on arrival the two incoming pairs
+//    are cross-matched: X0+Y0 against X1+Y1. Both old partnerships break every
+//    single round, which is the whole point of the format.
+//
+// 4. POINTS ARE INDIVIDUAL AND ONLY WINNERS BANK. "every win = bank your points
+//    on scoreboard, every loss = 0 points." Winning 6-3 banks 6 to each winner
+//    and 0 to each loser, so a comfortable win is worth more than a scrappy one.
+//    Totals are RECOMPUTED from every match rather than incremented, so fixing a
+//    typo fixes the standings instead of stacking on top of the mistake.
+//
+// Every fixture stays editable, so Ahmed can always overrule the draw.
 const { requireAdmin, safeError } = require('../_lib');
 const { resolveEvent } = require('../padel-status');
 
 const COURTS = 4;
-const WIN_POINTS = 3;
+const PER_COURT = 4;
 
-function standings(teamNos, matches) {
-  const table = new Map(teamNos.map((n) => [n, { team_no: n, points: 0, wins: 0, gf: 0, ga: 0 }]));
-  for (const m of matches) {
-    if (m.score_a == null || m.score_b == null) continue;
-    const a = table.get(m.team_a), b = table.get(m.team_b);
-    if (!a || !b) continue;
-    a.gf += m.score_a; a.ga += m.score_b;
-    b.gf += m.score_b; b.ga += m.score_a;
-    if (m.score_a > m.score_b) { a.wins++; a.points += WIN_POINTS; }
-    else if (m.score_b > m.score_a) { b.wins++; b.points += WIN_POINTS; }
-  }
-  return [...table.values()].sort((x, y) =>
-    y.points - x.points || (y.gf - y.ga) - (x.gf - x.ga) || y.gf - x.gf || x.team_no - y.team_no
-  );
+// Points banked by each winner = the games their side won. Losers bank nothing.
+function bankedFor(won, gamesWon) { return won ? gamesWon : 0; }
+
+// team_no 1..8 laid out two per court: court 1 holds teams 1 and 2, court 2
+// holds 3 and 4, and so on. Keeping it arithmetic means the board never needs a
+// lookup table to know which teams share a court.
+function teamNosForCourt(court) { return [court * 2 - 1, court * 2]; }
+function courtForTeam(teamNo) { return Math.ceil(teamNo / 2); }
+
+// The four players on a court in a given round, as [pairX, pairY].
+function pairsOnCourt(teams, court) {
+  const [na, nb] = teamNosForCourt(court);
+  const a = teams.find((t) => t.team_no === na);
+  const b = teams.find((t) => t.team_no === nb);
+  return [a, b];
+}
+
+// Cross-match two arriving pairs so nobody keeps their partner:
+// X = [x0, x1], Y = [y0, y1]  ->  (x0 + y0) against (x1 + y1).
+function crossMatch(X, Y) {
+  return [
+    { player_a: X[0], player_b: Y[0] },
+    { player_a: X[1], player_b: Y[1] }
+  ];
 }
 
 module.exports = async (req, res) => {
@@ -68,71 +89,149 @@ module.exports = async (req, res) => {
       await db.from('padel_matches').delete().eq('event_date', date);
       await db.from('padel_teams').delete().eq('event_date', date);
       await db.from('padel_night').delete().eq('event_date', date);
+      await db.from('padel_signups')
+        .update({ points: 0, updated_at: new Date().toISOString() })
+        .eq('event_date', date);
       return res.status(200).json({ ok: true, reset: true });
     }
 
+    // ---- Round 1: seed the courts by level -------------------------------
+    // Strongest four open on The Throne, next four on court 2, and so on, so the
+    // first round is already roughly level-matched and the rotation only has to
+    // correct from there. Within a court the four are paired 1+4 against 2+3,
+    // the same balancing logic the old snake seed used, now scoped to one court.
     if (body.action === 'build_teams') {
       const { data: signups } = await db.from('padel_signups')
         .select('member_id').eq('event_date', date).eq('paid', true);
       const ids = (signups || []).map((s) => s.member_id);
-      if (ids.length < 4) return res.status(400).json({ error: 'Need at least 4 paid players.' });
+      if (ids.length < PER_COURT) {
+        return res.status(400).json({ error: 'Need at least 4 paid players.' });
+      }
 
       const { data: profiles } = await db.from('padel_profiles')
         .select('member_id, level').in('member_id', ids);
       const levelOf = new Map((profiles || []).map((p) => [p.member_id, Number(p.level) || 1]));
       const ranked = ids.slice().sort((a, b) => (levelOf.get(b) || 1) - (levelOf.get(a) || 1));
 
-      // Snake seed: strongest with weakest, so every team's combined level is
-      // within a fraction of every other team's.
+      // The format is built for full courts of four. A short night still runs,
+      // it just fields fewer courts and the leftovers sit out — better than
+      // silently pairing someone with nobody the way the old build could.
+      const courts = Math.min(COURTS, Math.floor(ranked.length / PER_COURT));
+      const seated = ranked.slice(0, courts * PER_COURT);
+      const benched = ranked.length - seated.length;
+
       const teams = [];
-      let lo = 0, hi = ranked.length - 1, no = 1;
-      while (lo < hi) { teams.push({ team_no: no++, player_a: ranked[lo++], player_b: ranked[hi--] }); }
-      if (lo === hi) teams.push({ team_no: no++, player_a: ranked[lo], player_b: null });
+      for (let c = 1; c <= courts; c++) {
+        const four = seated.slice((c - 1) * PER_COURT, c * PER_COURT); // strongest first
+        const [na, nb] = teamNosForCourt(c);
+        teams.push({ team_no: na, player_a: four[0], player_b: four[3] });
+        teams.push({ team_no: nb, player_a: four[1], player_b: four[2] });
+      }
 
       await db.from('padel_matches').delete().eq('event_date', date);
       await db.from('padel_teams').delete().eq('event_date', date);
       const { error: insErr } = await db.from('padel_teams')
-        .insert(teams.map((t) => ({ ...t, event_date: date })));
-      if (insErr) return safeError(res, 'padel-night', insErr, 'Could not build the teams.');
-
-      await db.from('padel_night').upsert(
-        { event_date: date, current_round: 1, round_started_at: null, updated_at: new Date().toISOString() },
-        { onConflict: 'event_date' }
-      );
-      return res.status(200).json({ ok: true, teams: teams.length });
-    }
-
-    if (body.action === 'draw_round') {
-      const round = Math.max(1, Math.round(Number(body.round) || 1));
-      const { data: teams } = await db.from('padel_teams')
-        .select('team_no').eq('event_date', date).order('team_no');
-      const teamNos = (teams || []).map((t) => t.team_no);
-      if (teamNos.length < 2) return res.status(400).json({ error: 'Build the teams first.' });
-
-      // Round 1 plays the seeding order; every later round plays the table, so
-      // the Throne is always contested by the two teams actually leading.
-      let order = teamNos;
-      if (round > 1) {
-        const { data: played } = await db.from('padel_matches')
-          .select('round, team_a, team_b, score_a, score_b')
-          .eq('event_date', date).lt('round', round);
-        order = standings(teamNos, played || []).map((s) => s.team_no);
-      }
+        .insert(teams.map((t) => ({ ...t, event_date: date, round: 1 })));
+      if (insErr) return safeError(res, 'padel-night', insErr, 'Could not build the courts.');
 
       const fixtures = [];
-      for (let i = 0; i + 1 < order.length && fixtures.length < COURTS; i += 2) {
-        fixtures.push({
-          event_date: date,
-          round,
-          court: fixtures.length + 1,
-          team_a: order[i],
-          team_b: order[i + 1]
+      for (let c = 1; c <= courts; c++) {
+        const [na, nb] = teamNosForCourt(c);
+        fixtures.push({ event_date: date, round: 1, court: c, team_a: na, team_b: nb });
+      }
+      const { error: fErr } = await db.from('padel_matches').insert(fixtures);
+      if (fErr) return safeError(res, 'padel-night', fErr, 'Could not draw round 1.');
+
+      await db.from('padel_signups')
+        .update({ points: 0, updated_at: new Date().toISOString() })
+        .eq('event_date', date);
+
+      await db.from('padel_night').upsert(
+        { event_date: date, current_round: 1, round_started_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+        { onConflict: 'event_date' }
+      );
+      return res.status(200).json({ ok: true, courts, teams: teams.length, benched });
+    }
+
+    // ---- Round 2+: rotate on the previous round's results -----------------
+    if (body.action === 'draw_round') {
+      const round = Math.max(2, Math.round(Number(body.round) || 2));
+      const prev = round - 1;
+
+      const [{ data: prevTeams }, { data: prevMatches }] = await Promise.all([
+        db.from('padel_teams').select('team_no, player_a, player_b').eq('event_date', date).eq('round', prev),
+        db.from('padel_matches').select('court, team_a, team_b, score_a, score_b').eq('event_date', date).eq('round', prev)
+      ]);
+      if (!prevTeams || !prevTeams.length) {
+        return res.status(400).json({ error: 'Build the courts first.' });
+      }
+      const unplayed = (prevMatches || []).filter((m) => m.score_a == null || m.score_b == null);
+      if (unplayed.length) {
+        return res.status(400).json({
+          error: 'Score every court in round ' + prev + ' before drawing the next one.'
         });
       }
-      // Re-drawing a round clears its scores on purpose: a redraw means the
-      // fixtures were wrong, and keeping scores against replaced opponents
-      // would put fiction on the board.
+
+      const courts = (prevMatches || []).length;
+
+      // Winners and losers of each court, as pairs of member ids.
+      const winnersOf = new Map(); // court -> [id, id]
+      const losersOf = new Map();
+      for (const m of prevMatches) {
+        const a = prevTeams.find((t) => t.team_no === m.team_a);
+        const b = prevTeams.find((t) => t.team_no === m.team_b);
+        if (!a || !b) continue;
+        const aWon = m.score_a > m.score_b;
+        const w = aWon ? a : b;
+        const l = aWon ? b : a;
+        winnersOf.set(m.court, [w.player_a, w.player_b]);
+        losersOf.set(m.court, [l.player_a, l.player_b]);
+      }
+
+      // Movement. Court 1 winners hold The Throne, court `courts` losers hold the
+      // bottom; everyone else moves exactly one court toward their result.
+      const arrivals = new Map(); // court -> { holders: [..], climbers: [..] }
+      for (let c = 1; c <= courts; c++) arrivals.set(c, { holders: null, climbers: null });
+
+      for (let c = 1; c <= courts; c++) {
+        const w = winnersOf.get(c);
+        const l = losersOf.get(c);
+        if (!w || !l) continue;
+        // Winners: up one court, or stay if already on The Throne.
+        const up = c === 1 ? 1 : c - 1;
+        // Losers: down one court, or stay if already on the bottom court.
+        const down = c === courts ? courts : c + 1;
+        if (c === 1) arrivals.get(up).holders = w; else arrivals.get(up).climbers = w;
+        if (c === courts) arrivals.get(down).climbers = l; else arrivals.get(down).holders = l;
+      }
+
+      const teams = [];
+      for (let c = 1; c <= courts; c++) {
+        const { holders, climbers } = arrivals.get(c);
+        if (!holders || !climbers) {
+          return res.status(400).json({ error: 'Court ' + c + ' did not fill. Re-score round ' + prev + '.' });
+        }
+        const [pairA, pairB] = crossMatch(holders, climbers);
+        const [na, nb] = teamNosForCourt(c);
+        teams.push({ team_no: na, ...pairA });
+        teams.push({ team_no: nb, ...pairB });
+      }
+
+      // Re-drawing a round clears its pairings and scores on purpose: a redraw
+      // means the fixtures were wrong, and keeping scores against replaced
+      // opponents would put fiction on the board.
       await db.from('padel_matches').delete().eq('event_date', date).eq('round', round);
+      await db.from('padel_teams').delete().eq('event_date', date).eq('round', round);
+
+      const { error: tErr } = await db.from('padel_teams')
+        .insert(teams.map((t) => ({ ...t, event_date: date, round })));
+      if (tErr) return safeError(res, 'padel-night', tErr, 'Could not pair the next round.');
+
+      const fixtures = [];
+      for (let c = 1; c <= courts; c++) {
+        const [na, nb] = teamNosForCourt(c);
+        fixtures.push({ event_date: date, round, court: c, team_a: na, team_b: nb });
+      }
       const { error: fErr } = await db.from('padel_matches').insert(fixtures);
       if (fErr) return safeError(res, 'padel-night', fErr, 'Could not draw the round.');
 
@@ -160,12 +259,16 @@ module.exports = async (req, res) => {
       if (!Number.isFinite(round) || !Number.isFinite(court)) {
         return res.status(400).json({ error: 'round and court required' });
       }
-      // A typo of 60 instead of 6 would distort the tiebreak all night, and a
+      // A typo of 60 instead of 6 would distort every total all night, and a
       // negative score is never a real result.
       for (const v of [a, b]) {
         if (v != null && (!Number.isFinite(v) || v < 0 || v > 50)) {
           return res.status(400).json({ error: 'Scores must be between 0 and 50.' });
         }
+      }
+      // A draw cannot be banked: the format needs a winner to move up.
+      if (a != null && b != null && a === b) {
+        return res.status(400).json({ error: 'A draw has no winner — King of the Court needs one.' });
       }
       const { error: upErr } = await db.from('padel_matches')
         .update({ score_a: a, score_b: b, played_at: a == null || b == null ? null : new Date().toISOString() })
@@ -174,24 +277,35 @@ module.exports = async (req, res) => {
 
       // Bank each player's points on their signup row, which is what the public
       // padel leaderboard and the community total already read. Recomputed from
-      // every match rather than incremented, so a corrected score corrects the
+      // every round rather than incremented, so a corrected score corrects the
       // totals instead of stacking on top of the mistake.
       const [{ data: allTeams }, { data: allMatches }] = await Promise.all([
-        db.from('padel_teams').select('team_no, player_a, player_b').eq('event_date', date),
-        db.from('padel_matches').select('team_a, team_b, score_a, score_b').eq('event_date', date)
+        db.from('padel_teams').select('round, team_no, player_a, player_b').eq('event_date', date),
+        db.from('padel_matches').select('round, team_a, team_b, score_a, score_b').eq('event_date', date)
       ]);
-      const table = standings((allTeams || []).map((t) => t.team_no), allMatches || []);
-      const pointsByTeam = new Map(table.map((t) => [t.team_no, t.points]));
-      for (const t of allTeams || []) {
-        const pts = pointsByTeam.get(t.team_no) || 0;
-        for (const pid of [t.player_a, t.player_b]) {
-          if (!pid) continue;
-          await db.from('padel_signups')
-            .update({ points: pts, updated_at: new Date().toISOString() })
-            .eq('member_id', pid).eq('event_date', date);
-        }
+      const teamKey = (r, n) => r + ':' + n;
+      const teamById = new Map((allTeams || []).map((t) => [teamKey(t.round, t.team_no), t]));
+
+      const points = new Map();
+      const add = (id, n) => { if (id) points.set(id, (points.get(id) || 0) + n); };
+      for (const t of allTeams || []) { add(t.player_a, 0); add(t.player_b, 0); }
+
+      for (const m of allMatches || []) {
+        if (m.score_a == null || m.score_b == null || m.score_a === m.score_b) continue;
+        const ta = teamById.get(teamKey(m.round, m.team_a));
+        const tb = teamById.get(teamKey(m.round, m.team_b));
+        if (!ta || !tb) continue;
+        const aWon = m.score_a > m.score_b;
+        for (const pid of [ta.player_a, ta.player_b]) add(pid, bankedFor(aWon, m.score_a));
+        for (const pid of [tb.player_a, tb.player_b]) add(pid, bankedFor(!aWon, m.score_b));
       }
-      return res.status(200).json({ ok: true, standings: table });
+
+      for (const [pid, pts] of points) {
+        await db.from('padel_signups')
+          .update({ points: pts, updated_at: new Date().toISOString() })
+          .eq('member_id', pid).eq('event_date', date);
+      }
+      return res.status(200).json({ ok: true, banked: points.size });
     }
 
     return res.status(400).json({ error: 'Unknown action.' });

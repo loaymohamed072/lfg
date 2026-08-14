@@ -57,12 +57,14 @@
     return { status: res.status, ok: res.ok, data: d };
   }
 
+  // Partners rotate every round, so `board.teams` holds only THIS round's
+  // pairings and the name on a card is who is standing there right now.
   function teamName(no) {
-    if (!board) return 'Team ' + no;
+    if (!board) return 'Pair ' + no;
     for (var i = 0; i < board.teams.length; i++) {
       if (board.teams[i].team_no === no) return board.teams[i].name;
     }
-    return 'Team ' + no;
+    return 'Pair ' + no;
   }
 
   // ---- Render ------------------------------------------------------------
@@ -74,7 +76,7 @@
     var here = (board.matches || []).filter(function (m) { return m.round === round; });
 
     if (!here.length) {
-      matchesEl.innerHTML = '<p class="ps-empty">No round drawn yet. Open “Set up the night” below to build the teams and draw round one.</p>';
+      matchesEl.innerHTML = '<p class="ps-empty">No round drawn yet. Open “Set up the night” below to seed the courts and draw round one.</p>';
       return;
     }
 
@@ -156,18 +158,23 @@
 
   el('psNext').addEventListener('click', async function () {
     if (busy) return;
+    // The rotation is computed FROM the results, so an unscored court has no
+    // winner to move. The server refuses outright and says which round is short;
+    // there is deliberately no "draw anyway" escape, because there is no honest
+    // answer to "who goes up" when nobody won.
     var here = (board.matches || []).filter(function (m) { return m.round === board.round; });
     var unscored = here.filter(function (m) { return m.score_a == null || m.score_b == null; });
-    // Drawing the next round from an incomplete table would rank teams on
-    // matches that never finished, so this asks rather than silently allowing.
-    if (unscored.length && !window.confirm(unscored.length + ' match(es) in round ' + board.round + ' have no score. Draw the next round anyway?')) return;
+    if (unscored.length) {
+      say('Score all ' + here.length + ' courts first — ' + unscored.length + ' still open. Winners move up, so every court needs a result.', true);
+      return;
+    }
 
     busy = true;
     say('');
     var r = await api('/api/admin/padel-night', 'POST', { action: 'draw_round', round: board.round + 1 });
     busy = false;
     if (!r.ok) { say((r.data && r.data.error) || 'Could not draw the round.', true); return; }
-    say('Round ' + r.data.round + ' drawn. Courts are up on the board.');
+    say('Round ' + r.data.round + ' drawn. Winners moved up, partners swapped.');
     await load(true);
   });
 
@@ -182,26 +189,27 @@
 
   el('psBuild').addEventListener('click', async function () {
     if (busy) return;
-    if (!window.confirm('Build teams from everyone who paid? This clears any teams and scores already set for tonight.')) return;
+    if (!window.confirm('Seed the courts from everyone who paid? This clears any pairings and scores already set for tonight.')) return;
     busy = true;
     say('');
+    // build_teams seeds the courts AND draws round 1 in one write, so there is
+    // no window where the courts exist but no fixtures do.
     var r = await api('/api/admin/padel-night', 'POST', { action: 'build_teams' });
-    if (!r.ok) { busy = false; say((r.data && r.data.error) || 'Could not build the teams.', true); return; }
-    var teams = r.data.teams;
-    var d = await api('/api/admin/padel-night', 'POST', { action: 'draw_round', round: 1 });
     busy = false;
-    if (!d.ok) { say('Teams built, but round 1 did not draw. Try “Draw next round”.', true); await load(true); return; }
-    say(teams + ' teams built and round 1 drawn. Go play.');
+    if (!r.ok) { say((r.data && r.data.error) || 'Could not seed the courts.', true); return; }
+    var msg = r.data.courts + ' courts seeded and round 1 drawn. Go play.';
+    if (r.data.benched) msg += ' ' + r.data.benched + ' player(s) sitting out — courts need four.';
+    say(msg);
     await load(true);
   });
 
   el('psReset').addEventListener('click', async function () {
     if (busy) return;
-    if (!window.confirm('Reset tonight? Every team and score is deleted. There is no undo.')) return;
+    if (!window.confirm('Reset tonight? Every pairing, score and banked point is deleted. There is no undo.')) return;
     busy = true;
     var r = await api('/api/admin/padel-night', 'POST', { action: 'reset' });
     busy = false;
-    say(r.ok ? 'Night reset. Build the teams when you are ready.' : 'Could not reset.', !r.ok);
+    say(r.ok ? 'Night reset. Seed the courts when you are ready.' : 'Could not reset.', !r.ok);
     await load(true);
   });
 

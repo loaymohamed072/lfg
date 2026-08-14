@@ -1,19 +1,16 @@
 // GET /api/padel-board?date=YYYY-MM-DD - PUBLIC (read-only). Everything the TV
 // board and the scoring page render, in one round trip.
 //
-// King of the Court, LFG format: 16 players, 8 teams of 2, 4 courts, 15-minute
-// rounds with a 2-minute rotation. Court 1 is The Throne. Winners climb toward
-// it, losers drop away from it.
+// King of the Court, LFG format: 16 players, 4 courts of 4, rotating partners.
+// Court 1 is The Throne. Winners climb toward it, losers drop away from it, and
+// the pair that travels together is split on arrival. Scoring is INDIVIDUAL: win
+// the game and you bank the games your side won, lose and you bank nothing.
 //
 // The board is a READ. Nothing here writes, and it carries no player contact
 // details — it is displayed on a TV in a public venue, so it returns first name
 // plus last initial, the same privacy posture as /api/padel-leaderboard.
 const { admin, safeError } = require('./_lib');
 const { resolveEvent } = require('./padel-status');
-
-// A win is 3 points. Games won are the tiebreak, never the ranking: a team that
-// wins three tight matches beats a team that wins two and gets thrashed once.
-const WIN_POINTS = 3;
 
 function shortName(full, email) {
   const raw = String(full || '').trim() || String(email || '').split('@')[0] || '';
@@ -23,24 +20,46 @@ function shortName(full, email) {
   return parts[0] + ' ' + parts[parts.length - 1][0].toUpperCase();
 }
 
-// Standings from the played matches alone, so the board can never disagree with
-// the scores: there is no stored total to drift out of sync.
-function standings(teams, matches) {
-  const table = new Map();
-  for (const t of teams) {
-    table.set(t.team_no, { team_no: t.team_no, name: t.name, points: 0, wins: 0, losses: 0, gf: 0, ga: 0 });
-  }
+// Standings are PER PLAYER and derived from the played matches alone, so the
+// board can never disagree with the scores: there is no stored total to drift
+// out of sync. Points are the games banked on wins; losses bank nothing, which
+// is why `played` and `wins` are reported separately (a 0 can mean "lost every
+// round" or "has not played yet", and those look very different court-side).
+function standings(teamsByRound, matches, nameOf) {
+  const row = new Map();
+  const seat = (id) => {
+    if (!id) return null;
+    if (!row.has(id)) {
+      row.set(id, { member_id: id, name: nameOf(id), points: 0, wins: 0, losses: 0, played: 0, gf: 0, ga: 0 });
+    }
+    return row.get(id);
+  };
+  for (const t of teamsByRound.values()) { seat(t.player_a); seat(t.player_b); }
+
   for (const m of matches) {
-    if (m.score_a == null || m.score_b == null) continue;
-    const a = table.get(m.team_a), b = table.get(m.team_b);
-    if (!a || !b) continue;
-    a.gf += m.score_a; a.ga += m.score_b;
-    b.gf += m.score_b; b.ga += m.score_a;
-    if (m.score_a > m.score_b) { a.wins++; a.points += WIN_POINTS; b.losses++; }
-    else if (m.score_b > m.score_a) { b.wins++; b.points += WIN_POINTS; a.losses++; }
+    if (m.score_a == null || m.score_b == null || m.score_a === m.score_b) continue;
+    const ta = teamsByRound.get(m.round + ':' + m.team_a);
+    const tb = teamsByRound.get(m.round + ':' + m.team_b);
+    if (!ta || !tb) continue;
+    const aWon = m.score_a > m.score_b;
+    const sides = [
+      { team: ta, won: aWon, gf: m.score_a, ga: m.score_b },
+      { team: tb, won: !aWon, gf: m.score_b, ga: m.score_a }
+    ];
+    for (const s of sides) {
+      for (const pid of [s.team.player_a, s.team.player_b]) {
+        const r = seat(pid);
+        if (!r) continue;
+        r.played++;
+        r.gf += s.gf;
+        r.ga += s.ga;
+        if (s.won) { r.wins++; r.points += s.gf; } else { r.losses++; }
+      }
+    }
   }
-  return [...table.values()].sort((x, y) =>
-    y.points - x.points || (y.gf - y.ga) - (x.gf - x.ga) || y.gf - x.gf || x.team_no - y.team_no
+
+  return [...row.values()].sort((x, y) =>
+    y.points - x.points || y.wins - x.wins || (y.gf - y.ga) - (x.gf - x.ga) || x.name.localeCompare(y.name)
   );
 }
 
@@ -58,39 +77,63 @@ module.exports = async (req, res) => {
 
     const [teamsRes, matchesRes, nightRes] = await Promise.all([
       db.from('padel_teams')
-        .select('team_no, player_a, player_b, members_a:members!padel_teams_player_a_fkey(full_name, email), members_b:members!padel_teams_player_b_fkey(full_name, email)')
-        .eq('event_date', date).order('team_no'),
+        .select('round, team_no, player_a, player_b, members_a:members!padel_teams_player_a_fkey(full_name, email), members_b:members!padel_teams_player_b_fkey(full_name, email)')
+        .eq('event_date', date).order('round').order('team_no'),
       db.from('padel_matches')
         .select('round, court, team_a, team_b, score_a, score_b')
         .eq('event_date', date).order('round').order('court'),
       db.from('padel_night').select('*').eq('event_date', date).maybeSingle()
     ]);
 
-    const teams = (teamsRes.data || []).map((t) => {
-      const a = Array.isArray(t.members_a) ? t.members_a[0] : t.members_a;
-      const b = Array.isArray(t.members_b) ? t.members_b[0] : t.members_b;
-      const names = [shortName(a && a.full_name, a && a.email)];
-      if (t.player_b) names.push(shortName(b && b.full_name, b && b.email));
-      return { team_no: t.team_no, name: names.join(' & '), players: names };
-    });
-
+    const rawTeams = teamsRes.data || [];
     const matches = matchesRes.data || [];
     const night = nightRes.data || null;
     const round = night ? night.current_round : (matches.reduce((m, x) => Math.max(m, x.round), 0) || 1);
+
+    // One name per member id, harvested from whichever pairing embedded them.
+    const names = new Map();
+    const one = (v) => (Array.isArray(v) ? v[0] : v);
+    for (const t of rawTeams) {
+      const a = one(t.members_a), b = one(t.members_b);
+      if (t.player_a && !names.has(t.player_a)) names.set(t.player_a, shortName(a && a.full_name, a && a.email));
+      if (t.player_b && !names.has(t.player_b)) names.set(t.player_b, shortName(b && b.full_name, b && b.email));
+    }
+    const nameOf = (id) => names.get(id) || 'Player';
+
+    const byRound = new Map(rawTeams.map((t) => [t.round + ':' + t.team_no, t]));
+
+    // `teams` is the CURRENT round's pairings, which is what both screens draw.
+    // The pairing is a fact about this round only, so it carries its round with
+    // it and the board never renders a stale partner after a rotation.
+    const teams = rawTeams
+      .filter((t) => t.round === round)
+      .map((t) => {
+        const players = [nameOf(t.player_a)];
+        if (t.player_b) players.push(nameOf(t.player_b));
+        return {
+          team_no: t.team_no,
+          round: t.round,
+          name: players.join(' & '),
+          players,
+          member_ids: [t.player_a, t.player_b].filter(Boolean)
+        };
+      });
 
     return res.status(200).json({
       ready: teams.length > 0,
       event_date: date,
       location: (cfg && cfg.padel_location) || 'Dubai',
       capacity: Number((cfg && cfg.padel_capacity) || 16),
+      format: 'rotating',
       teams,
       matches,
-      standings: standings(teams, matches),
+      standings: standings(byRound, matches, nameOf),
       round,
       round_started_at: night ? night.round_started_at : null,
       round_minutes: night ? night.round_minutes : 15,
       break_minutes: night ? night.break_minutes : 2,
-      // The board polls; this lets it skip a repaint when nothing moved.
+      // The board polls; this lets it skip a repaint when nothing moved. Round is
+      // in the key because a rotation repaints every card even at equal scores.
       version: matches.reduce((n, m) => n + (m.score_a == null ? 0 : 1), 0) + ':' + round
     });
   } catch (e) {

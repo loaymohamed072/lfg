@@ -36,12 +36,14 @@
     });
   }
 
+  // Partners rotate every round, so `state.teams` is only THIS round's pairings
+  // and a name is always the two players currently standing on that side.
   function teamName(no) {
-    if (!state) return 'Team ' + no;
+    if (!state) return 'Pair ' + no;
     for (var i = 0; i < state.teams.length; i++) {
       if (state.teams[i].team_no === no) return state.teams[i].name;
     }
-    return 'Team ' + no;
+    return 'Pair ' + no;
   }
 
   // ---- Leaderboard -------------------------------------------------------
@@ -49,10 +51,12 @@
     if (!elTable) return;
     var rows = (state && state.standings) || [];
     if (!rows.length) {
-      elTable.innerHTML = '<p class="pb-empty">Teams go up when the night starts.</p>';
+      elTable.innerHTML = '<p class="pb-empty">Players go up when the night starts.</p>';
       return;
     }
-    var html = '<div class="pb-thead"><span>#</span><span>Team</span><span>Pts</span><span>W</span></div>';
+    // Individual board: partners change every round, so the only thing worth
+    // ranking is the player.
+    var html = '<div class="pb-thead"><span>#</span><span>Player</span><span>Pts</span><span>W</span></div>';
     html += rows.map(function (r, i) {
       return '<div class="pb-row' + (i === 0 ? ' is-top' : '') + '">'
         + '<span class="pb-rank">' + (i + 1) + '</span>'
@@ -129,9 +133,10 @@
 
   function paintMeta() {
     if (!state) return;
-    var teams = state.teams.length;
+    // Two pairings share a court, so the court count is half the pairing count.
+    var courts = Math.ceil(state.teams.length / 2);
     var players = state.teams.reduce(function (n, t) { return n + t.players.length; }, 0);
-    if (elTeams) elTeams.textContent = teams || '—';
+    if (elTeams) elTeams.textContent = courts || '—';
     if (elPlayers) elPlayers.textContent = players || '—';
     if (elRound) elRound.textContent = state.round || '—';
     if (elWhere) elWhere.textContent = state.location || '—';
