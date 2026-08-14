@@ -44,9 +44,19 @@
     return r.data.session ? r.data.session.access_token : null;
   }
 
+  // ?date=YYYY-MM-DD runs a REHEARSAL on a night that is not tonight, the same
+  // escape hatch the TV board already has. Every read and every write carries
+  // the date, so a practice night can never land on the real one by accident.
+  var qsDate = (function () {
+    var m = /[?&]date=(\d{4}-\d{2}-\d{2})/.exec(window.location.search);
+    return m ? m[1] : null;
+  })();
+  var BOARD_URL = '/api/padel-board' + (qsDate ? '?date=' + qsDate : '');
+
   async function api(path, method, body) {
     var t = await token();
     if (!t) return { status: 401, ok: false, data: null };
+    if (qsDate && body) body.event_date = qsDate;
     var res = await fetch(path, {
       method: method || 'GET',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + t },
@@ -111,7 +121,7 @@
   }
 
   async function load(force) {
-    var res = await fetch('/api/padel-board', { cache: 'no-store' })
+    var res = await fetch(BOARD_URL, { cache: 'no-store' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .catch(function () { return null; });
     if (!res) return;
@@ -230,6 +240,15 @@
     }
     gate.hidden = true;
     app.hidden = false;
+    // Rehearsal mode is loud on purpose: scoring a practice night while
+    // believing it is tonight would be the worst possible confusion.
+    if (qsDate) {
+      var flag = document.createElement('p');
+      flag.className = 'ps-msg';
+      flag.style.cssText = 'margin:0 0 16px;border-color:var(--pb-olive-text);';
+      flag.textContent = 'PRACTICE NIGHT · ' + qsDate + '. Nothing here touches a real night. Drop the ?date= from the URL to score for real.';
+      app.insertBefore(flag, app.firstChild);
+    }
     await load(true);
     setInterval(function () { load(false); }, 6000);
   })();
