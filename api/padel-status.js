@@ -6,15 +6,28 @@
 // here rather than a browser Supabase read like the runs config.
 const { admin, safeError } = require('./_lib');
 
-// Advance the configured first night to the next occurrence. The 1-hour grace
+// Advance the configured first night to the next occurrence. The grace period
 // keeps tonight's event "current" while it is happening, so a payment made
 // court-side lands on tonight, not next week.
+//
+// The grace was 1 hour, copied from the runs rule where an hour is plenty: a
+// run starts, people scan in, it is over. A padel night is two hours of
+// rotating rounds, so on 17 Aug the grace expired mid-event and every padel
+// surface silently jumped to next week's date. The TV board went blank with
+// three rounds in the database, and the scoring page would have written round
+// 4 to 2026-08-24 — the read looked like data loss and the next write would
+// have caused it.
+//
+// Six hours covers any plausible night with room either side and still rolls
+// over long before the next weekly occurrence.
+const GRACE_MS = 6 * 3600000;
+
 function resolveEvent(dtIso) {
   if (!dtIso) return null;
   let t = new Date(dtIso).getTime();
   if (isNaN(t)) return null;
   const WEEK = 7 * 86400000;
-  while (t + 3600000 < Date.now()) t += WEEK;
+  while (t + GRACE_MS < Date.now()) t += WEEK;
   const d = new Date(t);
   const ymd = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dubai' }).format(d);
   return { iso: d.toISOString(), ymd };
