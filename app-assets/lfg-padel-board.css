@@ -184,6 +184,7 @@ body {
 }
 
 .pb-thead {
+  flex: none;                     /* the header keeps its size; the rows flex */
   padding-bottom: 0.8vh;
   border-bottom: 1px solid var(--pb-line-strong);
   font-size: 1.05vh;
@@ -196,7 +197,13 @@ body {
 .pb-thead span:nth-child(4) { text-align: right; }
 
 .pb-row {
-  min-height: 6.4vh;              /* legibility floor at 8 metres */
+  /* Share the column instead of claiming a fixed height each.
+     The old floor was 6.4vh, set when the board ranked 8 TEAMS. Rotating
+     partners made it 16 PLAYERS, and 16 x 6.4vh needs 102vh before the header
+     is drawn, so the last four names fell off the bottom of the TV. Dividing
+     the space keeps every player on screen whatever the field size. */
+  flex: 1 1 0;
+  min-height: 0;
   padding: 0.5vh 0;
   border-bottom: 1px solid var(--pb-line);
 }
