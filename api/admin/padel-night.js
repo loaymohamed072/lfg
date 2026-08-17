@@ -251,6 +251,42 @@ module.exports = async (req, res) => {
       return res.status(200).json({ ok: true, round });
     }
 
+    // Call the night. Every score is already saved the moment it is entered,
+    // so this saves nothing new: it ENDS the night. Without it the board kept
+    // a dead round clock ticking over a finished event and never named a
+    // winner, which is what Ahmed hit on 17 Aug after the last round.
+    // Reversible on purpose (finished_at back to null), because "we squeezed
+    // in one more round" is a normal thing to happen on a padel night.
+    if (body.action === 'finish' || body.action === 'unfinish') {
+      const done = body.action === 'finish';
+      const { data: night } = await db.from('padel_night')
+        .select('current_round').eq('event_date', date).maybeSingle();
+      if (!night) return res.status(400).json({ error: 'No night to end yet.' });
+
+      if (done) {
+        // Calling it with a court still open would freeze a leaderboard that
+        // is missing points somebody actually won.
+        const { data: open } = await db.from('padel_matches')
+          .select('court').eq('event_date', date).eq('round', night.current_round)
+          .or('score_a.is.null,score_b.is.null');
+        if ((open || []).length) {
+          return res.status(400).json({
+            error: `Round ${night.current_round} still has ${open.length} court(s) without a score. Score them first, or reset the night.`
+          });
+        }
+      }
+
+      await db.from('padel_night').update({
+        finished_at: done ? new Date().toISOString() : null,
+        // Stop the countdown. A finished night showing a live clock is the
+        // exact confusion this action exists to remove.
+        round_started_at: done ? null : new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }).eq('event_date', date);
+
+      return res.status(200).json({ ok: true, finished: done, round: night.current_round });
+    }
+
     if (body.action === 'score') {
       const round = Math.round(Number(body.round));
       const court = Math.round(Number(body.court));

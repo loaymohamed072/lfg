@@ -129,6 +129,9 @@ module.exports = async (req, res) => {
       matches,
       standings: standings(byRound, matches, nameOf),
       round,
+      // Set once Ahmed calls the night. The board reads it to stop the clock
+      // and crown the leader instead of counting down a round nobody is playing.
+      finished_at: (night && night.finished_at) || null,
       round_started_at: night ? night.round_started_at : null,
       round_minutes: night ? night.round_minutes : 15,
       break_minutes: night ? night.break_minutes : 2,

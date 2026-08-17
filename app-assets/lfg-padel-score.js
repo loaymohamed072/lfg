@@ -80,7 +80,15 @@
   // ---- Render ------------------------------------------------------------
   function render() {
     if (!board) return;
-    if (roundEl) roundEl.textContent = board.round || '—';
+    var over = !!board.finished_at;
+    if (roundEl) roundEl.textContent = over ? 'Finished' : (board.round || '—');
+
+    // One button both ways, because a night that ended and a night that needs
+    // one more round are the same button press apart.
+    var finishBtn = el('psFinish');
+    if (finishBtn) finishBtn.textContent = over ? 'Reopen the night' : 'End the night';
+    var nextBtn = el('psNext');
+    if (nextBtn) nextBtn.disabled = over;
 
     var round = board.round;
     var here = (board.matches || []).filter(function (m) { return m.round === round; });
@@ -195,6 +203,22 @@
     busy = false;
     say(r.ok ? 'Clock restarted for round ' + board.round + '.' : 'Could not restart the clock.', !r.ok);
     load(false);
+  });
+
+  // Ends the night. Scores were already saved as they were entered, so this
+  // only stops the clock and freezes the leaderboard; the label says "end"
+  // rather than "save" so nobody thinks their results were unsaved until now.
+  el('psFinish').addEventListener('click', async function () {
+    if (busy) return;
+    var finished = !!(board && board.finished_at);
+    if (!finished && !window.confirm('End tonight and lock the leaderboard? You can reopen it if you play another round.')) return;
+    busy = true;
+    say('');
+    var r = await api('/api/admin/padel-night', 'POST', { action: finished ? 'unfinish' : 'finish' });
+    busy = false;
+    if (!r.ok) { say((r.data && r.data.error) || 'Could not end the night.', true); return; }
+    say(finished ? 'Night reopened. Draw the next round when you are ready.' : 'Night ended. The board is showing the final leaderboard.');
+    await load(true);
   });
 
   el('psBuild').addEventListener('click', async function () {

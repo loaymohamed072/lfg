@@ -417,3 +417,13 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .pb-court-card { transition: none; }
 }
+
+/* Night called. FINAL is a word, not a countdown, so it drops the tabular
+   digit sizing and takes the olive the winner's name sits in. */
+.pb-clock.is-final .pb-clock-time {
+  color: var(--pb-olive-text);
+  letter-spacing: 0.04em;
+}
+.pb-clock.is-final .pb-clock-label {
+  color: var(--pb-olive-cta);
+}

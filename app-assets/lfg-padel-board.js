@@ -138,7 +138,7 @@
     var players = state.teams.reduce(function (n, t) { return n + t.players.length; }, 0);
     if (elTeams) elTeams.textContent = courts || '—';
     if (elPlayers) elPlayers.textContent = players || '—';
-    if (elRound) elRound.textContent = state.round || '—';
+    if (elRound) elRound.textContent = state.finished_at ? 'Final' : (state.round || '—');
     if (elWhere) elWhere.textContent = state.location || '—';
   }
 
@@ -147,6 +147,21 @@
   // round_started_at — so a laptop with a wrong clock still agrees with the
   // phone doing the scoring.
   function tick() {
+    // Night called. Show the result, not a countdown for a round nobody is
+    // playing: before this existed the TV sat on a dead clock all evening.
+    if (state && state.finished_at) {
+      if (elClock) elClock.textContent = 'FINAL';
+      if (elClockLabel) {
+        var top = (state.standings || [])[0];
+        elClockLabel.textContent = top ? 'Winner · ' + top.name : 'Night finished';
+      }
+      if (elClockWrap) {
+        elClockWrap.classList.remove('is-urgent', 'is-break');
+        elClockWrap.classList.add('is-final');
+      }
+      return;
+    }
+    if (elClockWrap) elClockWrap.classList.remove('is-final');
     if (!elClock || !state || !state.round_started_at) {
       if (elClock) elClock.textContent = '--:--';
       return;
