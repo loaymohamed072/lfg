@@ -424,6 +424,14 @@ body {
   color: var(--pb-olive-text);
   letter-spacing: 0.04em;
 }
+/* The label slot normally holds "Round ends in", a caption at 1.05vh (11px on
+   a 1080p TV) that nobody needs to read from the far side of the room. At the
+   end of the night it holds the winner's NAME, which is the one thing everyone
+   looks for, so it cannot stay caption-sized: leaderboard names render at 26px
+   and this was sitting at 11. Matching them, and dropping the wide caption
+   tracking that only suits small uppercase. */
 .pb-clock.is-final .pb-clock-label {
   color: var(--pb-olive-cta);
+  font-size: 2.4vh;
+  letter-spacing: 0.06em;
 }
