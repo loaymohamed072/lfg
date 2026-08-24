@@ -888,6 +888,16 @@
         </div>
         <div id="padel-summary" class="paid-summary">—</div>
         <div id="padel-roster-list">Loading…</div>
+
+        <!-- Walk-in: someone on court who never booked online. Adds them as a
+             player on this night so they show on the board and get drawn into
+             courts like anyone else. -->
+        <div class="runs-toolbar" style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px;">
+          <input type="text" id="padel-add-name" class="runs-search" placeholder="Walk-in player name…" autocomplete="off" style="flex:1 1 200px;">
+          <input type="number" id="padel-add-level" class="runs-search" placeholder="Level" min="1" max="7" step="0.5" style="max-width:90px;">
+          <button class="mini" id="padel-add-btn" type="button">Add to night</button>
+        </div>
+        <p id="padel-add-msg" class="note" style="margin-top:6px;"></p>
       </div>
 
       <div class="card">
@@ -2365,11 +2375,15 @@
     if (!players.length) { listEl.innerHTML = '<p style="color:var(--muted);font-size:14px;">No players match &ldquo;' + esc(padelSearch) + '&rdquo;.</p>'; return; }
     listEl.innerHTML = players.map(function (p) {
       var first = p.first_night ? ' <span class="badge-staff">First night</span>' : '';
+      // A level nobody self-assessed: a friend the buyer guessed for, or a
+      // walk-in typed in here. Flagged so courts are not drawn off a guess.
+      // Either lvl button clears it.
+      var est = p.estimated ? ' <span class="badge-staff" title="Level was guessed, not self-assessed. Nudge it to confirm.">Est. level</span>' : '';
       var paidTag = p.paid
         ? '<span style="color:var(--ok);font-size:13px;">✓</span>'
         : '<span style="color:var(--muted);font-size:13px;">pending</span>';
       return '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);' + (p.paid ? '' : 'opacity:.5;') + '">'
-        + '<span style="min-width:150px;font-weight:600;color:var(--white);">' + esc(padelName(p)) + first + '</span>'
+        + '<span style="min-width:150px;font-weight:600;color:var(--white);">' + esc(padelName(p)) + first + est + '</span>'
         + '<span style="color:var(--muted);font-size:13px;min-width:34px;">' + padelLevelLabel(p.level) + '</span>'
         + '<span style="color:var(--green);font-size:13px;min-width:44px;font-weight:600;">' + (p.points || 0) + ' pts</span>'
         + paidTag
@@ -2443,6 +2457,28 @@
     wrap.innerHTML = html;
   }
   el('padel-regroup-btn').addEventListener('click', renderPadelCourts);
+
+  // Walk-in players. Level defaults server-side to mid-scale when left blank,
+  // because burying an unknown player at 1.0 costs them the whole night.
+  async function addPadelWalkIn() {
+    var nameEl = el('padel-add-name'), lvlEl = el('padel-add-level'), msg = el('padel-add-msg');
+    var name = nameEl.value.trim();
+    var date = el('padel-date').value || padelCurDate;
+    if (!name) { msg.textContent = 'Type a name first.'; return; }
+    if (!date) { msg.textContent = 'Pick a night first.'; return; }
+    var payload = { action: 'add_player', name: name, event_date: date };
+    if (lvlEl.value !== '') payload.level = parseFloat(lvlEl.value);
+    msg.textContent = 'Adding…';
+    var r = await api('/api/admin/padel-roster', 'POST', payload);
+    if (!r.ok || !r.data || !r.data.ok) { msg.textContent = (r.data && r.data.error) || 'Could not add that player.'; return; }
+    msg.textContent = r.data.name + ' added at level ' + Number(r.data.level).toFixed(1) + '.';
+    nameEl.value = ''; lvlEl.value = '';
+    loadPadelRoster(date);
+  }
+  el('padel-add-btn').addEventListener('click', addPadelWalkIn);
+  el('padel-add-name').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); addPadelWalkIn(); }
+  });
 
   el('padel-export-btn').addEventListener('click', function () {
     var players = padelPlayers();

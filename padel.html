@@ -46,7 +46,7 @@
 <meta name="theme-color" content="#0A0A0A">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/app-assets/lfg-padel-page.css?v=12">
+<link rel="stylesheet" href="/app-assets/lfg-padel-page.css?v=13">
 </head>
 <body>
 
@@ -355,6 +355,21 @@
     <div class="pd-qchips" id="pdQuizChips"></div>
   </div>
 
+  <!-- STEP: bring a friend — only reachable once your own spot is paid. The
+       friend has no LFG account, so their name and their level come from you. -->
+  <div class="pd-dstep" id="pdStepGuest" hidden>
+    <span class="pd-kicker">Bring a friend</span>
+    <h3>Who are you bringing?</h3>
+    <p>They don't need an LFG account. You pay for their spot, and the next five
+      taps set their level so they land on the right court.</p>
+    <label class="pd-glabel" for="pdGuestName">Their name</label>
+    <input type="text" id="pdGuestName" class="pd-ginput" autocomplete="off" placeholder="First and last name" maxlength="80">
+    <label class="pd-glabel" for="pdGuestEmail">Their email <span>(optional)</span></label>
+    <input type="email" id="pdGuestEmail" class="pd-ginput" autocomplete="off" placeholder="So they can claim their own account later" maxlength="120">
+    <p class="pd-derror" id="pdGuestErr" hidden></p>
+    <button type="button" class="pd-btn" id="pdGuestNext">Set their level</button>
+  </div>
+
   <!-- STEP: pay (Stripe embedded checkout) -->
   <div class="pd-dstep" id="pdStepPay" hidden>
     <span class="pd-kicker">Lock it in</span>
@@ -372,6 +387,7 @@
     <p class="pd-success-where" id="pdSuccessWhere"></p>
     <p>Your court and match group drop before the night. You're matched to your level.</p>
     <p id="pdSuccessEmailLine">Check your email for the confirmation.</p>
+    <button type="button" class="pd-btn pd-btn-ghost" id="pdBringFriend" hidden>Bring a friend</button>
     <p>If your plans change, tell us on WhatsApp by 2pm on game day so we can fill your spot. Your payment rolls to next week. After 2pm it's burned.</p>
     <p class="pd-dfoot">Question in the meantime? <a id="pdSuccessWa" href="https://wa.me/971504264410">Message us on WhatsApp</a></p>
   </div>
@@ -389,7 +405,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.1"></script>
 <script src="/app-assets/lfg-supabase.js?v=3"></script>
-<script src="/app-assets/lfg-padel-page.js?v=12" defer></script>
+<script src="/app-assets/lfg-padel-page.js?v=13" defer></script>
 <script>
   // keep the drawer's date in sync with the booking strip
   window.addEventListener('DOMContentLoaded', function () {

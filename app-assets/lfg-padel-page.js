@@ -398,8 +398,17 @@
     { key: 'court', q: 'On court, you can…', a: [['learning', 'Still learning the rules'], ['rally', 'Keep a rally going'], ['attack', 'Volley and smash'], ['control', 'Run the match']] },
     { key: 'self', q: 'The word that fits', a: [['beginner', 'Beginner'], ['improver', 'Improver'], ['intermediate', 'Intermediate'], ['advanced', 'Advanced']] }
   ];
+  // Buying a spot for someone without an LFG account. Non-null for the whole
+  // friend purchase, and the quiz writes into IT rather than into `book`, so a
+  // friend's answers can never overwrite the buyer's own level. Deliberately
+  // not persisted to localStorage: a half-finished friend is not something to
+  // restore days later, and the buyer's own booking state is what `book` is for.
+  var guest = null;
+  var lastGuestName = null;   // who the finished purchase was for, for the success copy
+  function answerBag() { return guest ? guest.answers : book.answers; }
   function answersComplete() {
-    for (var i = 0; i < QUIZ.length; i++) if (!book.answers[QUIZ[i].key]) return false;
+    var bag = answerBag();
+    for (var i = 0; i < QUIZ.length; i++) if (!bag[QUIZ[i].key]) return false;
     return true;
   }
 
@@ -560,7 +569,7 @@
   var retryMode = 'pay';
   var successMode = 'paid';
 
-  var PANELS = ['pdStepPreview', 'pdStepLogin', 'pdStepQuiz', 'pdStepPay', 'pdStepSuccess', 'pdStepSoldout'];
+  var PANELS = ['pdStepPreview', 'pdStepLogin', 'pdStepGuest', 'pdStepQuiz', 'pdStepPay', 'pdStepSuccess', 'pdStepSoldout'];
   function showPanel(id) {
     PANELS.forEach(function (p) { var n = el(p); if (n) n.hidden = (p !== id); });
     if (drawer) drawer.classList.toggle('pd-wide', id === 'pdStepPay');
@@ -587,6 +596,7 @@
   function topStep() { return stack.length ? stack[stack.length - 1] : null; }
   function render(step) {
     if (step === 'login') renderLogin();
+    else if (step === 'guest') renderGuest();
     else if (step && step.indexOf('quiz:') === 0) renderQuiz(parseInt(step.slice(5), 10));
     else if (step === 'pay') renderPay();
     else if (step === 'success') renderSuccess();
@@ -676,7 +686,8 @@
   /* ---------- step: quiz (first-timers, server-gated) ---------- */
   function toQuiz() {
     var idx = 0;
-    while (idx < QUIZ.length && book.answers[QUIZ[idx].key]) idx++;
+    var bag = answerBag();
+    while (idx < QUIZ.length && bag[QUIZ[idx].key]) idx++;
     if (idx >= QUIZ.length) idx = QUIZ.length - 1;
     // Member path opened straight onto 'pay'; the quiz replaces it so Back
     // from question one closes the drawer instead of landing on an empty
@@ -684,19 +695,56 @@
     if (topStep() === 'pay') replaceStep('quiz:' + idx);
     else pushStep('quiz:' + idx);
   }
+  /* ---------- step: bring a friend ---------- */
+  function renderGuest() {
+    showPanel('pdStepGuest');
+    hideErr('pdGuestErr');
+    var n = el('pdGuestName');
+    if (n) { n.value = (guest && guest.name) || ''; n.focus(); }
+    var e = el('pdGuestEmail');
+    if (e) e.value = (guest && guest.email) || '';
+  }
+  var guestNext = el('pdGuestNext');
+  if (guestNext) guestNext.addEventListener('click', function () {
+    var name = (el('pdGuestName').value || '').trim().replace(/\s+/g, ' ');
+    if (!name) { showErr('pdGuestErr', "Type your friend's name so we know who is on court."); return; }
+    var email = (el('pdGuestEmail').value || '').trim();
+    if (email && email.indexOf('@') < 1) { showErr('pdGuestErr', 'That email does not look right. Leave it blank if you are not sure.'); return; }
+    hideErr('pdGuestErr');
+    // Fresh answers every time: the quiz describes THIS friend.
+    guest = { name: name, email: email, answers: {} };
+    pushStep('quiz:0');
+  });
+
   function renderQuiz(i) {
     if (!(i >= 0 && i < QUIZ.length)) i = 0;
     showPanel('pdStepQuiz');
     var q = QUIZ[i];
+    var bag = answerBag();
     el('pdQuizProgress').textContent = (i + 1) + ' of 5';
     el('pdQuizIntro').hidden = i !== 0;
-    el('pdQuizQ').textContent = q.q;
+    if (i === 0) {
+      el('pdQuizIntro').textContent = guest
+        ? 'Five taps about ' + guest.name + ', so they get matched with people who play like them.'
+        : 'First time with us. Five taps, and you get matched with people who play like you.';
+    }
+    // The questions are written in the second person for the player answering
+    // about themselves. Buying for someone else, they are about a third party,
+    // so the two that read wrong get re-pointed rather than left saying "you".
+    var GUEST_Q = {
+      played: 'Have they played padel before?',
+      racket: 'Other racket sports — tennis, squash, badminton?',
+      frequency: 'How often do they play these days?',
+      court: 'On court, they can…',
+      self: 'The word that fits them'
+    };
+    el('pdQuizQ').textContent = guest ? (GUEST_Q[q.key] || q.q) : q.q;
     var wrap = el('pdQuizChips');
     wrap.innerHTML = '';
     q.a.forEach(function (pair) {
       var b = document.createElement('button');
       b.type = 'button';
-      b.className = 'pd-qchip' + (book.answers[q.key] === pair[0] ? ' sel' : '');
+      b.className = 'pd-qchip' + (bag[q.key] === pair[0] ? ' sel' : '');
       b.textContent = pair[1];
       b.addEventListener('click', function () { pickAnswer(i, pair[0]); });
       wrap.appendChild(b);
@@ -706,8 +754,10 @@
   if (quizBack) quizBack.addEventListener('click', function () { history.back(); });
   function pickAnswer(i, val) {
     if (inflight) return;
-    book.answers[QUIZ[i].key] = val;
-    store.save(book);
+    answerBag()[QUIZ[i].key] = val;
+    // Only the buyer's own answers are worth surviving a refresh; a friend's
+    // live in memory for the length of the purchase.
+    if (!guest) store.save(book);
     if (i < QUIZ.length - 1) {
       pushStep('quiz:' + (i + 1));
     } else {
@@ -778,13 +828,14 @@
     if (window.lfg && window.lfg.api) {
       var payload = {};
       if (body.answers) payload.answers = body.answers;
+      if (body.guest) payload.guest = body.guest;
       return window.lfg.api('/api/padel-pay', { method: 'POST', body: JSON.stringify(payload) })
         .then(function (r) { return { status: r.status, data: r.data }; });
     }
     return fetch('/api/padel-pay', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ answers: body.answers || undefined })
+      body: JSON.stringify({ answers: body.answers || undefined, guest: body.guest || undefined })
     }).then(function (res) {
       return res.json().catch(function () { return null; }).then(function (data) {
         return { status: res.status, data: data };
@@ -815,7 +866,8 @@
         out = await padelPay({
           authed: !!opts.authed,
           email: opts.email,
-          answers: answersComplete() ? book.answers : undefined
+          answers: answersComplete() ? answerBag() : undefined,
+          guest: guest ? { name: guest.name, email: guest.email || undefined } : undefined
         });
       } catch (e) {
         stepError('Network error starting the booking. Check your connection and try again.');
@@ -905,6 +957,8 @@
   /* ---------- steps: success + sold out ---------- */
   function showSuccessStep(mode) {
     successMode = mode;
+    lastGuestName = guest ? guest.name : null;
+    guest = null;               // the purchase is over, whichever way it ended
     book = { answers: {} };
     store.clear();
     pushStep('success');
@@ -912,13 +966,27 @@
   function renderSuccess() {
     showPanel('pdStepSuccess');
     var already = successMode === 'already';
-    el('pdSuccessTitle').textContent = already
-      ? "You're already in for " + NIGHT.day + "."
-      : "You're in for " + NIGHT.day + ".";
+    var friend = lastGuestName;
+    el('pdSuccessTitle').textContent = friend
+      ? (already ? friend + ' is already in.' : friend + ' is in for ' + NIGHT.day + '.')
+      : (already ? "You're already in for " + NIGHT.day + '.' : "You're in for " + NIGHT.day + '.');
     el('pdSuccessWhere').textContent = NIGHT.time + ' · ' + STATUS.location;
     el('pdSuccessEmailLine').hidden = already;
+    if (friend && !already) {
+      el('pdSuccessEmailLine').textContent = 'The confirmation is in your inbox. Tell ' + friend + ' where to be.';
+    }
+    // Only a signed-in member on a live night can buy for someone else, and the
+    // server requires their own spot to be paid first. A sold-out night still
+    // routes to the sold-out panel from the pay call, which is the honest answer.
+    var bf = el('pdBringFriend');
+    if (bf) bf.hidden = !(live && session);
     el('pdSuccessWa').href = WA + encodeURIComponent("Hey, I'm booked for padel night, quick question");
   }
+  var bringFriendBtn = el('pdBringFriend');
+  if (bringFriendBtn) bringFriendBtn.addEventListener('click', function () {
+    guest = null;
+    pushStep('guest');
+  });
   // A sold-out night is the moment demand is highest, so it ends in an action
   // rather than an apology. The list is real: drops happen most weeks before the
   // 2pm cutoff, and it decides who gets called first.

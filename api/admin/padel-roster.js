@@ -8,7 +8,7 @@
 //        -> nudge a player's level ±0.5 (or set it outright), clamped 1.0-7.0.
 //           This IS the ranking update loop: watch them play, nudge the level,
 //           next week's courts regroup around it. initial_level stays frozen.
-const { requireAdmin, safeError } = require('../_lib');
+const { requireAdmin, createGuestMember, safeError } = require('../_lib');
 const { resolveEvent } = require('../padel-status');
 
 module.exports = async (req, res) => {
@@ -24,6 +24,61 @@ module.exports = async (req, res) => {
 
     if (req.method === 'POST') {
       const body = req.body || {};
+
+      // Walk-in: someone standing on the court who never booked online. Runs
+      // before the member_id guard because this is the one action that creates
+      // the player rather than acting on an existing one. Same guest primitive
+      // as a friend bought in through checkout, so the board, courts, points
+      // and level nudges all treat them as an ordinary player from here on.
+      if (body.action === 'add_player') {
+        const eventDate = /^\d{4}-\d{2}-\d{2}$/.test(String(body.event_date || '')) ? body.event_date : null;
+        if (!eventDate) return res.status(400).json({ error: 'event_date required' });
+        const name = String(body.name || '').trim().replace(/\s+/g, ' ').slice(0, 80);
+        if (!name) return res.status(400).json({ error: 'Name required.' });
+
+        // Mid-scale unless the admin says otherwise: an unknown walk-in is more
+        // likely a 3 than a 1, and a wrong 1 buries a decent player on the
+        // bottom court all night. Nudge buttons fix it in one tap either way.
+        const lvlIn = Number(body.level);
+        const level = Math.min(7, Math.max(1, Math.round((Number.isFinite(lvlIn) ? lvlIn : 3) * 2) / 2));
+
+        let guest;
+        try {
+          guest = await createGuestMember(db, { name, email: body.email, guestOf: null });
+        } catch (e) {
+          return safeError(res, 'padel-roster', e, 'Could not add that player.');
+        }
+
+        const { data: clash } = await db.from('padel_signups')
+          .select('member_id').eq('member_id', guest.memberId).eq('event_date', eventDate).maybeSingle();
+        if (clash) return res.status(409).json({ error: name + ' is already on this night.' });
+
+        // answers is NOT NULL and there is no quiz here; record how the level
+        // was set so the roster never presents an admin guess as a self-report.
+        // If the name resolved to an existing player, their own level stands:
+        // a walk-in entry must not flatten a level they earned over weeks.
+        const { data: hasProfile } = await db.from('padel_profiles')
+          .select('member_id').eq('member_id', guest.memberId).maybeSingle();
+        if (!hasProfile) {
+          await db.from('padel_profiles').insert(
+            { member_id: guest.memberId, level, initial_level: level, answers: { source: 'admin' }, estimated: true }
+          );
+        }
+
+        const amount = Number(body.amount_aed);
+        const { error: sErr } = await db.from('padel_signups').insert({
+          member_id: guest.memberId,
+          event_date: eventDate,
+          attending: true,
+          paid: body.paid === false ? false : true,
+          amount_aed: Number.isFinite(amount) && amount > 0 ? amount : null,
+          updated_at: new Date().toISOString()
+        });
+        if (sErr) return safeError(res, 'padel-roster', sErr, 'Could not add that player to the night.');
+
+        return res.status(200).json({ ok: true, member_id: guest.memberId, name, level });
+      }
+
       const memberId = typeof body.member_id === 'string' ? body.member_id : null;
       if (!memberId) return res.status(400).json({ error: 'member_id required' });
 
@@ -94,8 +149,10 @@ module.exports = async (req, res) => {
       else if (typeof body.delta === 'number') next = Number(prof.level) + body.delta;
       else return res.status(400).json({ error: 'delta or level required' });
       next = Math.min(7, Math.max(1, Math.round(next * 2) / 2));
+      // An admin setting the level by hand IS the human check the estimate flag
+      // was asking for, so the flag clears with the nudge.
       const { error: uErr } = await db.from('padel_profiles')
-        .update({ level: next, updated_at: new Date().toISOString() })
+        .update({ level: next, estimated: false, updated_at: new Date().toISOString() })
         .eq('member_id', memberId);
       if (uErr) return safeError(res, 'padel-roster', uErr, 'Could not update the level.');
       return res.status(200).json({ ok: true, level: next });
@@ -123,10 +180,10 @@ module.exports = async (req, res) => {
     let membersById = {}, profilesById = {};
     if (ids.length) {
       const { data: mems } = await db.from('members')
-        .select('id, full_name, email').in('id', ids);
+        .select('id, full_name, email, is_guest, guest_of').in('id', ids);
       (mems || []).forEach(m => { membersById[m.id] = m; });
       const { data: profs } = await db.from('padel_profiles')
-        .select('member_id, level, initial_level, answers, created_at').in('member_id', ids);
+        .select('member_id, level, initial_level, answers, estimated, created_at').in('member_id', ids);
       (profs || []).forEach(p => { profilesById[p.member_id] = p; });
     }
 
@@ -146,6 +203,11 @@ module.exports = async (req, res) => {
         points: s.points || 0,
         level: p ? Number(p.level) : null,
         initial_level: p ? Number(p.initial_level) : null,
+        // The level was guessed by whoever paid them in, or typed by an admin,
+        // rather than self-assessed. Shown on the roster so courts are not
+        // drawn off a guess unchecked.
+        estimated: !!(p && p.estimated),
+        is_guest: !!m.is_guest,
         first_night: p ? p.created_at >= weekBefore : true,
         answers: p ? p.answers : null
       };

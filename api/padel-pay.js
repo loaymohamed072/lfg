@@ -18,8 +18,15 @@
 //
 // Security: price, date, and capacity come from event_config (server-side),
 // never the client. Level scoring is server-side. Service-role writes only.
+//   - Bringing a friend: a member who has ALREADY PAID for this night may buy
+//     additional spots for people without an LFG account. The friend becomes a
+//     guest member (see createGuestMember in _lib) and the buyer answers the
+//     same five questions on their behalf, scored identically but flagged
+//     `estimated` so the roster knows the level is a guess, not a self-report.
+//     The already-paid gate is what keeps this from being the public guest
+//     checkout that was closed on 2026-08-09.
 const Stripe = require('stripe');
-const { admin, getUser, ensureMember, safeError } = require('./_lib');
+const { admin, getUser, ensureMember, createGuestMember, safeError } = require('./_lib');
 const { resolveEvent } = require('./padel-status');
 
 // One entry per quiz question, answers ordered easiest -> strongest. The score
@@ -90,11 +97,30 @@ module.exports = async (req, res) => {
     const custEmail = user.email;
     if (!memberId) return res.status(400).json({ error: 'Could not read your account. Try again.' });
 
+    // Is this a spot for someone else? The buyer still pays; the spot, level
+    // and court placing belong to the friend.
+    const guestName = body.guest && String(body.guest.name || '').trim().replace(/\s+/g, ' ').slice(0, 80);
+    const forGuest = !!guestName;
+    if (body.guest && !guestName) {
+      return res.status(400).json({ error: "Enter your friend's name." });
+    }
+
     // Double-charge guard: the payments table is the money source of truth.
+    // Unchanged for an ordinary booking, and it is the SAME read that tells us
+    // whether a friend purchase is allowed, so the guest path costs no extra
+    // query: buying for someone else requires having paid for yourself first,
+    // which is exactly what this row proves. Without that gate the endpoint
+    // becomes the public guest checkout removed on 2026-08-09.
     const { data: paidAlready } = await db.from('payments')
       .select('id').eq('member_id', memberId).eq('kind', 'padel')
       .eq('status', 'paid').eq('run_date', ev.ymd).limit(1);
-    if (paidAlready && paidAlready.length) {
+    const buyerIsIn = !!(paidAlready && paidAlready.length);
+
+    if (forGuest) {
+      if (!buyerIsIn) {
+        return res.status(409).json({ error: 'Book your own spot first, then you can bring a friend.' });
+      }
+    } else if (buyerIsIn) {
       return res.status(409).json({ already_paid: true, error: "You're already in for this night. See you on court." });
     }
 
@@ -107,33 +133,97 @@ module.exports = async (req, res) => {
       return res.status(409).json({ sold_out: true, error: 'This night is sold out.' });
     }
 
-    // First-timer questionnaire gate. No profile + no answers -> tell the
-    // drawer to run the quiz (no side effects). No profile + answers -> score
-    // and create the profile. Existing profile -> straight through.
-    const { data: profile } = await db.from('padel_profiles')
-      .select('member_id').eq('member_id', memberId).maybeSingle();
-    if (!profile) {
-      if (!body.answers) return res.status(200).json({ needs_questionnaire: true });
+    // Questionnaire gate. No profile + no answers -> tell the drawer to run the
+    // quiz (no side effects). No profile + answers -> score and create the
+    // profile. Existing profile -> straight through.
+    //
+    // A friend has no profile by definition, so the quiz always runs for them,
+    // and the answers describe the FRIEND rather than the buyer. Asking before
+    // the guest account exists is deliberate: an abandoned quiz must not leave
+    // an account behind.
+    if (forGuest) {
+      if (!body.answers) return res.status(200).json({ needs_questionnaire: true, for_guest: true });
       const level = computeLevel(body.answers);
       if (level == null) return res.status(400).json({ error: 'Answer all five questions.' });
-      const { error: pErr } = await db.from('padel_profiles').insert({
-        member_id: memberId, level, initial_level: level, answers: body.answers
-      });
-      // A racing duplicate insert is fine; anything else is a real failure.
-      if (pErr && !/duplicate key|unique/i.test(pErr.message || '')) {
-        return safeError(res, 'padel-pay', pErr, 'Could not save your answers. Try again.');
+    } else {
+      const { data: profile } = await db.from('padel_profiles')
+        .select('member_id').eq('member_id', memberId).maybeSingle();
+      if (!profile) {
+        if (!body.answers) return res.status(200).json({ needs_questionnaire: true });
+        const level = computeLevel(body.answers);
+        if (level == null) return res.status(400).json({ error: 'Answer all five questions.' });
+        const { error: pErr } = await db.from('padel_profiles').insert({
+          member_id: memberId, level, initial_level: level, answers: body.answers
+        });
+        // A racing duplicate insert is fine; anything else is a real failure.
+        if (pErr && !/duplicate key|unique/i.test(pErr.message || '')) {
+          return safeError(res, 'padel-pay', pErr, 'Could not save your answers. Try again.');
+        }
       }
     }
 
+    // Who the spot is FOR. Everything downstream (signup, level, court, board)
+    // keys on this; the buyer only appears on the payment.
+    let playerId = memberId;
+    if (forGuest) {
+      // Reuse a guest this buyer has already created under the same name, so an
+      // abandoned checkout retried does not mint a second account for the same
+      // person. Scoped to guests THIS member brought, so one buyer's "Sarah"
+      // can never resolve to another buyer's.
+      const { data: known } = await db.from('members')
+        .select('id').eq('guest_of', memberId).eq('is_guest', true)
+        .eq('full_name', guestName).limit(1);
+      if (known && known.length) {
+        playerId = known[0].id;
+      } else {
+        const guest = await createGuestMember(db, {
+          name: guestName,
+          email: body.guest && body.guest.email,
+          guestOf: memberId
+        });
+        playerId = guest.memberId;
+      }
+
+      const { data: guestIn } = await db.from('padel_signups')
+        .select('member_id').eq('member_id', playerId).eq('event_date', ev.ymd)
+        .eq('paid', true).limit(1);
+      if (guestIn && guestIn.length) {
+        return res.status(409).json({ already_paid: true, error: guestName + ' is already in for this night.' });
+      }
+
+      // Only seed a level if they have none. If the friend turns out to be an
+      // existing LFG player, the level they set for themselves outranks the
+      // buyer's guess and must not be overwritten.
+      const { data: theirProfile } = await db.from('padel_profiles')
+        .select('member_id').eq('member_id', playerId).maybeSingle();
+      if (!theirProfile) {
+        const level = computeLevel(body.answers);
+        const { error: gpErr } = await db.from('padel_profiles').insert(
+          { member_id: playerId, level, initial_level: level, answers: body.answers, estimated: true }
+        );
+        if (gpErr && !/duplicate key|unique/i.test(gpErr.message || '')) {
+          return safeError(res, 'padel-pay', gpErr, 'Could not save their answers. Try again.');
+        }
+      }
+    }
+
+    // member_id stays the BUYER so the money and the confirmation email reach
+    // the person who paid; padel_for carries the spot to the friend.
     const metadata = { member_id: memberId, kind: 'padel', run_date: ev.ymd, location: cfg.padel_location || '' };
+    if (forGuest) {
+      metadata.padel_for = playerId;
+      metadata.guest_name = guestName;
+    }
 
     const { data: pay } = await db.from('payments')
       .insert({ member_id: memberId, kind: 'padel', amount_aed: amount, status: 'pending', run_date: ev.ymd })
       .select('id').single();
 
     // Intent row so the roster shows who started checkout; webhook flips paid.
+    // Keyed to the player, so a friend appears as the pending player rather
+    // than the buyer appearing twice.
     await db.from('padel_signups').upsert(
-      { member_id: memberId, event_date: ev.ymd, attending: true, updated_at: new Date().toISOString() },
+      { member_id: playerId, event_date: ev.ymd, attending: true, updated_at: new Date().toISOString() },
       { onConflict: 'member_id,event_date' }
     );
 
@@ -152,7 +242,9 @@ module.exports = async (req, res) => {
           unit_amount: Math.round(amount * 100), // fils
           product_data: {
             name: 'LFG Padel · ' + (cfg.padel_location || 'Dubai'),
-            description: 'Court entry · matched to your level'
+            description: forGuest
+              ? 'Court entry for ' + guestName + ' · matched to their level'
+              : 'Court entry · matched to your level'
           }
         }
       }],

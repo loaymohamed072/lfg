@@ -136,6 +136,59 @@ async function ensureMember(db, user) {
   return user.id;
 }
 
+// Create a guest player: a friend a member paid in, or a walk-in an admin typed
+// onto the board. Every padel foreign key points at members, and members.id
+// points at auth.users, so a player who never signed up still needs both rows.
+//
+// This is NOT the guest checkout that was closed on 2026-08-09, and it must not
+// become one. That decision killed a PUBLIC path where a typed-in email minted
+// an auth account, which is what produced ~220 junk GoTrue signups. Here the
+// caller is either an admin or a member who has already paid for their own spot
+// on this night, the write is service-role, and no email is ever sent: the
+// account is created confirmed so GoTrue stays silent, with no password.
+//
+// If a real email is given the guest can later claim the account with a login
+// link and inherit their level and points. With no email we synthesise an
+// unroutable address so nothing can ever be delivered to it.
+async function createGuestMember(db, { name, email, guestOf }) {
+  const clean = String(name || '').trim().replace(/\s+/g, ' ').slice(0, 80);
+  if (!clean) throw new Error('createGuestMember: name required');
+
+  const svc = authService();
+  const realEmail = String(email || '').trim().toLowerCase() || null;
+  // .invalid is reserved by RFC 2606 and can never resolve, so a guest with no
+  // email cannot be mailed by us or by anything downstream reading the row.
+  const loginEmail = realEmail || `guest-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}@padel.lfg.invalid`;
+
+  let userId = null;
+  const { data: created, error: cErr } = await svc.auth.admin.createUser({
+    email: loginEmail,
+    email_confirm: true,           // marks confirmed WITHOUT sending anything
+    user_metadata: { full_name: clean, lfg_guest: true }
+  });
+  if (created && created.user) {
+    userId = created.user.id;
+  } else if (cErr && /already been registered|already exists/i.test(cErr.message || '')) {
+    // The friend is already on LFG. Reuse their account rather than blocking the
+    // purchase or creating a second one, and return existing:true so the caller
+    // does NOT overwrite the level they set for themselves.
+    // limit(1) not maybeSingle: members.email carries no unique constraint, and
+    // a duplicate would turn a solvable case into a 500.
+    const { data: existing } = await db.from('members').select('id').eq('email', realEmail).limit(1);
+    if (!existing || !existing.length) throw new Error('createGuestMember: email taken but no member row');
+    return { memberId: existing[0].id, existing: true };
+  } else {
+    throw new Error('createGuestMember: ' + ((cErr && cErr.message) || 'could not create the player'));
+  }
+
+  const { error: mErr } = await db.from('members').upsert(
+    { id: userId, email: realEmail, full_name: clean, is_guest: true, guest_of: guestOf || null },
+    { onConflict: 'id' }
+  );
+  if (mErr) throw new Error('createGuestMember: ' + mErr.message);
+  return { memberId: userId, existing: false };
+}
+
 // True if the user is flagged as an admin/owner.
 async function isAdmin(db, userId) {
   const { data } = await db.from('members').select('is_admin').eq('id', userId).maybeSingle();
@@ -744,9 +797,14 @@ async function fulfillCheckoutSession(db, sessionObj) {
     // flip the signup to paid so the roster + capacity count see it, then send
     // the padel confirmation. emailKind stays null (package/single path skipped).
     const eventDate = md.run_date || null;
+    // padel_for is set when a member bought this spot for a friend: the money
+    // and the email belong to the buyer (md.member_id), the SPOT belongs to the
+    // guest. Absent it, buyer and player are the same person, as before.
+    const playerId = md.padel_for || md.member_id;
+    const guestName = md.guest_name || null;
     if (eventDate) {
       const { error: sErr } = await db.from('padel_signups').upsert(
-        { member_id: md.member_id, event_date: eventDate, attending: true, paid: true,
+        { member_id: playerId, event_date: eventDate, attending: true, paid: true,
           amount_aed: paidAmount, stripe_payment_intent: sessionObj.payment_intent,
           updated_at: new Date().toISOString() },
         { onConflict: 'member_id,event_date' }
@@ -765,13 +823,15 @@ async function fulfillCheckoutSession(db, sessionObj) {
             { weekday: 'long', day: 'numeric', month: 'short', timeZone: 'Asia/Dubai' });
         } catch (e) { /* keep fallback */ }
         const body = `
-          <h1 style="font-family:'Barlow Condensed','Helvetica Neue',sans-serif;font-weight:800;font-size:26px;text-transform:uppercase;letter-spacing:0.04em;margin:0 0 8px;color:#fff;">You're on <span style="color:#999966;">court.</span></h1>
-          <p style="margin:0 0 22px;color:rgba(255,255,255,0.65);font-size:15px;line-height:1.55;">Hey ${first}, your spot for padel is locked.</p>
+          <h1 style="font-family:'Barlow Condensed','Helvetica Neue',sans-serif;font-weight:800;font-size:26px;text-transform:uppercase;letter-spacing:0.04em;margin:0 0 8px;color:#fff;">${guestName ? 'They&rsquo;re on' : 'You&rsquo;re on'} <span style="color:#999966;">court.</span></h1>
+          <p style="margin:0 0 22px;color:rgba(255,255,255,0.65);font-size:15px;line-height:1.55;">${guestName
+            ? `Hey ${first}, ${escapeHtml(guestName)}&rsquo;s spot is locked. Bring them with you.`
+            : `Hey ${first}, your spot for padel is locked.`}</p>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);">
             <tr><td style="padding:20px 22px;text-align:center;">
               <div style="font-family:'Barlow Condensed','Helvetica Neue',sans-serif;font-size:11px;letter-spacing:0.26em;text-transform:uppercase;color:#999966;margin-bottom:6px;">Your night</div>
               <div style="font-family:'Barlow Condensed','Helvetica Neue',sans-serif;font-weight:700;font-size:22px;letter-spacing:0.02em;color:#fff;">${escapeHtml(nightLine)} · ${loc}</div>
-              <div style="margin-top:8px;color:rgba(255,255,255,0.6);font-size:13px;">Paid · AED ${escapeHtml(String(paidAmount))} · you'll be matched to your level on the night</div>
+              <div style="margin-top:8px;color:rgba(255,255,255,0.6);font-size:13px;">Paid · AED ${escapeHtml(String(paidAmount))} · ${guestName ? 'they' : 'you'}&rsquo;ll be matched to ${guestName ? 'their' : 'your'} level on the night</div>
             </td></tr>
           </table>
           <p style="margin:22px 0 0;font-size:13px;color:rgba(255,255,255,0.5);line-height:1.6;">Arrive 15 minutes early. Rackets sorted if you need one. — LFG</p>
@@ -917,7 +977,7 @@ module.exports = {
   admin, publicDb, authService,
   canonicalOrigin, buildAuthLink,
   getUser, getAuthUserById,
-  ensureMember, isAdmin, canViewRevenue,
+  ensureMember, createGuestMember, isAdmin, canViewRevenue,
   requireAdmin, requireAdminOrCron,
   safeError,
   buildMeResponse, formatDate, cancelCutoffOk,
