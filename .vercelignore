@@ -18,7 +18,7 @@ _preview-*.html
 .playwright-mcp
 scripts
 
-# Unused large media kept locally for editing — live site serves video from Bunny CDN (lfgdubai.b-cdn.net)
+# Unused large media kept locally for editing - live site serves video from Cloudflare R2
 new videos to check/
 TOBY MORNING RUN .mp4
 First hero video.mov
@@ -59,9 +59,9 @@ LFG-Coaching-Platform-HANDOFF.md
 IMG_6200.PNG
 464612580_435100992572893_7201260244501341517_n.jpg
 
-# All videos are served from Bunny CDN (lfgdubai.b-cdn.net); no local mp4 ships.
+# Site videos are served from Cloudflare R2 (free tier, no egress charge); no local mp4 ships.
 *.mp4
-# Exception: the padel-night loop ships from Vercel until it gets a Bunny slot
-# (no Bunny credentials on this machine; swap the URL + re-ignore when uploaded).
+# Exception: the padel-night loop still ships from Vercel. Moving it to R2 would
+# save ~8MB of Vercel bandwidth per cold view; it works as-is, so it is left alone.
 !app-assets/padel-live.mp4
 *.docx
