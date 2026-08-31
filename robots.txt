@@ -6,6 +6,7 @@ Disallow: /account
 Disallow: /admin
 Disallow: /login
 Disallow: /register
+Disallow: /gate
 Disallow: /api/
 
 # AI / answer-engine crawlers — explicitly welcomed (GEO)

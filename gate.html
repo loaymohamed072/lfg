@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Gate · LFG Run</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<link rel="icon" type="image/png" href="/lfg-logo.png">
+<meta name="theme-color" content="#0A0A0A">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* The door board. One thumb, outdoors, at night, on mobile data.
+     Everything is sized to be read at arm's length, and paid/unpaid never rests
+     on colour alone: each state carries its own word, its own glyph and its own
+     6px edge bar. Deliberately no imagery and no decorative ground - this is a
+     utility screen a volunteer waits for on a gate connection, so every byte and
+     every repaint has to earn itself. Brand tokens (Barlow / Barlow Condensed,
+     #0A0A0A / #999966 / #e0655e) are the LFG playbook's, unchanged. */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0A0A0A;
+    --line: rgba(255,255,255,0.12);
+    --muted: rgba(255,255,255,0.58);
+    --olive: #999966;
+    --coral: #e0655e;
+    --ease: cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    background: var(--bg); color: #fff; font-family: 'Barlow', sans-serif;
+    min-height: 100vh; min-height: 100dvh; -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  .g-hidden { display: none !important; }
+
+  /* ---------- the one button primitive ---------- */
+  .g-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    min-height: 52px; padding: 14px 22px; width: 100%;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 15px;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    background: var(--olive); color: #0A0A0A; border: 1px solid var(--olive);
+    border-radius: 4px; cursor: pointer; text-decoration: none;
+    transition: background .18s var(--ease), transform .12s var(--ease), opacity .18s var(--ease);
+  }
+  .g-btn:hover { background: #fff; border-color: #fff; }
+  .g-btn:active { transform: scale(0.98); background: #cfcfa8; }
+  .g-btn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+  .g-btn[disabled] { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .g-btn.ghost { background: transparent; color: rgba(255,255,255,0.82); border-color: var(--line); }
+  .g-btn.ghost:hover { color: #fff; border-color: #fff; background: transparent; }
+  .g-btn.ghost:active { background: rgba(255,255,255,0.08); }
+  .g-btn.small { width: auto; min-height: 44px; padding: 10px 16px; font-size: 13px; }
+  /* Pending: the label changes AND a ring spins, so a slow gate connection still
+     proves the tap landed. */
+  .g-btn.is-pending::before {
+    content: ''; width: 15px; height: 15px; border: 2px solid currentColor;
+    border-top-color: transparent; border-radius: 50%; animation: gSpin .7s linear infinite;
+  }
+  @keyframes gSpin { to { transform: rotate(360deg); } }
+
+  /* ---------- invalid link / who's on the door ---------- */
+  .g-centre { min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .g-card { width: 100%; max-width: 420px; background: rgba(255,255,255,0.04);
+    border: 1px solid var(--line); border-radius: 8px; padding: 30px 24px; }
+  .g-mark { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 24px;
+    letter-spacing: 0.3em; text-transform: uppercase; text-align: center; color: var(--olive); margin-bottom: 20px; }
+  .g-eyebrow { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 0.32em;
+    text-transform: uppercase; color: var(--muted); text-align: center; margin-bottom: 8px; }
+  .g-h { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 32px; line-height: 1;
+    text-transform: uppercase; text-align: center; margin-bottom: 22px; }
+  .g-lbl { display: block; font-family: 'Barlow Condensed', sans-serif; font-size: 11px;
+    letter-spacing: 0.24em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .g-input { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid var(--line);
+    color: #fff; font: inherit; font-size: 16px; padding: 13px 12px; border-radius: 4px; margin-bottom: 16px; }
+  .g-input::placeholder { color: rgba(255,255,255,0.38); }
+  .g-input:focus-visible { outline: none; border-color: var(--olive); box-shadow: 0 0 0 2px rgba(153,153,102,0.45); }
+  .g-msg { font-size: 14px; line-height: 1.5; margin-bottom: 14px; }
+  .g-msg.err { color: var(--coral); }
+  .g-msg:empty { display: none; }
+  .g-note { font-size: 15px; color: var(--muted); line-height: 1.6; text-align: center; }
+  /* The door-team picker: one full-width tap per name, sized for a thumb outdoors. */
+  .g-who-list { display: grid; gap: 8px; margin-top: 4px; }
+
+  /* ---------- board ---------- */
+  .g-top { position: sticky; top: 0; z-index: 5; background: var(--bg);
+    border-bottom: 1px solid var(--line); padding: 10px 14px 12px;
+    padding-top: calc(10px + env(safe-area-inset-top)); }
+  .g-toprow { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+  .g-run { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--muted); min-width: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .g-run b { color: #fff; font-weight: 600; }
+  .g-counts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .g-count { border: 1px solid var(--line); border-radius: 4px; padding: 8px 10px; }
+  .g-count .k { display: block; font-family: 'Barlow Condensed', sans-serif; font-size: 10px;
+    letter-spacing: 0.24em; text-transform: uppercase; color: var(--muted); }
+  .g-count .v { font-family: 'Barlow Condensed', sans-serif; font-size: 34px; font-weight: 700; line-height: 1.05; }
+  .g-count.owing { border-color: var(--coral); background: rgba(224,101,94,0.1); }
+  .g-count.owing .v, .g-count.owing .k { color: var(--coral); }
+  .g-search { margin-top: 10px; margin-bottom: 0; }
+
+  .g-banner { margin: 10px 14px 0; padding: 11px 12px; border-radius: 4px; font-size: 14px; line-height: 1.45;
+    border: 1px solid var(--coral); background: rgba(224,101,94,0.1); color: var(--coral); }
+
+  .g-list { list-style: none; padding: 6px 14px 0; }
+  .g-row { position: relative; display: flex; align-items: center; gap: 12px;
+    padding: 14px 12px 14px 10px; border: 1px solid var(--line);
+    border-left: 6px solid var(--olive); border-radius: 4px; margin-bottom: 8px; }
+  .g-row.owing { border-color: var(--coral); border-left-width: 6px; background: rgba(224,101,94,0.09); }
+  .g-row-main { flex: 1; min-width: 0; }
+  .g-name { font-size: 21px; font-weight: 600; line-height: 1.2; overflow-wrap: anywhere; }
+  .g-sub { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--muted); margin-top: 3px; }
+  .g-tag { flex: none; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px;
+    letter-spacing: 0.14em; text-transform: uppercase; padding: 8px 11px; border-radius: 3px;
+    background: var(--olive); color: #0A0A0A; white-space: nowrap; }
+  .g-tag.owing { background: var(--coral); }
+  /* The one moment of boldness on this page: a runner who just walked through the
+     gate announces itself once, then the row goes quiet. Animated as the OPACITY of
+     an overlay layer, so nothing repaints the row itself. */
+  .g-row.is-new::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none; border-radius: 2px;
+    background: #fff; opacity: 0; animation: gArrive 1.9s var(--ease) 1;
+  }
+  .g-row.owing.is-new::after { background: var(--coral); }
+  @keyframes gArrive { 0%, 35% { opacity: 0.26; } 100% { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) {
+    /* Same information, no movement: the flash becomes a flat tint that simply
+       clears on the next poll. */
+    .g-row.is-new::after { animation: none; opacity: 0.16; }
+    .g-btn { transition: none; }
+    .g-btn:active { transform: none; }
+    .g-btn.is-pending::before { animation: none; }
+  }
+
+  .g-state { padding: 40px 24px; text-align: center; color: var(--muted); font-size: 15px; line-height: 1.6; }
+
+  /* Bottom bar: what a thumb reaches for, kept clear of the list. */
+  .g-bottom { position: sticky; bottom: 0; z-index: 5; background: var(--bg);
+    border-top: 1px solid var(--line); padding: 10px 14px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
+  .g-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    margin-top: 9px; font-family: 'Barlow Condensed', sans-serif; font-size: 11px;
+    letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255,255,255,0.45); }
+  .g-foot button { display: inline-flex; align-items: center; min-height: 44px; background: none; border: none;
+    color: rgba(255,255,255,0.45); font: inherit; letter-spacing: inherit; text-transform: inherit;
+    cursor: pointer; padding: 0 2px; text-decoration: underline; }
+  .g-foot button:active { color: #fff; }
+  .g-foot button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+  /* ---------- mark-someone-in: a view of its own, not a modal ---------- */
+  .g-find { padding: 14px; padding-top: calc(14px + env(safe-area-inset-top)); }
+  .g-find-h { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+  .g-find-h h2 { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em; }
+  .g-hit { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--line);
+    border-radius: 4px; margin-bottom: 8px; }
+  .g-hit-name { flex: 1; min-width: 0; font-size: 18px; font-weight: 600; overflow-wrap: anywhere; }
+</style>
+</head>
+<body>
+
+<!-- Boot: the first board read decides whether the link is good. -->
+<div id="boot" class="g-centre"><p class="g-state">Loading the gate…</p></div>
+
+<!-- No key, or a wrong/rotated one. Deliberately says nothing about what lives
+     here and holds zero runner data. -->
+<section id="invalid" class="g-centre g-hidden">
+  <div class="g-card">
+    <p class="g-mark">LFG</p>
+    <p class="g-eyebrow">Run Gate</p>
+    <h1 class="g-h">Link not valid</h1>
+    <p class="g-note">This link is not valid, ask Ahmed or Loay for the current one.</p>
+  </div>
+</section>
+
+<!-- The shared link carries no identity, so attribution is bookkeeping: one tap
+     says who is holding the phone tonight, remembered on this device, changeable
+     from the board header. A label, not a login. -->
+<section id="who" class="g-centre g-hidden">
+  <div class="g-card">
+    <p class="g-mark">LFG</p>
+    <p class="g-eyebrow">Run Gate</p>
+    <h1 class="g-h">Who's on the door tonight?</h1>
+    <div class="g-who-list" id="who-list"></div>
+  </div>
+</section>
+
+<!-- The board. -->
+<main id="board" class="g-hidden">
+  <header class="g-top">
+    <div class="g-toprow">
+      <p class="g-run" id="g-run">Tonight's run</p>
+      <button type="button" class="g-btn ghost small" id="g-who-btn" title="Change who's on the door">Door: —</button>
+    </div>
+    <div class="g-counts">
+      <div class="g-count"><span class="k">Checked in</span><span class="v" id="g-in">0</span></div>
+      <div class="g-count" id="g-unpaid-box"><span class="k">Not paid</span><span class="v" id="g-unpaid">0</span></div>
+    </div>
+    <label class="g-lbl g-hidden" for="g-filter">Search the board</label>
+    <input class="g-input g-search" type="search" id="g-filter" placeholder="Search a name"
+           autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
+  </header>
+
+  <p class="g-banner g-hidden" id="g-banner" role="status"></p>
+
+  <p class="g-state g-hidden" id="g-empty">Nobody has checked in yet.<br>Names appear the second someone scans the QR.</p>
+  <p class="g-state g-hidden" id="g-nohits">Nobody on the board matches that.</p>
+  <ul class="g-list" id="g-list"></ul>
+
+  <div class="g-bottom">
+    <button type="button" class="g-btn ghost" id="g-open-find">+ Mark someone in</button>
+    <div class="g-foot">
+      <span id="g-updated">Updating…</span>
+      <button type="button" id="g-refresh">Refresh now</button>
+    </div>
+  </div>
+</main>
+
+<!-- Manual arrival, so the phone's Back gesture closes it. -->
+<section id="find" class="g-find g-hidden">
+  <div class="g-find-h">
+    <button type="button" class="g-btn ghost small" id="find-back">&larr; Back</button>
+    <h2>Mark someone in</h2>
+  </div>
+  <label class="g-lbl" for="find-q">Their name</label>
+  <input class="g-input" type="search" id="find-q" placeholder="Type at least 2 letters"
+         autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="search">
+  <p class="g-msg" id="find-msg" role="status"></p>
+  <div id="find-results"></div>
+</section>
+
+<script>
+(function () {
+  var el = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]; }); }
+  function show(id) { el(id).classList.remove('g-hidden'); }
+  function hide(id) { el(id).classList.add('g-hidden'); }
+
+  // Every async button goes through this, so a tap always visibly registers.
+  function pending(btn, on, label) {
+    if (on) { btn.dataset.label = btn.textContent; btn.textContent = label; btn.classList.add('is-pending'); btn.disabled = true; }
+    else { btn.textContent = btn.dataset.label || btn.textContent; btn.classList.remove('is-pending'); btn.disabled = false; }
+  }
+
+  // ---------- the front door: a capability link ----------
+  // Owner's call (2026-08-31): no sign-in on this page. The secret link IS the
+  // authorization - /gate?k=<token>, held in memory, sent as X-Gate-Key on every
+  // call, verified server-side against event_config.gate_token. A missing key or
+  // a 401 (wrong/rotated token) lands on the invalid-link card with zero runner
+  // data in the DOM. Rotating the token is one UPDATE on the server, no redeploy.
+  var KEY = '';
+  try { KEY = new URLSearchParams(location.search).get('k') || ''; } catch (e) {}
+
+  var linkDead = false;
+  function showInvalid() {
+    linkDead = true;
+    stopPolling();
+    rows = []; board = {}; knownIds = null; newIds = {};
+    el('g-list').innerHTML = '';
+    el('find-results').innerHTML = '';
+    hide('boot'); hide('board'); hide('find'); hide('who');
+    show('invalid');
+  }
+
+  // Plain fetch with the gate key. Same { ok, status, data } shape the old
+  // window.lfg.api returned, so the board code below is untouched.
+  async function api(path, options) {
+    options = options || {};
+    var headers = Object.assign({ 'Content-Type': 'application/json', 'X-Gate-Key': KEY }, options.headers || {});
+    try {
+      var res = await fetch(path, Object.assign({}, options, { headers: headers }));
+      var body = null;
+      try { body = await res.json(); } catch (e) { /* non-json */ }
+      return { ok: res.ok, status: res.status, data: body };
+    } catch (e) {
+      return { ok: false, status: 0, data: null };
+    }
+  }
+
+  // ---------- who's on the door ----------
+  // The shared link destroyed marked_by attribution, so it is replaced with
+  // bookkeeping: one tap picks tonight's volunteer from the flagged list the
+  // server sends, remembered per device. A label the server re-checks, never a
+  // permission - see /api/staff/mark-arrived.
+  var who = null, staffList = [];
+  try { who = JSON.parse(localStorage.getItem('lfg_gate_who') || 'null'); } catch (e) { who = null; }
+
+  function whoIsValid() {
+    if (!who || !who.id) return false;
+    // A volunteer unflagged since the last visit must re-pick, not keep the label.
+    return staffList.some(function (s) { return s.id === who.id; });
+  }
+  function whoLabel() {
+    el('g-who-btn').textContent = 'Door: ' + (who && who.name ? who.name : '—');
+  }
+  function openWho() {
+    el('who-list').innerHTML = staffList.map(function (s) {
+      return '<button type="button" class="g-btn ghost" data-id="' + esc(s.id) + '">' + esc(s.name) + '</button>';
+    }).join('') || '<p class="g-note">No door volunteers are set up yet. Ask Loay.</p>';
+    hide('board'); hide('find'); show('who');
+  }
+  el('who-list').addEventListener('click', function (e) {
+    var btn = e.target.closest('button[data-id]'); if (!btn) return;
+    var id = btn.getAttribute('data-id');
+    var s = null;
+    staffList.forEach(function (x) { if (x.id === id) s = x; });
+    if (!s) return;
+    who = { id: s.id, name: s.name };
+    try { localStorage.setItem('lfg_gate_who', JSON.stringify(who)); } catch (e2) {}
+    whoLabel();
+    hide('who'); show('board');
+    load(false);
+  });
+  el('g-who-btn').addEventListener('click', openWho);
+
+  (async function boot() {
+    if (!KEY) { showInvalid(); return; }
+    var r = await api('/api/staff/run-board');
+    if (r.status === 401 || r.status === 403 || r.status === 429) { showInvalid(); return; }
+    hide('boot');
+    if (r.ok && r.data) {
+      staffList = r.data.staff || [];
+      render(r.data);
+      whoLabel();
+      if (!whoIsValid()) { who = null; whoLabel(); openWho(); }
+      else show('board');
+    } else {
+      show('board');
+      banner('Could not load the board. Retrying…');
+    }
+    startPolling();
+  })();
+
+  // ---------- the board ----------
+  var rows = [], knownIds = null, newIds = {}, filter = '', pollTimer = null, board = {};
+
+  function banner(text) {
+    var b = el('g-banner');
+    if (!text) { b.classList.add('g-hidden'); return; }
+    b.textContent = text; b.classList.remove('g-hidden');
+  }
+
+  function timeOf(iso) {
+    if (!iso) return '';
+    return new Date(iso).toLocaleTimeString('en-GB', { timeZone: 'Asia/Dubai', hour: '2-digit', minute: '2-digit' });
+  }
+
+  function render(d) {
+    board = d || {};
+    rows = board.checked_in || [];
+    // The door-team roster rides on every response, so a volunteer flagged or
+    // unflagged mid-evening reaches the picker within one poll.
+    if (board.staff) staffList = board.staff;
+    var s = board.summary || { checked_in: 0, unpaid: 0 };
+
+    var label = board.run_type ? board.run_type.charAt(0).toUpperCase() + board.run_type.slice(1) + ' run' : 'Run';
+    el('g-run').innerHTML = '<b>' + esc(label) + '</b> &middot; ' + esc(board.run_date || '');
+
+    el('g-in').textContent = s.checked_in;
+    // A free run has nothing to owe, so the counter says so rather than lying with a 0.
+    el('g-unpaid').textContent = board.paid_run ? s.unpaid : '—';
+    el('g-unpaid-box').classList.toggle('owing', !!board.paid_run && s.unpaid > 0);
+
+    // Flag genuinely new arrivals, but never on the first paint - the whole list
+    // would flash. knownIds stays null until one render has completed.
+    newIds = {};
+    if (knownIds) rows.forEach(function (p) { if (!knownIds.has(p.member_id)) newIds[p.member_id] = 1; });
+    knownIds = new Set(rows.map(function (p) { return p.member_id; }));
+
+    el('g-updated').textContent = 'Updated ' + timeOf(new Date().toISOString());
+    banner('');
+    paint();
+  }
+
+  function paint() {
+    var q = filter.trim().toLowerCase();
+    var list = q ? rows.filter(function (p) { return String(p.name).toLowerCase().indexOf(q) > -1; }) : rows;
+
+    el('g-empty').classList.toggle('g-hidden', rows.length > 0);
+    el('g-nohits').classList.toggle('g-hidden', !(rows.length > 0 && list.length === 0));
+
+    el('g-list').innerHTML = list.map(function (p) {
+      var owing = board.paid_run && !p.paid;
+      var tag = !board.paid_run ? '<span class="g-tag">IN</span>'
+        : owing ? '<span class="g-tag owing">&#10007; NOT PAID</span>'
+                : '<span class="g-tag">&#10003; PAID</span>';
+      var sub = [timeOf(p.checked_in_at), p.manual ? 'marked in by staff' : ''].filter(Boolean).join(' &middot; ');
+      return '<li class="g-row' + (owing ? ' owing' : '') + (newIds[p.member_id] ? ' is-new' : '') + '">' +
+        '<div class="g-row-main"><p class="g-name">' + esc(p.name) + '</p>' +
+        '<p class="g-sub">' + sub + '</p></div>' + tag + '</li>';
+    }).join('');
+  }
+
+  el('g-filter').addEventListener('input', function () { filter = this.value; paint(); });
+
+  async function load(showPending) {
+    if (linkDead) return; // wake/online handlers keep firing; a dead link stays dark
+    var btn = el('g-refresh');
+    if (showPending) btn.textContent = 'Refreshing…';
+    var r = await api('/api/staff/run-board');
+    if (showPending) btn.textContent = 'Refresh now';
+    // The token was rotated (or this was never the right link): go dark, keep nothing.
+    if (r.status === 401 || r.status === 403) { showInvalid(); return; }
+    if (!r.ok || !r.data) { banner('Lost the connection. Still showing the last list.'); return; }
+    render(r.data);
+  }
+
+  // 5 seconds while the page is in front of the staff member, nothing while it is
+  // hidden, and an immediate read the moment the phone wakes or comes back online.
+  // A door person unlocking their screen must never read stale names.
+  function startPolling() {
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(function () { if (!document.hidden) load(false); }, 5000);
+  }
+  function stopPolling() {
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = null;
+  }
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) load(false); });
+  window.addEventListener('focus', function () { load(false); });
+  window.addEventListener('online', function () { load(false); });
+  window.addEventListener('offline', function () { banner('No connection. Showing the last list.'); });
+  el('g-refresh').addEventListener('click', function () { load(true); });
+
+  // ---------- mark someone in ----------
+  // Its own view with a history entry, so Back closes the panel instead of
+  // leaving the page.
+  function openFind() {
+    hide('board'); show('find');
+    el('find-q').value = ''; el('find-results').innerHTML = ''; el('find-msg').textContent = '';
+    try { history.pushState({ gate: 'find' }, '', '#find'); } catch (e) {}
+    el('find-q').focus();
+  }
+  function closeFind() { hide('find'); show('board'); load(false); }
+  el('g-open-find').addEventListener('click', openFind);
+  el('find-back').addEventListener('click', function () {
+    if (location.hash === '#find') history.back(); else closeFind();
+  });
+  window.addEventListener('popstate', function () {
+    if (!el('find').classList.contains('g-hidden')) closeFind();
+  });
+
+  var findTimer = null;
+  el('find-q').addEventListener('input', function () {
+    var q = this.value.trim();
+    clearTimeout(findTimer);
+    if (q.length < 2) { el('find-results').innerHTML = ''; el('find-msg').textContent = ''; return; }
+    el('find-msg').textContent = 'Searching…';
+    findTimer = setTimeout(function () { search(q); }, 300);
+  });
+
+  async function search(q) {
+    var r = await api('/api/staff/mark-arrived?q=' + encodeURIComponent(q));
+    if (r.status === 401 || r.status === 403) { showInvalid(); return; }
+    if (!r.ok) { el('find-msg').textContent = 'Search failed. Check your signal and try again.'; return; }
+    var hits = (r.data && r.data.results) || [];
+    el('find-msg').textContent = hits.length ? '' : 'Nobody by that name who is not already on the board.';
+    el('find-results').innerHTML = hits.map(function (h) {
+      return '<div class="g-hit"><span class="g-hit-name">' + esc(h.name) + '</span>' +
+        '<button type="button" class="g-btn small" data-id="' + esc(h.member_id) + '">Mark in</button></div>';
+    }).join('');
+  }
+
+  el('find-results').addEventListener('click', async function (e) {
+    var btn = e.target.closest('button[data-id]'); if (!btn) return;
+    el('find-msg').textContent = '';
+    pending(btn, true, 'Marking…');
+    // marked_by is tonight's picked volunteer - attribution, re-verified server-side.
+    var r = await api('/api/staff/mark-arrived', {
+      method: 'POST',
+      body: JSON.stringify({ member_id: btn.getAttribute('data-id'), marked_by: who && who.id ? who.id : null })
+    });
+    if (r.status === 401 || r.status === 403) { showInvalid(); return; }
+    if (!r.ok) {
+      pending(btn, false);
+      // The RPC's own refusal ("Check-in opens 90 minutes before the run", "No LFG
+      // run today") is already plain English, so it is shown as written.
+      el('find-msg').textContent = (r.data && r.data.error) || 'Could not mark them in. Try again.';
+      return;
+    }
+    btn.classList.remove('is-pending');
+    btn.textContent = r.data.already ? 'Already in' : 'Done';
+    el('find-msg').textContent = r.data.name + ' is on the board.';
+    load(false);
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 // Shared serverless helpers for the LFG bootcamp API.
 // Uses the Supabase SERVICE key - server-side only, never shipped to the browser.
+const crypto = require('crypto');
 const { createClient } = require('@supabase/supabase-js');
 
 // Which Postgres schema the app tables live in. The shared/old project isolates LFG in
@@ -193,6 +194,78 @@ async function createGuestMember(db, { name, email, guestOf }) {
 async function isAdmin(db, userId) {
   const { data } = await db.from('members').select('is_admin').eq('id', userId).maybeSingle();
   return !!(data && data.is_admin);
+}
+
+// True if the user is allowed to work the door: a gate volunteer, or an admin
+// (an admin is always allowed everywhere staff are, so nobody has to hold both
+// flags). Used by /api/staff/* so a door volunteer can read the live check-in
+// board without any admin access. Fails closed: if the column or the row is
+// missing the read errors out and this returns false.
+async function isGateStaff(db, userId) {
+  const { data } = await db.from('members').select('is_admin, is_gate_staff').eq('id', userId).maybeSingle();
+  return !!(data && (data.is_admin || data.is_gate_staff));
+}
+
+// ---- gate link access ----
+// The /gate board is a capability URL (owner's decision, 2026-08-31): possession
+// of the secret link IS the authorization. /api/staff/* accepts EITHER a valid
+// admin/gate-staff JWT (the pre-existing path, kept so admin usage still works)
+// OR the shared token in the X-Gate-Key header, compared constant-time against
+// event_config.gate_token. Rotation = one UPDATE on that row, no redeploy.
+//
+// Brute-force damper: a small in-memory per-IP counter. Per-instance and reset
+// on cold start - not a real rate limiter, just enough to make guessing a
+// 256-bit token even more pointless. Never log the token.
+const GATE_FAIL_LIMIT = 20;
+const gateFailBucket = new Map(); // ip -> { n, windowStart }
+
+function gateRateLimited(ip) {
+  const now = Date.now();
+  const b = gateFailBucket.get(ip);
+  if (!b || now - b.windowStart > 60000) { gateFailBucket.set(ip, { n: 0, windowStart: now }); return false; }
+  return b.n >= GATE_FAIL_LIMIT;
+}
+function gateNoteFail(ip) {
+  const b = gateFailBucket.get(ip);
+  if (b) b.n += 1;
+  if (gateFailBucket.size > 5000) gateFailBucket.clear(); // cap memory, worst case resets counters
+}
+
+// Gate for /api/staff/*: returns { db, user } on success (user is null on the
+// token path) or writes the 401/403/429 and returns null.
+async function requireGateAccess(req, res) {
+  // Path 1: JWT - an admin, or a signed-in gate volunteer.
+  const user = await getUser(req);
+  if (user) {
+    const db = admin();
+    if (await isGateStaff(db, user.id)) return { db, user };
+    res.status(403).json({ error: 'Gate staff only' });
+    return null;
+  }
+
+  // Path 2: the shared gate-link token.
+  const supplied = String(req.headers['x-gate-key'] || '');
+  if (!supplied) { res.status(401).json({ error: 'Not authenticated' }); return null; }
+
+  const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim()
+    || (req.socket && req.socket.remoteAddress) || 'unknown';
+  if (gateRateLimited(ip)) { res.status(429).json({ error: 'Too many attempts. Wait a minute.' }); return null; }
+
+  const db = admin();
+  const { data: cfg } = await db.from('event_config').select('gate_token').eq('id', 1).maybeSingle();
+  const stored = cfg && cfg.gate_token ? String(cfg.gate_token) : '';
+
+  let ok = false;
+  if (stored) {
+    const a = Buffer.from(supplied), b = Buffer.from(stored);
+    if (a.length === b.length) ok = crypto.timingSafeEqual(a, b);
+  }
+  if (!ok) {
+    gateNoteFail(ip);
+    res.status(401).json({ error: 'Not authenticated' });
+    return null;
+  }
+  return { db, user: null };
 }
 
 // Whether this admin is allowed to see revenue/money figures. Defaults to TRUE so the
@@ -977,8 +1050,8 @@ module.exports = {
   admin, publicDb, authService,
   canonicalOrigin, buildAuthLink,
   getUser, getAuthUserById,
-  ensureMember, createGuestMember, isAdmin, canViewRevenue,
-  requireAdmin, requireAdminOrCron,
+  ensureMember, createGuestMember, isAdmin, isGateStaff, canViewRevenue,
+  requireAdmin, requireAdminOrCron, requireGateAccess,
   safeError,
   buildMeResponse, formatDate, cancelCutoffOk,
   ownerStats, validatePromoCode, fulfillCheckoutSession,

@@ -52,4 +52,54 @@ async function memberPaidForRun(db, memberId, runDate) {
   return { paid: false, via: null };
 }
 
-module.exports = { memberPaidForRun };
+// Bulk version of the same rule, for a whole run at once: three queries total
+// instead of four per person, which is what a 5-second door poll needs. The order
+// and the thresholds are identical to memberPaidForRun above (direct -> linked
+// name -> linked phone -> host), so the door board and the runner nudge can never
+// disagree about who owes.
+//
+// Also hands back the members it already loaded, so a caller that needs names
+// doesn't fetch the table twice.
+// Returns { members: { id: { id, full_name, is_admin } }, isPaid(memberId) -> bool }.
+async function buildRunPaidIndex(db, runDate) {
+  const [payRes, memRes, regRes] = await Promise.all([
+    db.from('payments').select('member_id, status').eq('kind', 'run').eq('run_date', runDate),
+    db.from('members').select('id, full_name, is_admin'),
+    db.from('run_registrations').select('member_id, whatsapp_e164')
+  ]);
+
+  const members = {};
+  (memRes.data || []).forEach(m => { members[m.id] = m; });
+
+  // First row that carries a number wins, same as the admin board.
+  const phoneByMember = {};
+  (regRes.data || []).forEach(r => {
+    if (r.member_id && r.whatsapp_e164 && !phoneByMember[r.member_id]) {
+      phoneByMember[r.member_id] = normPhone(r.whatsapp_e164);
+    }
+  });
+
+  const paidIds = new Set(), paidNames = new Set(), paidPhones = new Set();
+  (payRes.data || []).forEach(p => {
+    if (!p.member_id || p.status !== 'paid') return;
+    paidIds.add(p.member_id);
+    const nm = normName(members[p.member_id] && members[p.member_id].full_name);
+    if (nm && nm.indexOf(' ') > -1) paidNames.add(nm);   // 2+ word names only
+    const ph = phoneByMember[p.member_id];
+    if (ph && ph.length >= 8) paidPhones.add(ph);
+  });
+
+  function isPaid(memberId) {
+    if (paidIds.has(memberId)) return true;
+    const m = members[memberId] || {};
+    const nm = normName(m.full_name);
+    if (nm && paidNames.has(nm)) return true;
+    const ph = phoneByMember[memberId];
+    if (ph && ph.length >= 8 && paidPhones.has(ph)) return true;
+    return !!m.is_admin;
+  }
+
+  return { members, isPaid };
+}
+
+module.exports = { memberPaidForRun, buildRunPaidIndex };
