@@ -41,6 +41,27 @@ const QUIZ = {
   self: ['beginner', 'improver', 'intermediate', 'advanced']
 };
 
+// Same normalizer the run check-in uses, so one person's number is stored the
+// same way whichever form they came through. A local 05X becomes +9715X; an
+// already-international number passes through untouched.
+function cleanPhone(v) {
+  if (v === undefined || v === null) return null;
+  const raw = String(v).trim();
+  if (!raw) return null;
+  // Strip spaces, dashes and brackets FIRST, including on an international
+  // number: "+44 7700 900123" is how people actually type a foreign mobile,
+  // and rejecting it on the spaces blocked every non-UAE player.
+  let s;
+  if (raw.charAt(0) === '+') {
+    s = '+' + raw.slice(1).replace(/[^\d]/g, '');
+  } else {
+    const d = raw.replace(/[^\d]/g, '').replace(/^0+/, '');
+    if (!d) return null;
+    s = d.indexOf('971') === 0 ? '+' + d : '+971' + d;
+  }
+  return /^\+\d{8,16}$/.test(s) ? s : null;
+}
+
 function computeLevel(answers) {
   if (!answers || typeof answers !== 'object') return null;
   let score = 0;
@@ -122,6 +143,38 @@ module.exports = async (req, res) => {
       }
     } else if (buyerIsIn) {
       return res.status(409).json({ already_paid: true, error: "You're already in for this night. See you on court." });
+    }
+
+    // Phone gate. Padel collected a name and an email and nothing else, so a
+    // paid player could be unreachable on game day — which is exactly what
+    // happened on 31 Aug, when 13 of 18 players on court had no number anywhere
+    // in the database. A spot is a physical booking: if the court moves, the
+    // time shifts or someone has to be told they are off the list, email is not
+    // good enough.
+    //
+    // Asked ONCE and only of players we have no number for. Anyone who already
+    // gave one (run check-in, coaching, an earlier padel booking) is never
+    // asked again. Saved before checkout starts, so an abandoned payment still
+    // leaves us able to reach them.
+    //
+    // The buyer's number covers a guest spot too: the friend has no account and
+    // the buyer is the one we would call about their spot.
+    if (!forGuest) {
+      const { data: meRow } = await db.from('members')
+        .select('phone').eq('id', memberId).maybeSingle();
+      const known = meRow && String(meRow.phone || '').trim();
+      if (!known) {
+        const given = cleanPhone(body.phone);
+        if (!given) {
+          // No side effects: the drawer renders the phone step and calls back.
+          return res.status(200).json({ needs_phone: true });
+        }
+        const { error: phErr } = await db.from('members')
+          .update({ phone: given }).eq('id', memberId);
+        if (phErr) {
+          return safeError(res, 'padel-pay', phErr, 'Could not save your number. Try again.');
+        }
+      }
     }
 
     // Capacity gate: count PAID signups only; pending checkouts don't hold spots.

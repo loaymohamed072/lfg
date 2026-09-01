@@ -569,7 +569,7 @@
   var retryMode = 'pay';
   var successMode = 'paid';
 
-  var PANELS = ['pdStepPreview', 'pdStepLogin', 'pdStepGuest', 'pdStepQuiz', 'pdStepPay', 'pdStepSuccess', 'pdStepSoldout'];
+  var PANELS = ['pdStepPreview', 'pdStepLogin', 'pdStepGuest', 'pdStepQuiz', 'pdStepPhone', 'pdStepPay', 'pdStepSuccess', 'pdStepSoldout'];
   function showPanel(id) {
     PANELS.forEach(function (p) { var n = el(p); if (n) n.hidden = (p !== id); });
     if (drawer) drawer.classList.toggle('pd-wide', id === 'pdStepPay');
@@ -598,6 +598,7 @@
     if (step === 'login') renderLogin();
     else if (step === 'guest') renderGuest();
     else if (step && step.indexOf('quiz:') === 0) renderQuiz(parseInt(step.slice(5), 10));
+    else if (step === 'phone') renderPhone();
     else if (step === 'pay') renderPay();
     else if (step === 'success') renderSuccess();
     else if (step === 'soldout') renderSoldout();
@@ -695,6 +696,58 @@
     if (topStep() === 'pay') replaceStep('quiz:' + idx);
     else pushStep('quiz:' + idx);
   }
+  /* ---------- step: phone (asked once, only when we have no number) ----------
+     Server-gated exactly like the quiz: /api/padel-pay answers needs_phone and
+     this renders, so a player who already gave a number on the run form or as a
+     coaching client is never asked again. */
+  var phoneGiven = null;
+
+  // UAE default, copied from the run check-in so both forms store the same
+  // shape: a local 05X becomes +9715X, anything already international is left
+  // alone.
+  function toE164(v) {
+    var s = String(v || '').trim();
+    // An international number keeps its country code but loses its spacing:
+    // "+44 7700 900123" has to reach the server as +447700900123 or the
+    // server-side check rejects it and the player cannot book at all.
+    if (s.charAt(0) === '+') return '+' + s.slice(1).replace(/[^\d]/g, '');
+    var d = s.replace(/[^\d]/g, '').replace(/^0+/, '');
+    if (!d) return '';
+    if (d.indexOf('971') === 0) return '+' + d;
+    return '+971' + d;
+  }
+
+  function toPhone() {
+    if (topStep() === 'pay') replaceStep('phone');
+    else pushStep('phone');
+  }
+
+  function renderPhone() {
+    showPanel('pdStepPhone');
+    hideErr('pdPhoneErr');
+    var input = el('pdPhoneInput');
+    if (input) setTimeout(function () { try { input.focus(); } catch (e) {} }, 60);
+  }
+
+  var phoneNext = el('pdPhoneNext');
+  if (phoneNext) phoneNext.addEventListener('click', function () {
+    if (inflight) return;
+    var input = el('pdPhoneInput');
+    var e164 = toE164(input && input.value);
+    if (!/^\+\d{8,16}$/.test(e164)) {
+      showErr('pdPhoneErr', 'Enter a mobile number we can reach you on, like 050 123 4567.');
+      return;
+    }
+    hideErr('pdPhoneErr');
+    phoneGiven = e164;
+    pushStep('pay');
+    startPay({ authed: true, btn: phoneNext });
+  });
+  var phoneInput = el('pdPhoneInput');
+  if (phoneInput) phoneInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); if (phoneNext) phoneNext.click(); }
+  });
+
   /* ---------- step: bring a friend ---------- */
   function renderGuest() {
     showPanel('pdStepGuest');
@@ -829,13 +882,14 @@
       var payload = {};
       if (body.answers) payload.answers = body.answers;
       if (body.guest) payload.guest = body.guest;
+      if (body.phone) payload.phone = body.phone;
       return window.lfg.api('/api/padel-pay', { method: 'POST', body: JSON.stringify(payload) })
         .then(function (r) { return { status: r.status, data: r.data }; });
     }
     return fetch('/api/padel-pay', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ answers: body.answers || undefined, guest: body.guest || undefined })
+      body: JSON.stringify({ answers: body.answers || undefined, guest: body.guest || undefined, phone: body.phone || undefined })
     }).then(function (res) {
       return res.json().catch(function () { return null; }).then(function (data) {
         return { status: res.status, data: data };
@@ -867,7 +921,8 @@
           authed: !!opts.authed,
           email: opts.email,
           answers: answersComplete() ? answerBag() : undefined,
-          guest: guest ? { name: guest.name, email: guest.email || undefined } : undefined
+          guest: guest ? { name: guest.name, email: guest.email || undefined } : undefined,
+          phone: phoneGiven || undefined
         });
       } catch (e) {
         stepError('Network error starting the booking. Check your connection and try again.');
@@ -891,6 +946,7 @@
       }
       if (status === 409 && data.already_paid) { showSuccessStep('already'); return; }
       if (data.needs_questionnaire) { toQuiz(); return; }
+      if (data.needs_phone) { toPhone(); return; }
       if (data.preview) { showPreviewPay(); return; }
       if (!data.client_secret || !data.publishable_key) {
         stepError((data && data.error) || 'Could not start payment. Try again or message us on WhatsApp.');

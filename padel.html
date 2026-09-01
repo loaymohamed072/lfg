@@ -370,6 +370,22 @@
     <button type="button" class="pd-btn" id="pdGuestNext">Set their level</button>
   </div>
 
+  <!-- STEP: phone — asked once, and only of players we have no number for.
+       A padel spot is a physical booking: courts move, times shift, and a
+       player who has to be told they are off the list cannot be reached by
+       email on a Sunday night. -->
+  <div class="pd-dstep" id="pdStepPhone" hidden>
+    <span class="pd-kicker">One last thing</span>
+    <h3>What's your number?</h3>
+    <p>So we can reach you if the court moves or the game changes on the night.
+      We only ask once.</p>
+    <label class="pd-glabel" for="pdPhoneInput">Mobile</label>
+    <input type="tel" id="pdPhoneInput" class="pd-ginput" inputmode="tel"
+      autocomplete="tel" placeholder="05X XXX XXXX" maxlength="20">
+    <p class="pd-derror" id="pdPhoneErr" hidden></p>
+    <button type="button" class="pd-btn" id="pdPhoneNext">Continue to payment</button>
+  </div>
+
   <!-- STEP: pay (Stripe embedded checkout) -->
   <div class="pd-dstep" id="pdStepPay" hidden>
     <span class="pd-kicker">Lock it in</span>
@@ -405,7 +421,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.1"></script>
 <script src="/app-assets/lfg-supabase.js?v=3"></script>
-<script src="/app-assets/lfg-padel-page.js?v=13" defer></script>
+<script src="/app-assets/lfg-padel-page.js?v=14" defer></script>
 <script>
   // keep the drawer's date in sync with the booking strip
   window.addEventListener('DOMContentLoaded', function () {
