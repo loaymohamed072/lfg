@@ -65,3 +65,22 @@ IMG_6200.PNG
 # save ~8MB of Vercel bandwidth per cold view; it works as-is, so it is left alone.
 !app-assets/padel-live.mp4
 *.docx
+
+# Internal material that was being SERVED PUBLICLY (found 2026-09-05). Every path
+# below answered 200 on lfgdubai.com, and robots.txt allows crawling: the August
+# revenue and partner traction reports, the WhatsApp team guide, a meeting
+# transcript, the security review, and the SQL migrations (schema + table names).
+#
+# The list above this block names files one at a time, so every new internal doc
+# shipped by default and nobody noticed. These rules exclude by TYPE and by
+# DIRECTORY instead, which is what actually stops the next one. Nothing here is
+# read at runtime and no page links to it — checked before adding.
+analytics-*
+sql
+data
+lfg-coach-mcp
+Coaching testimonials
+*.md
+*.rtf
+*.rtfd
+*.py

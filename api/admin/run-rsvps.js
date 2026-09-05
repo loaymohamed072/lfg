@@ -41,6 +41,13 @@ module.exports = async (req, res) => {
       .eq('attending', true)
       .order('run_date', { ascending: true });
     if (runDate) q = q.eq('run_date', runDate);
+    // Upcoming only, filtered HERE and not in the browser. PostgREST caps every
+    // response at 1000 rows, and this query sorts oldest-first, so once the table
+    // passed 1000 attending rows (26 Aug 2026) the newest runs — the only ones the
+    // dashboard shows — were the rows being dropped. The roster card then saw an
+    // empty list and hid itself. The caller already discarded past runs, so this
+    // filter changes nothing except which rows survive the cap.
+    else q = q.gte('run_date', dubaiYMD(new Date()));
     const { data: rsvps, error } = await q;
     if (error) return res.status(500).json({ error: error.message });
 

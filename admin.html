@@ -3500,7 +3500,16 @@
         var lbl = new Date(g.run_date + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
         return '<option value="' + g.run_date + '">' + lbl + '</option>';
       }).join('');
-      paidRunsDate = paidRunsData.length ? paidRunsData[0].run_date : '';
+      // Default to the most recent run that has actually happened. The list is
+      // newest-first, so a single early payment for a future run used to take the
+      // top slot and open this pane on one payer, which read as "the paid runs
+      // are gone". Future dates stay in the dropdown, just not preselected.
+      var todayDubai = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dubai', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+      var lastHeld = null;
+      for (var pi = 0; pi < paidRunsData.length; pi++) {
+        if (paidRunsData[pi].run_date <= todayDubai) { lastHeld = paidRunsData[pi].run_date; break; }
+      }
+      paidRunsDate = lastHeld || (paidRunsData.length ? paidRunsData[0].run_date : '');
       sel.value = paidRunsDate;
       if (!sel._wired) { sel._wired = true; sel.addEventListener('change', function () { paidRunsDate = sel.value; renderPaidRuns(); }); }
     }

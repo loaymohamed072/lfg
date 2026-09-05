@@ -529,6 +529,25 @@ async function validatePromoCode(db, rawCode, originalAmountAed, userEmail) {
 function sectionCapN(total, idx, n) { return Math.floor(total / n) + (idx < (total % n) ? 1 : 0); }
 function stationLabelsN(n) { const o = []; for (let i = 0; i < (n || 4); i++) o.push(String.fromCharCode(65 + i)); return o; }
 
+// PostgREST answers with at most 1000 rows and says nothing about the rest, so a
+// growing table quietly starts returning a partial answer. That is how the run
+// roster emptied itself in Aug 2026. Use this wherever a query has no natural
+// ceiling: it pages until the last page comes back short. On error it returns the
+// rows gathered so far, because every caller here already treats a failed read as
+// "no data" rather than crashing the dashboard. Give the query a stable .order():
+// paging an unordered result can repeat or skip rows between pages.
+async function fetchAllRows(makeQuery, pageSize = 1000) {
+  const out = [];
+  for (let from = 0; from < 200000; from += pageSize) {
+    const { data, error } = await makeQuery().range(from, from + pageSize - 1);
+    if (error) return { data: out, error };
+    const rows = data || [];
+    for (const r of rows) out.push(r);
+    if (rows.length < pageSize) break;
+  }
+  return { data: out, error: null };
+}
+
 // Owner dashboard rollup: totals, per-member rows, upcoming session fill. Shared by stats + CSV export.
 async function ownerStats(db) {
   const now = new Date();
@@ -536,7 +555,13 @@ async function ownerStats(db) {
     db.from('members').select('id,email,full_name,created_at,is_admin'),
     db.from('member_packages').select('member_id,sessions_total,sessions_remaining,status,expires_at'),
     db.from('bookings').select('member_id,session_id,section,status,booked_at'),
-    db.from('payments').select('member_id,amount_aed,status,created_at').eq('status', 'paid'),
+    // Lifetime spend per member, so this one genuinely needs every paid row: it was
+    // at 911 of the 1000-row ceiling in Sep 2026 and would have started understating
+    // revenue without a word. Paged rather than date-capped.
+    // The id sort is load-bearing: paging an unordered query can repeat or skip
+    // rows between pages. Order is irrelevant to the sums below.
+    fetchAllRows(() => db.from('payments').select('member_id,amount_aed,status,created_at')
+      .eq('status', 'paid').order('id', { ascending: true })),
     db.from('sessions').select('id,session_date,start_time,location,capacity,status,stations,photo_url')
       .gte('session_date', new Date(now.toDateString()).toISOString().slice(0, 10)).order('session_date'),
     pointsByMember(db)
