@@ -460,14 +460,30 @@
   }
   loadBoard();
 
+  // The status call is kept as a promise so a tap that lands before it
+  // answers can wait on it. Before this, an early tap on a slow phone opened
+  // the "bookings not open" preview with a hardcoded price while the server
+  // had the real one; a client saw 99 where the admin said 120 (2026-09-05).
+  var statusReq = null;
+  var statusFailed = false;
+  function loadStatus() {
+    statusFailed = false;
+    statusReq = fetch('/api/padel-status')
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (d && d.enabled) goLive(d);
+        else if (!d) statusFailed = true;
+        return d;
+      })
+      .catch(function () { statusFailed = true; return null; });
+    return statusReq;
+  }
+
   if (param('pdpreview') === '1') {
     PREVIEW_PAY = true;
     goLive(mockStatus());
   } else {
-    fetch('/api/padel-status')
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (d) { if (d && d.enabled) goLive(d); })
-      .catch(function () { /* preview state stays */ });
+    loadStatus();
   }
 
   function goLive(d) {
@@ -565,11 +581,12 @@
   var scrim = el('pdScrim');
   var closeBtn = el('pdDrawerClose');
   var inflight = false;
+  var openToken = 0;        // latest openDrawer() call; a stale status wait must not repaint
   var embedded = null, paySession = null;
   var retryMode = 'pay';
   var successMode = 'paid';
 
-  var PANELS = ['pdStepPreview', 'pdStepLogin', 'pdStepGuest', 'pdStepQuiz', 'pdStepPhone', 'pdStepPay', 'pdStepSuccess', 'pdStepSoldout'];
+  var PANELS = ['pdStepLoading', 'pdStepStatusErr', 'pdStepPreview', 'pdStepLogin', 'pdStepGuest', 'pdStepQuiz', 'pdStepPhone', 'pdStepPay', 'pdStepSuccess', 'pdStepSoldout'];
   function showPanel(id) {
     PANELS.forEach(function (p) { var n = el(p); if (n) n.hidden = (p !== id); });
     if (drawer) drawer.classList.toggle('pd-wide', id === 'pdStepPay');
@@ -627,7 +644,22 @@
     scrim.classList.add('open');
     if (closeBtn) closeBtn.focus();
     stack = [];
-    if (!live || !STATUS) { showPanel('pdStepPreview'); return; }
+    if (!live || !STATUS) {
+      if (statusFailed || !statusReq) { showPanel('pdStepStatusErr'); return; }
+      // Still waiting on /api/padel-status: hold on the loading panel, then
+      // route for real. 8s is past any healthy answer; after that it is an
+      // error with a retry, never the preview.
+      showPanel('pdStepLoading');
+      var token = ++openToken;
+      var timeout = new Promise(function (resolve) { setTimeout(function () { resolve('timeout'); }, 8000); });
+      Promise.race([statusReq, timeout]).then(function (r) {
+        if (token !== openToken || !drawer.classList.contains('open')) return;
+        if (live && STATUS) { openDrawer(); return; }
+        if (r === 'timeout') statusFailed = true;
+        showPanel(statusFailed ? 'pdStepStatusErr' : 'pdStepPreview');
+      });
+      return;
+    }
     if (!(STATUS.spots_left > 0)) { pushStep('soldout'); return; }
     if (session) {
       // Logged-in member: no email step, straight to checkout (Bearer).
@@ -661,6 +693,12 @@
       try { history.go(-depth); } catch (e) { closingViaUi = false; }
     }
   }
+  var statusRetry = el('pdStatusRetry');
+  if (statusRetry) statusRetry.addEventListener('click', function () {
+    if (PREVIEW_PAY) return;
+    loadStatus();
+    openDrawer();
+  });
   Array.prototype.forEach.call(document.querySelectorAll('[data-book]'), function (btn) {
     btn.addEventListener('click', function (e) {
       e.preventDefault();

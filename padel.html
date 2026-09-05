@@ -146,7 +146,7 @@
       </div>
       <div class="pd-book-right">
         <div>
-          <div class="pd-price">99<small>AED</small></div>
+          <div class="pd-price">&hellip;<small>AED</small></div>
           <div class="pd-spots">Spots go first-come</div>
         </div>
         <button type="button" class="pd-btn" data-book>Book My Monday Spot</button>
@@ -325,10 +325,26 @@
 <div class="pd-drawer" id="pdDrawer" role="dialog" aria-modal="true" aria-label="Book padel night">
   <button class="pd-drawer-close" id="pdDrawerClose" aria-label="Close">&times;</button>
 
-  <!-- PREVIEW — bookings not open yet (today's behavior, unchanged) -->
-  <div class="pd-dstep" id="pdStepPreview">
-    <h3>Almost live</h3>
-    <p>This page is a preview. When bookings open, this button takes your name and your 99 AED and locks your spot for <strong id="pdDrawerDate">Monday</strong> through the same secure checkout as the bootcamp.</p>
+  <!-- LOADING — the drawer opened before /api/padel-status answered. Shown
+       instead of the old "Almost live / 99 AED" preview, which a client saw
+       on a slow connection while the real price was 120 (2026-09-05). -->
+  <div class="pd-dstep" id="pdStepLoading" hidden>
+    <h3>One second&hellip;</h3>
+    <p>Checking this week's price and spots.</p>
+  </div>
+
+  <!-- STATUS FAILED — the status call did not come back -->
+  <div class="pd-dstep" id="pdStepStatusErr" hidden>
+    <h3>Couldn't load this week's booking.</h3>
+    <p>Check your connection and try again, or sort your spot on WhatsApp.</p>
+    <button type="button" class="pd-btn" id="pdStatusRetry">Try again</button>
+    <p class="pd-dfoot"><a href="https://wa.me/971504264410?text=Hey%2C%20I%20want%20in%20on%20the%20LFG%20padel%20night">Message us on WhatsApp</a></p>
+  </div>
+
+  <!-- PREVIEW — the server says bookings are not open -->
+  <div class="pd-dstep" id="pdStepPreview" hidden>
+    <h3>Bookings aren't open yet</h3>
+    <p>When they open, this button takes your name and payment and locks your spot through the same secure checkout as the bootcamp.</p>
     <p>Until then, the WhatsApp group is where game nights happen.</p>
     <a class="pd-btn" href="https://wa.me/971504264410?text=Hey%2C%20I%20want%20in%20on%20the%20LFG%20padel%20night">Join via WhatsApp</a>
   </div>
@@ -421,14 +437,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.1"></script>
 <script src="/app-assets/lfg-supabase.js?v=3"></script>
-<script src="/app-assets/lfg-padel-page.js?v=14" defer></script>
-<script>
-  // keep the drawer's date in sync with the booking strip
-  window.addEventListener('DOMContentLoaded', function () {
-    var d = document.getElementById('pdDate');
-    var t = document.getElementById('pdDrawerDate');
-    if (d && t) setTimeout(function () { t.textContent = d.textContent; }, 50);
-  });
-</script>
+<script src="/app-assets/lfg-padel-page.js?v=15" defer></script>
 </body>
 </html>
