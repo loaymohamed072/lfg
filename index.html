@@ -2782,7 +2782,7 @@ footer {
 }
 </style>
 <a href="/track" class="paid-run-banner" id="paid-run-banner" hidden>
-  <span class="prb-tag">This Wednesday</span>
+  <span class="prb-tag" id="prb-tag">This Wednesday</span>
   <span class="prb-text">Paid intervals session<span class="prb-loc-wrap"> at <b id="prb-loc">Gems World Academy</b></span> · <b id="prb-price">AED 30</b></span>
   <span class="prb-cta">Reserve your spot →</span>
 </a>
@@ -3034,7 +3034,7 @@ footer {
         .run-paid-cta .rpc-note { margin-top:14px; font-size:12.5px; color:rgba(255,255,255,0.5); }
         </style>
         <div id="run-paid-cta" class="run-paid-cta" hidden>
-          <p class="rpc-eyebrow">This Wednesday · Paid session</p>
+          <p class="rpc-eyebrow" id="rpc-eyebrow">This Wednesday · Paid session</p>
           <h3 class="rpc-title">Intervals at <span id="rpc-loc">Gems World Academy</span></h3>
           <p class="rpc-sub">This week's run is a paid intervals session. Reserve your spot and pay online — <b id="rpc-price">AED 30</b> per person.</p>
           <a href="/track" class="rpc-btn">Reserve your spot · <span id="rpc-price2">AED 30</span> →</a>
@@ -3859,6 +3859,11 @@ async function fetchEventConfig() {
       const row = rows[0];
       const wedTarget = _advanceIfPast(row.event_datetime);
       _eventOverrides = [{ target: wedTarget, location: row.location }];
+      // The run's weekday, read from the configured date rather than written into the
+      // markup. The countdown always tracked the real day, but the paid banner and the
+      // paid CTA had "Wednesday" typed into them, so moving the run to Tuesday left the
+      // page announcing two different days at once (seen 2026-09-06).
+      const wedDay = wedTarget.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'Asia/Dubai' });
 
       // Paid-run integration: when the owner flags the next run as paid, the whole run
       // funnel switches over — top banner, schedule badge, and the register section becomes
@@ -3870,6 +3875,7 @@ async function fetchEventConfig() {
       const paidBanner = document.getElementById('paid-run-banner');
       if (paidBanner) {
         if (_isPaidRun) {
+          const pt = document.getElementById('prb-tag'); if (pt) pt.textContent = 'This ' + wedDay;
           const pl = document.getElementById('prb-loc'); if (pl && row.location) pl.textContent = row.location;
           const pp = document.getElementById('prb-price'); if (pp) pp.textContent = _runPrice;
           paidBanner.hidden = false;
@@ -3892,6 +3898,7 @@ async function fetchEventConfig() {
       const formLabel = document.querySelector('#register-form .activity-form-label');
       if (runForm && runPaidCta) {
         if (_isPaidRun) {
+          const re = document.getElementById('rpc-eyebrow'); if (re) re.textContent = 'This ' + wedDay + ' · Paid session';
           const rl = document.getElementById('rpc-loc'); if (rl && row.location) rl.textContent = row.location;
           const r1 = document.getElementById('rpc-price'); if (r1) r1.textContent = _runPrice;
           const r2 = document.getElementById('rpc-price2'); if (r2) r2.textContent = _runPrice;
@@ -3905,7 +3912,6 @@ async function fetchEventConfig() {
         }
       }
 
-      const wedDay    = wedTarget.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'Asia/Dubai' });
       const wedTime   = wedTarget.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Dubai' });
 
       const bcDate = _advanceIfPast(row.bootcamp_datetime);
