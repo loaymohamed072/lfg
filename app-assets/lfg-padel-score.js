@@ -217,7 +217,18 @@
     var r = await api('/api/admin/padel-night', 'POST', { action: finished ? 'unfinish' : 'finish' });
     busy = false;
     if (!r.ok) { say((r.data && r.data.error) || 'Could not end the night.', true); return; }
-    say(finished ? 'Night reopened. Draw the next round when you are ready.' : 'Night ended. The board is showing the final leaderboard.');
+    if (finished) {
+      say('Night reopened. Draw the next round when you are ready.');
+    } else {
+      // Ending the night also re-rates everyone off the results. Say so, or
+      // levels change silently and nobody trusts them when they notice.
+      var lv = r.data && r.data.levels;
+      var levelNote = '';
+      if (lv && lv.error) levelNote = ' Levels were not updated.';
+      else if (lv && lv.moved) levelNote = ' ' + lv.moved + ' player level' + (lv.moved === 1 ? '' : 's') + ' updated.';
+      else if (lv) levelNote = ' No levels changed.';
+      say('Night ended. The board is showing the final leaderboard.' + levelNote);
+    }
     await load(true);
   });
 

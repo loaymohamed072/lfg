@@ -32,6 +32,7 @@
 // Every fixture stays editable, so Ahmed can always overrule the draw.
 const { requireAdmin, safeError } = require('../_lib');
 const { resolveEvent } = require('../padel-status');
+const { computeLevels, applyLevels } = require('../_padel-rating');
 
 const COURTS = 4;
 const PER_COURT = 4;
@@ -284,7 +285,29 @@ module.exports = async (req, res) => {
         updated_at: new Date().toISOString(),
       }).eq('event_date', date);
 
-      return res.status(200).json({ ok: true, finished: done, round: night.current_round });
+      // Re-rate the roster off the night that just finished, so next week's
+      // round 1 is seeded by how people actually played rather than by the
+      // signup quiz they filled in once. Replays every night from the quiz
+      // seed, so correcting an old score and ending a night again fixes the
+      // levels rather than compounding the error.
+      //
+      // A failure here must not fail the call: the night IS over, the scores
+      // and points are already banked, and levels can be recomputed later with
+      // scripts/padel-rerate.js. Reported so it does not fail silently.
+      let levels = null;
+      if (done) {
+        try {
+          const { rows } = await computeLevels(db);
+          const { written, failed } = await applyLevels(db, rows);
+          levels = { moved: written, failed: failed.length };
+          if (failed.length) console.error('[padel-night] level writes failed', failed);
+        } catch (e) {
+          console.error('[padel-night] re-rating failed', e);
+          levels = { error: 'Levels were not updated. Run scripts/padel-rerate.js.' };
+        }
+      }
+
+      return res.status(200).json({ ok: true, finished: done, round: night.current_round, levels });
     }
 
     if (body.action === 'score') {
