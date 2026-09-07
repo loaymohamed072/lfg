@@ -135,7 +135,14 @@
       return ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c];
     });
   }
-  function runLabel(t) { return t === 'saturday' ? 'Saturday run' : t === 'wednesday' ? 'Wednesday run' : 'LFG run'; }
+  // run_type is the weekday the run actually falls on, lowercased, so it follows the
+  // configured date rather than a fixed pair. Naming only Saturday and Wednesday meant a
+  // Tuesday run fell through to the generic label; any weekday now reads back properly.
+  function runLabel(t) {
+    var d = String(t || '');
+    if (!/^[a-z]+day$/.test(d)) return 'LFG run';
+    return d.charAt(0).toUpperCase() + d.slice(1) + ' run';
+  }
 
   (async function go() {
     // Waits out the auth-redirect token race so a freshly signed-in member sticks.

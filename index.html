@@ -2951,7 +2951,7 @@ footer {
     <a href="#runs" class="lfg-block reveal delay-1" style="text-decoration:none;color:inherit;cursor:pointer;">
       <span class="lfg-block-num">01</span>
       <h3 class="lfg-block-title">Runs</h3>
-      <p class="lfg-block-text">Weekly runs built for every level. Wednesday evenings and Saturday mornings. Show up and move.</p>
+      <p class="lfg-block-text">Weekly runs built for every level. <span id="runs-block-days">Wednesday evenings and Saturday mornings</span>. Show up and move.</p>
       <p class="lfg-block-cta">See Runs <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg></p>
     </a>
     <a href="#bootcamps" class="lfg-block reveal delay-2" style="text-decoration:none;color:inherit;cursor:pointer;">
@@ -3589,7 +3589,7 @@ footer {
     </div>
     <div class="split-panel-overlay"></div>
     <div class="split-panel-content">
-      <p class="split-direction">Every Wednesday</p>
+      <p class="split-direction" id="split-direction">Every Wednesday</p>
       <h2 class="split-headline">
         Join The<br>Run.
       </h2>
@@ -3627,13 +3627,13 @@ footer {
     <div class="seo-left reveal-left">
       <p class="seo-eyebrow">Dubai Running Community</p>
       <h2 class="seo-heading">Running Club<br><em>in Dubai</em></h2>
-      <p class="seo-body">LFG is one of the fastest growing running clubs in Dubai, bringing together a community of over 1000+ members for weekly group runs built around consistency, energy, and performance. Every Wednesday at 7:30 PM, runners across Dubai show up to train, connect, and push their limits in a community that feels bigger than a workout. Whether you are just getting started or already serious about performance, LFG gives you a high-energy running club experience in Dubai that is built on discipline, movement, and momentum.</p>
+      <p class="seo-body">LFG is one of the fastest growing running clubs in Dubai, bringing together a community of over 1000+ members for weekly group runs built around consistency, energy, and performance. <span id="seo-body-run">Every Wednesday at 7:30 PM</span>, runners across Dubai show up to train, connect, and push their limits in a community that feels bigger than a workout. Whether you are just getting started or already serious about performance, LFG gives you a high-energy running club experience in Dubai that is built on discipline, movement, and momentum.</p>
     </div>
     <div class="seo-right reveal-right">
       <ul class="seo-points" role="list">
         <li class="seo-point">
           <span class="seo-point-mark">01</span>
-          <span class="seo-point-text">Weekly Wednesday runs at 7:30 PM</span>
+          <span class="seo-point-text" id="seo-point-run">Weekly Wednesday runs at 7:30 PM</span>
         </li>
         <li class="seo-point">
           <span class="seo-point-mark">02</span>
@@ -3712,7 +3712,7 @@ footer {
               <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 1v8M1 5h8"/></svg></span>
             </button>
             <div class="faq-answer" role="region" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-              <p class="faq-answer-inner" itemprop="text">LFG runs every Wednesday at 7:30 PM and every Saturday at 6:30 AM. The weekly run is designed to bring the community together through movement, accountability, and energy.</p>
+              <p class="faq-answer-inner" itemprop="text"><span id="faq-schedule">LFG runs every Wednesday at 7:30 PM and every Saturday at 6:30 AM.</span> The weekly run is designed to bring the community together through movement, accountability, and energy.</p>
             </div>
           </li>
           <li class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
@@ -3920,13 +3920,16 @@ async function fetchEventConfig() {
       // Saturday - toggle hides/shows entire slot
       const satDivider = document.getElementById('sat-divider');
       const satSlot    = document.getElementById('sat-slot');
+      // Declared out here so the schedule copy below can name the Saturday run too.
+      // The defaults match the markup and only apply while the Saturday run is off.
+      let satDay = 'Saturday', satTime = '6:30 AM';
       if (row.saturday_enabled) {
         if (satDivider) satDivider.style.display = '';
         if (satSlot)    satSlot.style.display    = '';
         const satTarget = _advanceIfPast(row.saturday_datetime);
         _eventOverrides.push({ target: satTarget, location: row.saturday_location });
-        const satDay  = satTarget.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'Asia/Dubai' });
-        const satTime = satTarget.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Dubai' });
+        satDay  = satTarget.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'Asia/Dubai' });
+        satTime = satTarget.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Dubai' });
         const satEls = { 'sat-slot-day': satDay, 'sat-slot-time': satTime, 'sat-slot-loc': row.saturday_location };
         Object.entries(satEls).forEach(([id, val]) => {
           const el = document.getElementById(id);
@@ -3953,6 +3956,46 @@ async function fetchEventConfig() {
       });
       // Any remaining bootcamp-time labels (calendar rows + upsell header) follow config too.
       if (bcTime) document.querySelectorAll('.bdc-time').forEach(el => { el.textContent = bcTime; });
+
+      // ---- Everywhere else the page names the run's day ----
+      // The run had been Wednesday for months, so "Wednesday at 7:30 PM" was written
+      // into the schedule copy, the FAQ, the share text and the structured data. Moving
+      // the run to Tuesday left those contradicting the countdown right above them.
+      // They all read the configured date now, so whichever day is set, the page agrees
+      // with itself. Every string below is REPLACED, never appended, so this is safe to
+      // run again and a no-op when the configured day is the one already in the markup.
+      const MARKUP_DAY = 'Wednesday';   // what the static HTML ships with
+      const MARKUP_TIME = '7:30 PM';    // ditto, for the run's start time
+      const wedTime24 = wedTarget.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Dubai' });
+
+      const scheduleCopy = {
+        'split-direction': `Every ${wedDay}`,
+        'runs-block-days': `${wedDay} evenings and ${satDay} mornings`,
+        'seo-point-run':   `Weekly ${wedDay} runs at ${wedTime}`,
+        'seo-body-run':    `Every ${wedDay} at ${wedTime}`,
+        'faq-schedule':    `LFG runs every ${wedDay} at ${wedTime} and every ${satDay} at ${satTime}.`
+      };
+      Object.entries(scheduleCopy).forEach(([id, val]) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+      });
+
+      // Structured data and the share description carry the day and time as plain text
+      // (including the schema.org/Wednesday byDay URL and a 24-hour startTime), so a
+      // word swap keeps them in step without rebuilding the JSON by hand.
+      if (wedDay !== MARKUP_DAY || wedTime !== MARKUP_TIME) {
+        const swap = (s) => s
+          .split(MARKUP_DAY).join(wedDay)
+          .split(MARKUP_TIME).join(wedTime)
+          .split('"19:30"').join(`"${wedTime24}"`);
+        document.querySelectorAll('script[type="application/ld+json"]').forEach(s => {
+          const next = swap(s.textContent);
+          // Only write it back if it still parses; a broken block is worse than a stale one.
+          try { JSON.parse(next); s.textContent = next; } catch (e) { /* leave as shipped */ }
+        });
+        document.querySelectorAll('meta[property="og:description"], meta[name="description"], meta[name="twitter:description"]')
+          .forEach(m => { m.content = swap(m.content); });
+      }
     }
   } catch (_) {}
   updateTimers();

@@ -120,6 +120,16 @@
           var dayStr = when.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'short', timeZone: 'Asia/Dubai' });
           var timeStr = when.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Dubai' });
           var fw = el('fact-when'); if (fw) fw.innerHTML = dayStr + '<small>' + timeStr + '</small>';
+
+          // The rest of the page named the day in its markup, because the run was
+          // Wednesday for months. Moving it to Tuesday left the eyebrow, the strapline
+          // and the confirmation contradicting the "When" fact directly beside them.
+          var dayWord = when.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'Asia/Dubai' });
+          var eyebrow = el('hero-eyebrow');
+          if (eyebrow) eyebrow.textContent = 'This ' + dayWord + ' · Paid intervals session';
+          if (sub && !cfg.run_tagline) sub.textContent = dayWord + ' track intervals.';
+          var okMsg = el('track-success-msg');
+          if (okMsg) okMsg.textContent = 'Your spot is locked. Check your email for the details. See you ' + dayWord + '.';
         }
         var fwh = el('fact-where'); if (fwh) fwh.innerHTML = RUN.location + '<small>Tap the map below</small>';
         // The tap-through link must never disagree with the venue on the page

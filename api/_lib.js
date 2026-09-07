@@ -820,7 +820,7 @@ async function fulfillCheckoutSession(db, sessionObj) {
               <div style="margin-top:8px;color:rgba(255,255,255,0.6);font-size:13px;">Pick it up at the next run. We'll have it ready with your name on it.</div>
             </td></tr>
           </table>
-          <p style="margin:22px 0 0;font-size:13px;color:rgba(255,255,255,0.5);line-height:1.6;">See you Wednesday. — LFG</p>
+          <p style="margin:22px 0 0;font-size:13px;color:rgba(255,255,255,0.5);line-height:1.6;">See you at the next run. — LFG</p>
         `;
         await sendEmail({
           to: m.email,

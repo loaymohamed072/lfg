@@ -703,7 +703,7 @@
       <form id="sched-form">
         <div class="sched-grid">
           <div class="card">
-            <h3>Wednesday Run</h3>
+            <h3>Weekly Run</h3>
             <div class="cur-info" id="wed-info">Loading…</div>
             <label>Location</label><input type="text" id="location" placeholder="e.g. Dubai Autodrome" required>
             <label>Date &amp; Time</label><input type="datetime-local" id="event_datetime" required>
@@ -713,7 +713,7 @@
             <div id="run-paid-fields" class="disabled-fields">
               <label>Entry price (AED)</label><input type="number" id="run_price_aed" min="1" step="1" value="30">
               <label>Map link (Google Maps URL)</label><input type="text" id="run_map_url" placeholder="https://maps.app.goo.gl/…">
-              <label>Track page description</label><input type="text" id="run_tagline" placeholder="e.g. Wednesday track intervals." maxlength="120">
+              <label>Track page description</label><input type="text" id="run_tagline" placeholder="e.g. Track intervals at GEMS." maxlength="120">
               <p class="note">The <b>/track</b> title auto-becomes “LFG × <b>Location</b>”, the map uses your Map link, and this line is the description under it. Change the Location / Map link above and the track page follows automatically.</p>
               <p class="note">When on, the homepage run section switches to a paid CTA, a top banner appears, and <b>/track</b> takes payment. Turn off after the run to go back to the free sign-up.</p>
             </div>
@@ -1079,7 +1079,7 @@
           <div class="promo-grid">
             <div class="pf-row pf-row-wide">
               <label for="pn-title">Title <span class="lbl-hint">(what they read first, keep it short)</span></label>
-              <input type="text" id="pn-title" maxlength="60" placeholder="Runs this Wednesday" autocomplete="off" required>
+              <input type="text" id="pn-title" maxlength="60" placeholder="Runs this week" autocomplete="off" required>
             </div>
             <div class="pf-row pf-row-wide">
               <label for="pn-body">Message</label>
@@ -1113,7 +1113,7 @@
             <div class="pn-preview-card">
               <img src="/icon-192.png" alt="" class="pn-preview-icon">
               <div class="pn-preview-text">
-                <div class="pn-preview-title" id="pn-preview-title">Runs this Wednesday</div>
+                <div class="pn-preview-title" id="pn-preview-title">Runs this week</div>
                 <div class="pn-preview-body" id="pn-preview-body">6am, Kite Beach. Bring water, bring a friend.</div>
                 <div class="pn-preview-src">www.lfgdubai.com</div>
               </div>
@@ -4162,7 +4162,7 @@
   }
 
   function paintPreview() {
-    el('pn-preview-title').textContent = el('pn-title').value.trim() || 'Runs this Wednesday';
+    el('pn-preview-title').textContent = el('pn-title').value.trim() || 'Runs this week';
     el('pn-preview-body').textContent = el('pn-body').value.trim() || '6am, Kite Beach. Bring water, bring a friend.';
   }
 
