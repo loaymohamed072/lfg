@@ -440,3 +440,56 @@ load only same-origin assets plus the Supabase CDN the rest of the site already 
 Data-exposure note: the board is displayed publicly on a venue TV, so it deliberately returns
 first name + last initial only, matching `/api/padel-leaderboard`. No email, phone, level or
 payment data reaches either new page.
+
+---
+
+## 2026-09-07 — run-day copy sweep + admin query fixes (site-security lane)
+
+**Verdict: FLAG** — deliverable with the standing items below disclosed. No BLOCK survived verification.
+
+Changed this session: `.vercelignore`, `api/_lib.js`, `api/admin/run-rsvps.js`, `index.html`,
+`track.html`, `shop.html`, `run-checkin.html`, `admin.html`, `llms.txt`, `app-assets/lfg-track.js`.
+
+### Fixed this session
+Internal files were being served publicly and are now 404: the August revenue and partner
+traction reports, `WHATSAPP-AI-TEAM-GUIDE.md`, a meeting transcript, `SECURITY.md`,
+`BUILD-STATE.md`, `PADEL-DESIGN.md`, and `sql/2026-09-01_crm_leads.sql`. `.vercelignore`
+listed private files one at a time, so each new internal doc shipped by default; it now
+excludes by type and directory. All but the SQL file predate this session; that one was
+published by a deploy earlier the same day. Assume the reports were reachable 1-5 Sep.
+
+### Verified at runtime, not asserted
+- **Anon-key read probe** — `members`, `payments`, `run_rsvps`, `run_registrations`,
+  `coaching_clients`, `check_ins`, `client_metrics`, `padel_signups`, `promo_codes`,
+  `merch_orders`: every one returns `[]` with the publishable key.
+- **Anon-key write probe** — inserts on `members` and `run_rsvps` return 401. A PATCH zeroing
+  `payments.amount_aed` returned 204 (PostgREST reports success on a zero-row update), so it
+  was checked against the database: 596 run payments, all still 30.00, total 17,880 AED,
+  none zeroed. RLS held.
+- **Unauthenticated admin endpoints** — `/api/admin/{stats,roster,paid-runs,run-rsvps,leads,export}`
+  all 401.
+- **RLS coverage** — every table in `public` has RLS enabled (zero exceptions). The 24 tables
+  the advisor lists at INFO as "enabled, no policy" are deny-all by design: browser code never
+  reads them, the serverless functions use the service key.
+- **`.git` not served** (404). No `service_role` / `sb_secret_` value in any client-reachable
+  file or tracked in git.
+
+### Scanner findings dismissed with reasons
+- `gitleaks`: 7 hits, all the Supabase **publishable/anon** key (`role: anon` decoded from the
+  JWT payload). Public by design, and proven inert by the probes above.
+- `leak_scan` 389 and `web_vuln_scan` 18 BLOCK: every one sits in `coaching-app/.next`,
+  `research/`, or `scripts/`. None deploy (`.vercelignore`), `coaching-app` has 0 files tracked
+  in this repo, and the flagged research export is gitignored and was never committed. Re-run
+  against the deployed file set only: leak scan PASS, web-vuln FLAG with no BLOCK.
+
+### Standing FLAGs (none introduced this session)
+1. Site CSP still has no `script-src`; scripts are unrestricted. Unchanged.
+2. No `security.txt`. One file under `.well-known/` fixes it.
+3. `npm audit` high: `sharp` <0.35.0 (libvips CVEs). devDependency only, not imported by
+   anything under `api/`, so it does not reach the deployed functions.
+4. 48 `innerHTML` sinks across `app-assets/*.js`. Pre-existing; the diff this session added
+   none, every new write uses `textContent`.
+5. Security baseline 1/9 (legacy repo predating the 2026-08-29 scaffold).
+6. Supabase advisors: WARN only. Mutable `search_path` on `short_name`, `vector` extension in
+   `public`, several `SECURITY DEFINER` functions callable by `anon`/`authenticated`, and
+   leaked-password protection disabled. No ERROR-level advisor.
