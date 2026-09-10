@@ -1,0 +1,20 @@
+# Documented false positives, re-verified 2026-09-10 by decoding every match.
+#
+# Every fingerprint below is a Supabase PUBLISHABLE key: the JWTs decode to
+# {"role":"anon"} and the others carry the sb_publishable_ prefix. These are
+# designed to ship in the browser; the real access control is RLS, which is
+# probed at each security pass (anon read returns nothing, anon insert is
+# refused by policy). No service_role or sb_secret_ key appears in any tracked
+# file - that is the finding this ignore file must never be allowed to hide, so
+# re-decode the role claim before adding a line here.
+#
+# The two 2026-05-05 entries are the anon key of Supabase project
+# ykpnnqkoqgmwuwdrfmbe, which no longer exists in the account. They survive only
+# in git history and point at nothing.
+3e9c2f9aebcf6826d8e56e7ca82bcc0e4015e6e1:app-assets/lfg-padel-score.js:jwt:13
+9809110a20c5a52bc1c17131bac1e60a8ecd88a4:admin.html:jwt:1389
+9809110a20c5a52bc1c17131bac1e60a8ecd88a4:app-assets/lfg-supabase.js:generic-api-key:8
+9809110a20c5a52bc1c17131bac1e60a8ecd88a4:app-assets/lfg-track.js:generic-api-key:8
+9809110a20c5a52bc1c17131bac1e60a8ecd88a4:index.html:jwt:3804
+ddaebca309a34c5e84ac9d472a27479ba1dd68ae:index.html:jwt:3376
+ddaebca309a34c5e84ac9d472a27479ba1dd68ae:admin.html:jwt:222
