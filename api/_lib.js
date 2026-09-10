@@ -297,8 +297,14 @@ async function requireAdminOrCron(req, res) {
   const header = req.headers.authorization || req.headers.Authorization || '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : null;
   if (!token) { res.status(401).json({ error: 'Not authenticated' }); return null; }
-  if (process.env.LFG_CRON_TOKEN && token === process.env.LFG_CRON_TOKEN) {
-    return { db: admin(), mode: 'cron' };
+  // Constant-time compare, same as the webhook/HMAC check above: a plain ===
+  // on a bearer secret leaks its length and prefix through response timing.
+  if (process.env.LFG_CRON_TOKEN) {
+    const a = Buffer.from(token);
+    const b = Buffer.from(process.env.LFG_CRON_TOKEN);
+    if (a.length === b.length && crypto.timingSafeEqual(a, b)) {
+      return { db: admin(), mode: 'cron' };
+    }
   }
   const { data } = await authService().auth.getUser(token);
   const user = data && data.user;

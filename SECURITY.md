@@ -493,3 +493,75 @@ published by a deploy earlier the same day. Assume the reports were reachable 1-
 6. Supabase advisors: WARN only. Mutable `search_path` on `short_name`, `vector` extension in
    `public`, several `SECURITY DEFINER` functions callable by `anon`/`authenticated`, and
    leaked-password protection disabled. No ERROR-level advisor.
+
+## 2026-09-10 — Sponsored bootcamp tickets (site-security lane, scoped to branch `sponsored-tickets`)
+
+**Scope:** checkout kind `sponsor` in `api/checkout.js`; fulfilment branch in
+`api/_lib.js` `fulfillCheckoutSession`; new `api/sponsor.js` (member) and
+`api/admin/sponsored.js` (admin); tables `sponsored_tickets` and
+`sponsored_ticket_allocations` (RLS on, no policies, service-role only);
+`payments.kind` CHECK widened to include `sponsor`; account.html sponsor card
+(embedded Stripe); admin.html Sponsored view. ASVS target L2. Verified on the
+Vercel preview of the branch, not on production.
+
+### Fixed this session
+- `requireAdminOrCron` compared the cron bearer with `===`. Now
+  `crypto.timingSafeEqual` on equal-length buffers, the same shape the HMAC
+  check above it already used. Pre-existing; found by this lane's grep.
+- A sponsor no longer gets the GHL "bootcamp purchaser" tag (they booked nothing).
+
+### Verified at runtime, not asserted
+- **Anon-key probe, both new tables:** `select` → 0 rows; `insert` → 42501 RLS
+  violation on each. Service role is the only reader/writer, as intended.
+- **Two-user authz:** signed in as a non-admin member (`loay@komplete.tech`):
+  `GET /api/admin/sponsored` → 403 `Admins only`; `POST` hand-out → 403.
+  `GET /api/sponsor` → 200 with aggregate counts and that member's own rows only.
+- **Input bounds on the money path:** `kind:'sponsor', qty:999` → 400;
+  `promo_code` on a sponsor checkout → 400. Amount is computed server-side as
+  `SINGLE_SESSION_PRICE_AED × qty`; nothing from the client sets a price.
+- **Webhook boundary:** `stripe.webhooks.constructEvent(raw, sig, secret)` over
+  the raw body runs before any fulfilment; `claim_fulfilment()` gives an atomic
+  pending→paid transition on the session id, and the `sponsored_tickets`
+  unique `stripe_payment_intent` makes a replay a no-op. Proven by
+  `scripts/qa-sponsored-fulfil.mjs`: first pass `fulfilled: 'sponsor'`, second
+  pass `dedup: true, reason: 'already_processed'`. Probe rows then removed.
+- **Hand-out path end to end on the preview:** pool 2 → hand 1 to a member →
+  `adjust_credits` created a 1-session comp pack expiring in 60 days with the
+  ledger reason `Sponsored bootcamp ticket · paid forward by <sponsor>`, one
+  allocation row written, pool 1. Reversed and removed afterwards.
+- **Sinks:** admin rows are built with `textContent`; the only `innerHTML` in
+  the new code clears a table before repainting. The sponsor's free-text note
+  never reaches `innerHTML`.
+- **Headers on the preview:** HSTS, nosniff, frame-ancestors, Referrer-Policy,
+  Permissions-Policy all present. CSP still has no `script-src`/`default-src`
+  (site-wide, pre-existing; standing FLAG below).
+- **Supabase security advisors:** no ERROR-level findings. The two new tables
+  appear as INFO `rls_enabled_no_policy`, the intended posture.
+
+### Scanner findings dismissed with reasons
+- `gitleaks` ×7 / `semgrep detected-jwt-token` ×3: one distinct JWT across
+  `index.html`, `admin.html`, `lfg-supabase.js`, `lfg-track.js`,
+  `lfg-padel-score.js`. Decoded claims: `role: anon`, `ref: mqhrjliqjxcxtzorapiy`.
+  That is the publishable key, public by design. No `service_role` token in any
+  tracked file.
+- `leak_scan` / `web_vuln_scan` BLOCKs: every path is under `coaching-app/`
+  (a separate repo, gitignored here, including its `.next` build output) or
+  `research/kahunas-teardown/export/` (gitignored). None is tracked by this repo.
+- `check_buttons` B1/B8 BLOCKs: all in `coaching-app/`. The new controls on
+  this site are real `<button>`s with pending labels (`Opening checkout…`,
+  `Handing out…`) and disabled state while the promise is open.
+
+### Standing FLAGs (none introduced this session)
+- CSP without `script-src`/`default-src` across the site.
+- `sharp@0.34.5` high (libvips/libheif CVEs). devDependency for
+  `scripts/gen-icons.cjs` only; not shipped. Bump when next touching tooling.
+- Security baseline 2/9 present (legacy repo): no `.npmrc` install-script block,
+  no Dependabot cooldown, no `ci-required` workflow, no `security.txt`, no
+  gitleaks pre-commit hook. `scaffold_baseline.mjs` writes them; separate task.
+- Advisors WARN: `is_coach()` and `bootcamp_checkin_state()` are SECURITY
+  DEFINER and executable by `anon`; `short_name()` has a mutable search_path;
+  `vector` extension in `public`; leaked-password protection off in Auth.
+
+**Verdict for this diff: PASS on every diff-scoped check. Repo artifact: FLAG**
+(standing items above; the only BLOCK-class item found, the `===` cron compare,
+is fixed in this branch).
