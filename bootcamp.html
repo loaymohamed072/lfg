@@ -348,6 +348,207 @@
 </section>
 
 <!-- ============================================================
+     SECTION: SPONSOR A BOOTCAMP TICKET
+     Public checkout. No LFG account needed, on purpose: these
+     buyers are guests, and minting auth users from typed-in
+     emails is the path that was closed on 2026-08-09.
+     ============================================================ -->
+<section id="give" class="give-section">
+  <style>
+    .give-section {
+      position: relative;
+      padding: clamp(80px, 11vw, 140px) 24px;
+      background:
+        radial-gradient(120% 90% at 12% 0%, rgba(153,153,102,0.13), transparent 58%),
+        linear-gradient(180deg, #0C0C0A 0%, #080808 62%, #0A0A0A 100%);
+      border-top: 1px solid rgba(255,255,255,0.06);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      overflow: hidden;
+    }
+    .give-section::after {
+      content: "";
+      position: absolute; inset: 0;
+      background-image:
+        repeating-linear-gradient(90deg, rgba(255,255,255,0.015) 0 1px, transparent 1px 112px);
+      pointer-events: none;
+    }
+    .give-inner {
+      position: relative; z-index: 1;
+      max-width: 1120px; margin: 0 auto;
+      display: grid; gap: clamp(36px, 6vw, 72px);
+      grid-template-columns: 1fr;
+      align-items: start;
+    }
+    @media (min-width: 900px) { .give-inner { grid-template-columns: 1.05fr 0.95fr; align-items: center; } }
+
+    .give-eyebrow {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 12px; letter-spacing: 0.28em; text-transform: uppercase;
+      color: #999966; margin: 0 0 18px;
+    }
+    .give-title {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: clamp(38px, 6.4vw, 72px); line-height: 0.95;
+      letter-spacing: -0.01em; text-transform: uppercase;
+      margin: 0 0 22px; color: #FFFFFF;
+    }
+    .give-lede {
+      font-size: clamp(15px, 1.5vw, 17px); line-height: 1.65;
+      color: rgba(255,255,255,0.66); margin: 0; max-width: 46ch;
+    }
+    .give-count {
+      margin: 26px 0 0; padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      font-family: 'Barlow Condensed', sans-serif; font-size: 13px;
+      letter-spacing: 0.16em; text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+    }
+    .give-count b { color: #999966; font-size: 17px; }
+
+    .give-card {
+      background: rgba(255,255,255,0.035);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 4px;
+      padding: clamp(26px, 3.4vw, 38px);
+      backdrop-filter: blur(6px);
+    }
+    .give-card [hidden] { display: none !important; }
+    .give-card-label {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 12px;
+      letter-spacing: 0.24em; text-transform: uppercase;
+      color: rgba(255,255,255,0.5); margin: 0 0 14px;
+    }
+
+    .give-stepper { display: flex; align-items: center; gap: 18px; }
+    .give-step {
+      width: 46px; height: 46px; flex: none;
+      background: transparent; color: #FFFFFF;
+      border: 1px solid rgba(255,255,255,0.22); border-radius: 3px;
+      font-size: 22px; line-height: 1; cursor: pointer;
+      transition: background .18s ease, border-color .18s ease, transform .12s ease;
+    }
+    .give-step:hover { background: rgba(153,153,102,0.16); border-color: #999966; }
+    .give-step:focus-visible { outline: 2px solid #999966; outline-offset: 2px; }
+    .give-step:active { transform: scale(0.94); background: rgba(153,153,102,0.28); }
+    .give-step:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+    .give-qty {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 40px; font-weight: 700;
+      min-width: 62px; text-align: center; color: #FFFFFF;
+    }
+    .give-total {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 15px;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: #999966; margin: 16px 0 26px;
+    }
+
+    .give-note-label {
+      display: block; font-family: 'Barlow Condensed', sans-serif; font-size: 12px;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      color: rgba(255,255,255,0.5); margin: 0 0 9px;
+    }
+    .give-note-label span { color: rgba(255,255,255,0.3); letter-spacing: 0.12em; }
+    .give-note {
+      width: 100%; box-sizing: border-box;
+      background: rgba(0,0,0,0.35); color: #FFFFFF;
+      border: 1px solid rgba(255,255,255,0.16); border-radius: 3px;
+      padding: 13px 14px; font-family: 'Barlow', sans-serif; font-size: 16px;
+      transition: border-color .18s ease;
+    }
+    .give-note::placeholder { color: rgba(255,255,255,0.28); }
+    .give-note:focus { outline: none; border-color: #999966; }
+
+    .give-go {
+      width: 100%; margin-top: 24px; padding: 17px 20px;
+      background: #999966; color: #0A0A0A;
+      border: 1px solid #999966; border-radius: 3px;
+      font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 700;
+      letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer;
+      transition: background .18s ease, transform .12s ease, opacity .18s ease;
+    }
+    .give-go:hover { background: #ADAD73; }
+    .give-go:focus-visible { outline: 2px solid #FFFFFF; outline-offset: 3px; }
+    .give-go:active { transform: scale(0.985); background: #85855A; }
+    .give-go[disabled] { opacity: 0.55; cursor: progress; transform: none; }
+
+    .give-err {
+      margin: 14px 0 0; font-size: 14px; line-height: 1.5;
+      color: #E8917C;
+    }
+    .give-fine {
+      margin: 16px 0 0; font-size: 12.5px; line-height: 1.55;
+      color: rgba(255,255,255,0.38);
+    }
+    .give-back {
+      background: none; border: none; cursor: pointer; padding: 0 0 16px;
+      font-family: 'Barlow Condensed', sans-serif; font-size: 13px;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: rgba(255,255,255,0.6);
+      transition: color .18s ease;
+    }
+    .give-back:hover { color: #999966; }
+    .give-back:focus-visible { outline: 2px solid #999966; outline-offset: 3px; }
+    #give-mount { min-height: 320px; }
+
+    .give-done-mark {
+      font-size: 34px; line-height: 1; color: #999966; margin: 0 0 14px;
+    }
+    .give-done-title {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 30px; font-weight: 700;
+      text-transform: uppercase; margin: 0 0 12px; color: #FFFFFF;
+    }
+    .give-done-body { margin: 0; font-size: 15px; line-height: 1.65; color: rgba(255,255,255,0.66); }
+
+    @media (prefers-reduced-motion: reduce) {
+      .give-step, .give-go, .give-back, .give-note { transition: none; }
+      .give-step:active, .give-go:active { transform: none; }
+    }
+  </style>
+
+  <div class="give-inner">
+    <div class="give-copy">
+      <p class="give-eyebrow">Pay it forward</p>
+      <h2 class="give-title">Put someone<br>in the session.</h2>
+      <p class="give-lede">
+        Buy bootcamp tickets and leave them with the coaches. They go to people who want
+        to train and cannot cover the session themselves. You pick how many, we hand them
+        out by name, and you never need an LFG account to do it.
+      </p>
+      <p class="give-count" id="give-count" hidden></p>
+    </div>
+
+    <div class="give-card">
+      <div id="give-form">
+        <p class="give-card-label">Tickets</p>
+        <div class="give-stepper">
+          <button type="button" class="give-step" id="give-minus" aria-label="One ticket fewer">&minus;</button>
+          <span class="give-qty" id="give-qty" aria-live="polite">2</span>
+          <button type="button" class="give-step" id="give-plus" aria-label="One ticket more">+</button>
+        </div>
+        <p class="give-total" id="give-total">&nbsp;</p>
+
+        <label class="give-note-label" for="give-note">Note for the coaches <span>optional</span></label>
+        <input id="give-note" class="give-note" type="text" maxlength="200" placeholder="From the Ahmed family" autocomplete="off">
+
+        <button type="button" class="give-go" id="give-go">Sponsor tickets</button>
+        <p class="give-err" id="give-err" role="alert" hidden></p>
+        <p class="give-fine">Card payment through Stripe. Nothing is booked for you, and the tickets never expire on the shelf.</p>
+      </div>
+
+      <div id="give-checkout" hidden>
+        <button type="button" class="give-back" id="give-back">&larr; Back</button>
+        <div id="give-mount"></div>
+      </div>
+
+      <div id="give-done" hidden>
+        <p class="give-done-mark">&#10003;</p>
+        <p class="give-done-title">Thank you.</p>
+        <p class="give-done-body" id="give-done-body"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
      FAQ
      ============================================================ -->
 <section class="bc-faq" id="bc-faq">
@@ -447,6 +648,7 @@
 <script src="/app-assets/lfg-supabase.js?v=3"></script>
 <script src="https://js.stripe.com/v3/"></script>
 <script src="/app-assets/lfg-home-booking.js?v=12"></script>
+<script src="/app-assets/lfg-sponsor.js?v=2"></script>
 
 <!-- Live bootcamp location: single source of truth is lfg_event_config.bootcamp_location
      (set from the admin Schedule view). Fills every [data-bc-loc] placeholder so the venue
