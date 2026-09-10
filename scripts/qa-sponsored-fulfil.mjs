@@ -28,11 +28,22 @@ async function cleanup() {
 
 async function main() {
   if (process.argv.includes('--cleanup')) return cleanup();
-  const email = (process.argv[2] || '').trim().toLowerCase();
-  const qty = Math.max(1, Math.min(50, parseInt(process.argv[3] || '2', 10) || 2));
-  if (!email) { console.error('usage: qa-sponsored-fulfil.mjs <member-email> [qty] | --cleanup'); process.exit(1); }
-  const { data: m } = await db.from('members').select('id, full_name, email').ilike('email', email).maybeSingle();
-  if (!m) { console.error('no member with that email'); process.exit(1); }
+  // --guest exercises the homepage path: a sponsor with no LFG account, whose
+  // name and email come from Stripe rather than from a members row.
+  const guest = process.argv.includes('--guest');
+  const args = process.argv.slice(2).filter((a) => !a.startsWith('--'));
+  const email = (args[0] || '').trim().toLowerCase();
+  const qty = Math.max(1, Math.min(50, parseInt(args[1] || '2', 10) || 2));
+  let m = null;
+  if (guest) {
+    if (!email) { console.error('usage: qa-sponsored-fulfil.mjs --guest <any-email> [qty]'); process.exit(1); }
+    m = { id: null, full_name: 'QA Guest Sponsor', email: email };
+  } else {
+    if (!email) { console.error('usage: qa-sponsored-fulfil.mjs <member-email> [qty] | --guest <email> [qty] | --cleanup'); process.exit(1); }
+    const found = await db.from('members').select('id, full_name, email').ilike('email', email).maybeSingle();
+    m = found.data;
+    if (!m) { console.error('no member with that email'); process.exit(1); }
+  }
 
   const stamp = Date.now();
   const perTicket = Number(process.env.SINGLE_SESSION_PRICE_AED || 99);
@@ -40,15 +51,18 @@ async function main() {
     id: PREFIX + stamp,
     payment_intent: 'pi_qa_sponsor_' + stamp,
     amount_total: perTicket * qty * 100,
-    customer_details: { name: m.full_name || null },
-    metadata: { member_id: m.id, kind: 'sponsor', qty: String(qty), note: 'QA probe, not a real sponsorship' },
+    customer_details: { name: m.full_name || null, email: m.email || null },
+    metadata: Object.assign(
+      { kind: 'sponsor', qty: String(qty), note: 'QA probe, not a real sponsorship' },
+      m.id ? { member_id: m.id } : {}
+    ),
   };
-  console.log('fulfilling fake session', fakeSession.id, 'for', m.email, 'qty', qty);
+  console.log('fulfilling fake session', fakeSession.id, 'for', m.email, guest ? '(GUEST, no account)' : '(member)', 'qty', qty);
   const result = await lib.fulfillCheckoutSession(db, fakeSession);
   console.log('fulfil result:', result);
 
   const { data: pay } = await db.from('payments').select('kind, status, amount_aed').eq('stripe_session_id', fakeSession.id).maybeSingle();
-  const { data: sp } = await db.from('sponsored_tickets').select('qty, amount_aed, note').eq('stripe_session_id', fakeSession.id).maybeSingle();
+  const { data: sp } = await db.from('sponsored_tickets').select('qty, amount_aed, note, sponsor_member_id, sponsor_name, sponsor_email').eq('stripe_session_id', fakeSession.id).maybeSingle();
   const { data: all } = await db.from('sponsored_tickets').select('qty');
   console.log('payments row:', pay);
   console.log('sponsored_tickets row:', sp);

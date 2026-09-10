@@ -715,16 +715,24 @@ async function ownerStats(db) {
 // faithful reconstruction from the webhook event).
 async function fulfillCheckoutSession(db, sessionObj) {
   const md = sessionObj.metadata || {};
-  if (!md.member_id || !md.kind) return { ok: true, dedup: true, reason: 'no LFG metadata' };
+  // A sponsored-ticket purchase is the one kind that can arrive with no member:
+  // it is bought from the public homepage by someone who has no LFG account and
+  // must not be given one. Every other kind still requires the member id.
+  if (!md.kind) return { ok: true, dedup: true, reason: 'no LFG metadata' };
+  if (!md.member_id && md.kind !== 'sponsor') return { ok: true, dedup: true, reason: 'no LFG metadata' };
 
   // Member must exist before we can FK against it.
-  const authUser = await getAuthUserById(md.member_id);
-  await ensureMember(db, authUser || { id: md.member_id });
+  if (md.member_id) {
+    const authUser = await getAuthUserById(md.member_id);
+    await ensureMember(db, authUser || { id: md.member_id });
+  }
 
   const claim = await db.rpc('claim_fulfilment', {
     p_session_id: sessionObj.id,
     p_payment_intent: sessionObj.payment_intent,
-    p_member_id: md.member_id,
+    // Explicit null, never undefined: supabase-js drops undefined keys, and a
+    // missing p_member_id makes PostgREST fail to resolve the overload.
+    p_member_id: md.member_id || null,
     p_kind: md.kind,
     p_amount_aed: (sessionObj.amount_total || 0) / 100,
     p_promo_code: md.promo_code || null
@@ -736,7 +744,7 @@ async function fulfillCheckoutSession(db, sessionObj) {
 
   // Capture name from Stripe checkout if we don't have one yet.
   const stripeName = sessionObj.customer_details && sessionObj.customer_details.name;
-  if (stripeName) await db.from('members').update({ full_name: stripeName }).eq('id', md.member_id).is('full_name', null);
+  if (stripeName && md.member_id) await db.from('members').update({ full_name: stripeName }).eq('id', md.member_id).is('full_name', null);
 
   // Capture details we may need for the confirmation email AFTER the booking/credit lands.
   let emailKind = null;
@@ -799,8 +807,13 @@ async function fulfillCheckoutSession(db, sessionObj) {
     // unique payment_intent makes a replayed webhook a no-op, and
     // claim_fulfilment above already stops a second pass reaching here.
     const qty = Math.max(1, Math.min(50, parseInt(md.qty, 10) || 1));
+    // Attribution comes from the member row when a member bought it, and from
+    // what Stripe collected when a guest did. One of the two always exists.
+    const buyer = sessionObj.customer_details || {};
     const { error: spErr } = await db.from('sponsored_tickets').insert({
-      sponsor_member_id: md.member_id,
+      sponsor_member_id: md.member_id || null,
+      sponsor_name: md.member_id ? null : (buyer.name || null),
+      sponsor_email: md.member_id ? null : (buyer.email || null),
       qty: qty,
       amount_aed: paidAmount,
       note: md.note || null,
@@ -818,8 +831,13 @@ async function fulfillCheckoutSession(db, sessionObj) {
       const to = process.env.LFG_OWNER_EMAIL;
       if (to) {
         const { sendEmail, emailShell, escapeHtml } = require('./_email');
-        const { data: who } = await db.from('members').select('full_name,email').eq('id', md.member_id).maybeSingle();
-        const name = (who && (who.full_name || who.email)) || 'A member';
+        let name = 'A guest';
+        if (md.member_id) {
+          const { data: who } = await db.from('members').select('full_name,email').eq('id', md.member_id).maybeSingle();
+          name = (who && (who.full_name || who.email)) || 'A member';
+        } else {
+          name = (sessionObj.customer_details && (sessionObj.customer_details.name || sessionObj.customer_details.email)) || 'A guest';
+        }
         const origin = process.env.SITE_ORIGIN || 'https://lfgdubai.com';
         await sendEmail({
           to: to,

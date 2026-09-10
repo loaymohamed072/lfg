@@ -1,12 +1,24 @@
 // POST /api/checkout - creates a Stripe Checkout Session (test mode).
 // Body: { kind:'single'|'package'|'merch'|'sponsor', package_id?, session_id?, promo_code?, qty?, note? }
+// Auth: required for every kind except 'sponsor', which is public (see below).
 // Returns: { url } to redirect the member to Stripe.
 const Stripe = require('stripe');
 const { admin, getUser, ensureMember, validatePromoCode, safeError } = require('./_lib');
 
 module.exports = async (req, res) => {
   const user = await getUser(req);
-  if (!user) return res.status(401).json({ error: 'Not authenticated' });
+  // Sponsored tickets are the one PUBLIC checkout on the site. They are a gift to
+  // the community, nothing is booked for the buyer, and the buyer is usually a
+  // guest of Reem's PR list rather than an LFG member. Demanding an account here
+  // would either lose the sale or mint an auth user from a typed-in email, which
+  // is exactly the path closed on 2026-08-09 (~220 junk GoTrue signups). So the
+  // sponsor stays anonymous to us and Stripe collects their name and email.
+  // The GET branch below only reports the paid/unpaid status of a session id the
+  // caller already holds, so it is safe to leave open for that same guest.
+  const publicSponsor = !user && (
+    req.method === 'GET' || (req.method === 'POST' && (req.body || {}).kind === 'sponsor')
+  );
+  if (!user && !publicSponsor) return res.status(401).json({ error: 'Not authenticated' });
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -32,10 +44,12 @@ module.exports = async (req, res) => {
 
   try {
     // Guarantee the member row exists before writing payments (FK dependency).
-    await ensureMember(db, user);
+    // An anonymous sponsor has no member row and must not be given one.
+    if (user) await ensureMember(db, user);
 
     let lineItem, promo = null;
-    const metadata = { member_id: user.id, kind: kind };
+    const metadata = { kind: kind };
+    if (user) metadata.member_id = user.id;
 
     if (kind === 'package') {
       const { data: pkg } = await db.from('packages').select('*').eq('id', body.package_id).eq('active', true).single();
@@ -127,7 +141,7 @@ module.exports = async (req, res) => {
 
     // Record a pending payment up front (reconciled by the webhook).
     const { data: pay, error: payErr } = await db.from('payments')
-      .insert({ member_id: user.id, kind: kind, amount_aed: lineItem.price_data.unit_amount / 100, promo_code: promo, status: 'pending' })
+      .insert({ member_id: user ? user.id : null, kind: kind, amount_aed: lineItem.price_data.unit_amount / 100, promo_code: promo, status: 'pending' })
       .select('id').single();
     if (payErr) throw new Error('payment insert: ' + payErr.message);
 
@@ -139,7 +153,9 @@ module.exports = async (req, res) => {
       ui_mode: 'embedded_page',
       mode: 'payment',
       line_items: [lineItem],
-      customer_email: user.email,
+      // No customer_email for an anonymous sponsor: Stripe collects it, and that
+      // is where the attribution on the hand-out comes from.
+      customer_email: user ? user.email : undefined,
       metadata: metadata,
       payment_method_types: ['card'],
       redirect_on_completion: 'never'

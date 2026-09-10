@@ -20,7 +20,7 @@ const EXPIRES_DAYS = 60;
 async function loadPool(db) {
   const [{ data: tickets, error: tErr }, { data: allocs, error: aErr }] = await Promise.all([
     db.from('sponsored_tickets')
-      .select('id, sponsor_member_id, qty, amount_aed, note, purchased_at')
+      .select('id, sponsor_member_id, sponsor_name, sponsor_email, qty, amount_aed, note, purchased_at')
       .order('purchased_at', { ascending: true }),
     db.from('sponsored_ticket_allocations')
       .select('id, sponsored_ticket_id, member_id, qty, actor_admin_id, created_at')
@@ -30,7 +30,7 @@ async function loadPool(db) {
   if (aErr) throw new Error(aErr.message);
 
   const ids = new Set();
-  (tickets || []).forEach((t) => ids.add(t.sponsor_member_id));
+  (tickets || []).forEach((t) => { if (t.sponsor_member_id) ids.add(t.sponsor_member_id); });
   (allocs || []).forEach((a) => { ids.add(a.member_id); ids.add(a.actor_admin_id); });
   let names = new Map();
   if (ids.size) {
@@ -43,7 +43,8 @@ async function loadPool(db) {
 
   const sponsorships = (tickets || []).map((t) => ({
     id: t.id,
-    sponsor: names.get(t.sponsor_member_id) || 'Member',
+    // A homepage sponsor has no member row, so fall back to what Stripe collected.
+    sponsor: names.get(t.sponsor_member_id) || t.sponsor_name || t.sponsor_email || 'Guest',
     qty: t.qty,
     remaining: t.qty - (usedBy.get(t.id) || 0),
     amount_aed: Number(t.amount_aed),
