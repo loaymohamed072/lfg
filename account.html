@@ -168,6 +168,59 @@
       <div id="referralRewards" class="referral-rewards" style="display:none;"></div>
     </section>
 
+    <!-- Sponsor a bootcamp. Ahmed, 10 Sep: PR contacts want to support the bootcamps
+         by buying passes and paying them forward. Bottom of the profile, on his
+         instruction, and "sponsored", never "donation". The buyer gets nothing booked;
+         the coaches hand the tickets out by name from Admin → Sponsored. -->
+    <section id="sponsorPanel" class="referral-panel" style="display:none;">
+      <style>
+        .sp-row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:14px; }
+        .sp-step { display:inline-flex; align-items:center; border:1px solid rgba(255,255,255,.18); border-radius:999px; overflow:hidden; }
+        .sp-step button { background:none; border:none; color:inherit; font:inherit; font-size:18px; width:40px; height:40px; cursor:pointer; }
+        .sp-step button:hover, .sp-step button:focus-visible { background:rgba(255,255,255,.08); outline:none; }
+        .sp-step button:active { transform:translateY(1px); }
+        .sp-step button:disabled { opacity:.35; cursor:default; transform:none; }
+        .sp-step output { min-width:34px; text-align:center; font-family:var(--fh, inherit); font-weight:800; font-size:16px; }
+        .sp-total { font-family:var(--fh, inherit); font-weight:800; font-size:16px; letter-spacing:.02em; }
+        .sp-note { width:100%; margin-top:10px; background:transparent; border:1px solid rgba(255,255,255,.18); border-radius:10px; color:inherit; font:inherit; font-size:16px; padding:10px 12px; }
+        .sp-note::placeholder { color:rgba(255,255,255,.4); }
+        .sp-go { margin-top:14px; width:100%; }
+        .sp-go[disabled] { opacity:.6; cursor:default; }
+        .sp-meta { margin-top:10px; font-size:13px; opacity:.7; }
+        .sp-mount { margin-top:14px; min-height:120px; }
+        .sp-back { background:none; border:none; color:inherit; font:inherit; font-size:13px; opacity:.7; cursor:pointer; padding:0; margin-top:8px; }
+        .sp-done { margin-top:12px; padding:14px 16px; border:1px solid rgba(153,153,102,.5); border-radius:12px; background:rgba(153,153,102,.08); }
+      </style>
+      <div class="referral-head">
+        <div class="lfg-eyebrow" style="text-align:left;margin-bottom:8px;letter-spacing:.32em;font-size:10px;">Sponsor a bootcamp</div>
+        <h3 class="referral-h">Pay a session <em>forward.</em></h3>
+        <p class="referral-sub">Buy bootcamp tickets for the community. The coaches hand them to people who could use one, by name. Your card is charged, nothing is booked for you.</p>
+      </div>
+
+      <div id="spForm">
+        <div class="sp-row">
+          <div class="sp-step" role="group" aria-label="Number of tickets">
+            <button type="button" id="spMinus" aria-label="Fewer tickets">&minus;</button>
+            <output id="spQty" aria-live="polite">1</output>
+            <button type="button" id="spPlus" aria-label="More tickets">+</button>
+          </div>
+          <div class="sp-total" id="spTotal">AED 99</div>
+        </div>
+        <input class="sp-note" id="spNote" maxlength="200" placeholder="A note for the coaches (optional)" aria-label="Note for the coaches">
+        <button type="button" class="referral-action sp-go" id="spGo">Sponsor 1 ticket</button>
+        <div class="sp-meta" id="spMeta"></div>
+        <div class="sp-meta" id="spErr" style="display:none;color:#e58a8a;opacity:1;"></div>
+      </div>
+
+      <div id="spCheckout" style="display:none;">
+        <div class="lfg-eyebrow" style="text-align:left;letter-spacing:.32em;font-size:10px;">Secure checkout</div>
+        <div id="spMount" class="sp-mount"></div>
+        <button type="button" class="sp-back" id="spBack">&larr; Back</button>
+      </div>
+
+      <div id="spDone" class="sp-done" style="display:none;"></div>
+    </section>
+
     <!-- Push opt-in. Same pill component as the install prompt so the two read as one
          row of app settings rather than two competing banners. -->
     <div id="notifyCard" class="install-pill" style="display:none">
@@ -254,6 +307,7 @@
 <div class="lfg-toast" id="lfgToast" role="status" aria-live="polite"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.1"></script>
+<script src="https://js.stripe.com/v3/"></script>
 <script src="/app-assets/lfg-supabase.js?v=3"></script>
 <script>
   (function () {
@@ -943,6 +997,83 @@
         });
       });
     }
+    // ---- Sponsor a bootcamp (Ahmed, 10 Sep) ----
+    // Shows only for a signed-in member (/api/sponsor 401s otherwise). Checkout
+    // is the same embedded Stripe flow the home page uses for packages, mounted
+    // inside this card so nobody leaves the page to pay a session forward.
+    (function sponsorCard() {
+      var panel = el('sponsorPanel');
+      if (!panel || !window.lfg) return;
+      var qty = 1, price = 99, busy = false, checkout = null;
+      function paint() {
+        el('spQty').textContent = qty;
+        el('spTotal').textContent = 'AED ' + (price * qty);
+        el('spGo').textContent = 'Sponsor ' + qty + ' ticket' + (qty === 1 ? '' : 's');
+        el('spMinus').disabled = qty <= 1;
+        el('spPlus').disabled = qty >= 50;
+      }
+      function meta(d) {
+        var parts = [];
+        if (d.community_total) parts.push(d.community_total + ' ticket' + (d.community_total === 1 ? '' : 's') + ' paid forward by the community so far');
+        if (d.yours_total) parts.push('You’ve sponsored ' + d.yours_total);
+        el('spMeta').textContent = parts.join(' · ');
+      }
+      function showErr(m) { var e = el('spErr'); e.textContent = m || ''; e.style.display = m ? 'block' : 'none'; }
+      function destroy() { if (checkout) { try { checkout.destroy(); } catch (e) {} checkout = null; } el('spMount').innerHTML = ''; }
+      function backToForm() { destroy(); el('spCheckout').style.display = 'none'; el('spForm').style.display = ''; }
+      async function load() {
+        var r = await lfg.api('/api/sponsor');
+        if (!r.ok || !r.data) return;
+        price = Number(r.data.price_aed) || 99;
+        meta(r.data); paint();
+        panel.style.display = '';
+      }
+      el('spMinus').addEventListener('click', function () { if (qty > 1) { qty--; paint(); } });
+      el('spPlus').addEventListener('click', function () { if (qty < 50) { qty++; paint(); } });
+      el('spBack').addEventListener('click', backToForm);
+      el('spGo').addEventListener('click', async function () {
+        if (busy) return;
+        showErr('');
+        if (!window.Stripe) { showErr('Payment library did not load. Refresh and try again.'); return; }
+        busy = true;
+        var btn = el('spGo'); var prev = btn.textContent; btn.disabled = true; btn.textContent = 'Opening checkout…';
+        var res = await lfg.api('/api/checkout', { method: 'POST', body: JSON.stringify({ kind: 'sponsor', qty: qty, note: el('spNote').value }) });
+        btn.disabled = false; btn.textContent = prev; busy = false;
+        if (!res.ok || !res.data || !res.data.client_secret || !res.data.publishable_key) {
+          showErr((res.data && res.data.error) || 'Checkout failed. Try again.');
+          return;
+        }
+        var sessionId = res.data.id;
+        var paidQty = qty;
+        el('spForm').style.display = 'none'; el('spCheckout').style.display = '';
+        try {
+          var stripe = window.Stripe(res.data.publishable_key);
+          checkout = await stripe.initEmbeddedCheckout({
+            clientSecret: res.data.client_secret,
+            onComplete: async function () {
+              var paid = false;
+              try {
+                var st = await lfg.api('/api/checkout?session_id=' + encodeURIComponent(sessionId));
+                paid = st.ok && st.data && st.data.payment_status === 'paid';
+              } catch (e) {}
+              destroy(); el('spCheckout').style.display = 'none';
+              var done = el('spDone'); done.style.display = '';
+              done.textContent = paid
+                ? ('Thank you. ' + paidQty + ' ticket' + (paidQty === 1 ? '' : 's') + ' paid forward. The coaches will hand ' + (paidQty === 1 ? 'it' : 'them') + ' out.')
+                : 'Payment is being confirmed. It will show here in a moment.';
+              qty = 1; el('spNote').value = '';
+              el('spForm').style.display = '';
+              load();
+            }
+          });
+          checkout.mount('#spMount');
+        } catch (e) {
+          showErr('Could not load checkout. Try again.');
+          backToForm();
+        }
+      });
+      load();
+    })();
   })();
 </script>
 </body>

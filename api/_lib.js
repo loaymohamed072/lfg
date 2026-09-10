@@ -788,6 +788,49 @@ async function fulfillCheckoutSession(db, sessionObj) {
         paidAmount
       };
     }
+  } else if (md.kind === 'sponsor') {
+    // Sponsored tickets go into the pool, not onto the buyer's account. The
+    // unique payment_intent makes a replayed webhook a no-op, and
+    // claim_fulfilment above already stops a second pass reaching here.
+    const qty = Math.max(1, Math.min(50, parseInt(md.qty, 10) || 1));
+    const { error: spErr } = await db.from('sponsored_tickets').insert({
+      sponsor_member_id: md.member_id,
+      qty: qty,
+      amount_aed: paidAmount,
+      note: md.note || null,
+      stripe_session_id: sessionObj.id,
+      stripe_payment_intent: sessionObj.payment_intent
+    });
+    if (spErr && !/duplicate key|unique/i.test(spErr.message || '')) {
+      return { ok: false, error: 'sponsored tickets: ' + spErr.message };
+    }
+    // Tell the owner there are tickets to hand out. Best-effort: the money
+    // and the pool row are already in, so a mail failure must not fail
+    // fulfilment or trigger a Stripe retry. Required lazily because _email
+    // depends on this file.
+    try {
+      const to = process.env.LFG_OWNER_EMAIL;
+      if (to) {
+        const { sendEmail, emailShell, escapeHtml } = require('./_email');
+        const { data: who } = await db.from('members').select('full_name,email').eq('id', md.member_id).maybeSingle();
+        const name = (who && (who.full_name || who.email)) || 'A member';
+        const origin = process.env.SITE_ORIGIN || 'https://lfgdubai.com';
+        await sendEmail({
+          to: to,
+          subject: qty + ' bootcamp ticket' + (qty === 1 ? '' : 's') + ' sponsored by ' + name,
+          html: emailShell({
+            preheader: qty + ' sponsored ticket' + (qty === 1 ? '' : 's') + ' waiting to be handed out.',
+            bodyHtml:
+              '<p><b>' + escapeHtml(name) + '</b> paid forward <b>' + qty + ' bootcamp ticket' + (qty === 1 ? '' : 's') + '</b> (AED ' + paidAmount + ').</p>' +
+              (md.note ? '<p>Their note: <i>' + escapeHtml(md.note) + '</i></p>' : '') +
+              '<p>Hand them out by name in <a href="' + origin + '/admin.html">Admin &rarr; Sponsored</a>.</p>'
+          }),
+          text: name + ' sponsored ' + qty + ' bootcamp ticket(s). Allocate them in Admin -> Sponsored.'
+        });
+      }
+    } catch (mailErr) {
+      console.warn('[fulfill] sponsor mail failed:', mailErr && mailErr.message);
+    }
   } else if (md.kind === 'merch') {
     // Record the paid t-shirt order. Idempotent via the unique index on payment_intent
     // (claim_fulfilment above already guarantees we only reach here once per session).

@@ -522,6 +522,7 @@
     <button class="nav-btn" data-view="runs"><span class="ico"></span> Runs</button>
     <button class="nav-btn" data-view="padel"><span class="ico"></span> Padel</button>
     <button class="nav-btn" data-view="leads"><span class="ico"></span> Leads <span class="nav-badge" id="leads-nav-badge"></span></button>
+    <button class="nav-btn" data-view="sponsored"><span class="ico"></span> Sponsored <span class="nav-badge" id="sponsored-nav-badge"></span></button>
     <button class="nav-btn" data-view="orders"><span class="ico"></span> Merch <span class="nav-badge" id="orders-nav-badge"></span></button>
     <button class="nav-btn" data-view="reviews"><span class="ico"></span> Reviews <span class="nav-badge" id="reviews-nav-badge"></span></button>
     <button class="nav-btn" data-view="promos"><span class="ico"></span> Promo codes</button>
@@ -695,6 +696,38 @@
         </div>
         <div class="tbl-wrap"><table class="tbl" id="members-tbl"></table></div>
         <div id="members-pager" class="lfg-pager"></div>
+      </div>
+    </section>
+
+    <!-- SPONSORED TICKETS. Ahmed, 10 Sep: members and PR contacts buy bootcamp
+         tickets and pay them forward; the coaches hand them out by name. The
+         credit lands through adjust_credits(), so it expires and audits like a
+         comped session; this view is the pool and the hand-out. -->
+    <section class="view hidden" id="view-sponsored">
+      <div class="card">
+        <h3>Sponsored tickets</h3>
+        <div class="stat-row" id="sp-stats" style="display:flex;gap:18px;flex-wrap:wrap;margin:8px 0 14px;">
+          <div><div class="muted" style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;">In the pool</div><div id="sp-remaining" style="font-family:var(--fh);font-size:28px;font-weight:800;">—</div></div>
+          <div><div class="muted" style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;">Handed out</div><div id="sp-allocated" style="font-family:var(--fh);font-size:28px;font-weight:800;">—</div></div>
+          <div><div class="muted" style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;">Sponsored so far</div><div id="sp-purchased" style="font-family:var(--fh);font-size:28px;font-weight:800;">—</div></div>
+        </div>
+        <div class="tbl-tools" style="align-items:flex-end;gap:10px;flex-wrap:wrap;">
+          <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;">Member email
+            <input type="email" id="sp-email" placeholder="who gets the ticket" autocomplete="off" style="min-width:240px;"></label>
+          <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;">Tickets
+            <input type="number" id="sp-qty" min="1" max="20" value="1" style="width:80px;"></label>
+          <button class="mini" id="sp-go">Hand out</button>
+          <span class="muted" id="sp-msg" style="font-size:12px;"></span>
+        </div>
+        <p class="muted" style="font-size:12px;margin-top:6px;">Credits them a comp pack that expires in 60 days, with the sponsor named on their ledger. Oldest sponsorship is drawn first.</p>
+      </div>
+      <div class="card">
+        <h3>Sponsorships</h3>
+        <div class="tbl-wrap"><table class="tbl" id="sp-sponsorships"></table></div>
+      </div>
+      <div class="card">
+        <h3>Hand-outs</h3>
+        <div class="tbl-wrap"><table class="tbl" id="sp-allocations"></table></div>
       </div>
     </section>
 
@@ -1505,7 +1538,8 @@
     orders:   ['Merch', 'Tee stock, orders & fulfilment'],
     reviews:  ['Reviews', 'What members wrote. Approve to publish on the bootcamp page'],
     promos:   ['Promo codes', 'Generate, deactivate, and track redemptions'],
-    notify:   ['Notify', 'Push an announcement to members who installed the app']
+    notify:   ['Notify', 'Push an announcement to members who installed the app'],
+    sponsored: ['Sponsored', 'Bootcamp tickets paid forward by the community, handed out by you']
   };
   var promosLoaded = false;
   var runsLoaded = false;
@@ -1516,6 +1550,7 @@
   var pastBootcampsLoaded = false;
   var reviewsLoaded = false;
   var pushLoaded = false;
+  var sponsoredLoaded = false;
   document.querySelectorAll('.nav-btn').forEach(function (b) {
     b.addEventListener('click', function () {
       var v = b.getAttribute('data-view');
@@ -1532,6 +1567,7 @@
       if (v === 'bootcamp' && !pastBootcampsLoaded) { pastBootcampsLoaded = true; loadPastBootcamps(1); }
       if (v === 'reviews' && !reviewsLoaded) { reviewsLoaded = true; loadReviews(); }
       if (v === 'notify' && !pushLoaded) { pushLoaded = true; loadPush(); }
+      if (v === 'sponsored' && !sponsoredLoaded) { sponsoredLoaded = true; loadSponsored(); }
     });
   });
   el('refresh-btn').addEventListener('click', loadAll);
@@ -4288,7 +4324,60 @@
     loadPush();
   });
 
+  // ---- Sponsored tickets (Ahmed, 10 Sep) ----
+  // Pool + hand-out. Rows are built with textContent, never innerHTML, because
+  // the sponsor's note is free text typed by a member.
+  function spCell(text) { var td = document.createElement('td'); td.textContent = text == null ? '' : String(text); return td; }
+  function spRow(cells) { var tr = document.createElement('tr'); cells.forEach(function (c) { tr.appendChild(spCell(c)); }); return tr; }
+  function spHead(cols) { var tr = document.createElement('tr'); cols.forEach(function (c) { var th = document.createElement('th'); th.textContent = c; tr.appendChild(th); }); return tr; }
+  function spWhen(iso) {
+    try { return new Date(iso).toLocaleString('en-GB', { timeZone: 'Asia/Dubai', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); }
+    catch (e) { return iso || ''; }
+  }
+  function paintSponsored(d) {
+    el('sp-remaining').textContent = d.pool.remaining;
+    el('sp-allocated').textContent = d.pool.allocated;
+    el('sp-purchased').textContent = d.pool.purchased;
+    var badge = el('sponsored-nav-badge'); if (badge) badge.textContent = d.pool.remaining ? String(d.pool.remaining) : '';
+    var t1 = el('sp-sponsorships'); t1.innerHTML = '';
+    t1.appendChild(spHead(['When', 'Sponsor', 'Tickets', 'Left', 'Paid', 'Note']));
+    if (!d.sponsorships.length) t1.appendChild(spRow(['No sponsorships yet.', '', '', '', '', '']));
+    d.sponsorships.forEach(function (s) { t1.appendChild(spRow([spWhen(s.purchased_at), s.sponsor, s.qty, s.remaining, 'AED ' + s.amount_aed, s.note || ''])); });
+    var t2 = el('sp-allocations'); t2.innerHTML = '';
+    t2.appendChild(spHead(['When', 'Member', 'Tickets', 'By']));
+    if (!d.allocations.length) t2.appendChild(spRow(['Nothing handed out yet.', '', '', '']));
+    d.allocations.forEach(function (a) { t2.appendChild(spRow([spWhen(a.created_at), a.member, a.qty, a.by])); });
+  }
+  async function loadSponsored() {
+    var r = await api('/api/admin/sponsored', 'GET');
+    if (r.ok && r.data && r.data.pool) paintSponsored(r.data);
+    else el('sp-msg').textContent = (r.data && r.data.error) || 'Could not load sponsored tickets.';
+  }
+  // Badge on load, so tickets waiting to be handed out are visible from any view.
+  async function refreshSponsoredBadge() {
+    try {
+      var r = await api('/api/admin/sponsored', 'GET');
+      var badge = el('sponsored-nav-badge');
+      if (r.ok && r.data && r.data.pool && badge) badge.textContent = r.data.pool.remaining ? String(r.data.pool.remaining) : '';
+    } catch (e) {}
+  }
+  el('sp-go').addEventListener('click', async function () {
+    var email = el('sp-email').value.trim().toLowerCase();
+    var qty = parseInt(el('sp-qty').value, 10);
+    var msg = el('sp-msg');
+    if (!email) { msg.textContent = 'Enter the member’s email.'; return; }
+    if (!Number.isInteger(qty) || qty < 1 || qty > 20) { msg.textContent = '1 to 20 tickets at a time.'; return; }
+    var btn = el('sp-go'); btn.disabled = true; var prev = btn.textContent; btn.textContent = 'Handing out…'; msg.textContent = '';
+    var r = await api('/api/admin/sponsored', 'POST', { member_email: email, qty: qty });
+    btn.disabled = false; btn.textContent = prev;
+    if (!r.ok || !r.data || !r.data.ok) { msg.textContent = (r.data && r.data.error) || 'Could not hand out.'; return; }
+    msg.textContent = 'Done: ' + r.data.handed_out + ' ticket' + (r.data.handed_out === 1 ? '' : 's') + ' to ' + email + '.';
+    el('sp-email').value = ''; el('sp-qty').value = '1';
+    loadSponsored();
+  });
+
   paintWhen();
+  refreshSponsoredBadge();
 })();
 </script>
 </body>
