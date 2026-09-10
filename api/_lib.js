@@ -1071,7 +1071,8 @@ async function fulfillCheckoutSession(db, sessionObj) {
   // its own try/catch and won't throw. Honors GHL_DRY_RUN + GHL_DISABLED.
   // Merch buyers + paid-run entries aren't bootcamp purchasers - skip the bootcamp tag.
   // (Run registrants already synced to GHL via run-register's onRunRegister.)
-  if (md.kind !== 'merch' && md.kind !== 'run') {
+  // A sponsor paid for someone else's seat and booked nothing, so no tag either.
+  if (md.kind !== 'merch' && md.kind !== 'run' && md.kind !== 'sponsor') {
     try {
       const ghl = require('./_ghl');
       const { data: m } = await db.from('members').select('email,full_name').eq('id', md.member_id).maybeSingle();
