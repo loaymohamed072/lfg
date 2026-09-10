@@ -92,7 +92,13 @@
       price = Number(res.data.price_aed);
       var total = Number(res.data.community_total || 0);
       if (total > 0) {
-        el.count.innerHTML = '<b>' + total + '</b> ticket' + (total === 1 ? '' : 's') + ' paid forward so far';
+        // Built as nodes rather than markup: the count is ours, but the habit is
+        // what keeps the next edit here safe.
+        var strong = document.createElement('b');
+        strong.textContent = String(total);
+        el.count.replaceChildren(strong, document.createTextNode(
+          ' ticket' + (total === 1 ? '' : 's') + ' paid forward so far'
+        ));
         el.count.hidden = false;
       }
       paintTotal();
@@ -131,7 +137,7 @@
     var sessionId = res.data.id;
     el.form.hidden = true;
     el.checkout.hidden = false;
-    el.mount.innerHTML = '';
+    el.mount.replaceChildren();
 
     try {
       var stripe = window.Stripe(res.data.publishable_key);
