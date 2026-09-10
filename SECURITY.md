@@ -565,3 +565,49 @@ Vercel preview of the branch, not on production.
 **Verdict for this diff: PASS on every diff-scoped check. Repo artifact: FLAG**
 (standing items above; the only BLOCK-class item found, the `===` cron compare,
 is fixed in this branch).
+
+
+## 2026-09-10 — Sponsored tickets moved to a PUBLIC checkout (site-security lane, ASVS L2)
+
+**Verdict: FLAG** (`security-gate.sh --legacy --url https://www.lfgdubai.com`). No BLOCK.
+
+New attack surface this pass reviewed: `/api/checkout` now accepts `kind:'sponsor'`
+unauthenticated, and `GET /api/sponsor` is public.
+
+### Tested and holding
+- Auth boundary: anonymous POST is accepted ONLY for `kind:'sponsor'`; `single`,
+  `package` and `merch` still return 401, verified live on production.
+- `/api/admin/sponsored` returns 401 to an anonymous caller, verified live.
+- Public read surface: `GET /api/sponsor` returns price + community count only.
+  A member's own history is attached only when a session is present.
+- Anon-key RLS probe against `sponsored_tickets` and
+  `sponsored_ticket_allocations`: reads return `[]`, insert refused with 42501.
+  Both tables are RLS-on with no policies (service-role only, by design).
+- Webhook fulfilment: guest and member paths both write one pool row and dedupe on
+  replay (`claim_fulfilment` -> `already_processed`). Probe rows removed after.
+- Input validation: qty outside 1..50 and any promo code are rejected 400 before
+  Stripe is called.
+- No account is created for a guest sponsor. The 2026-08-09 decision that closed
+  public auth-user minting is intact; attribution comes from Stripe's own
+  `customer_details`.
+- Supabase advisors: no ERROR-level findings.
+
+### Dismissed, with reason
+- gitleaks reported 7 "secrets". Every one decodes to a Supabase PUBLISHABLE key
+  (`role: anon`, or the `sb_publishable_` prefix) that is meant to ship in the
+  browser; RLS is the control and it was probed. Two belong to project
+  `ykpnnqkoqgmwuwdrfmbe`, which no longer exists in the account and survives only
+  in git history. Recorded in `.gitleaksignore` with the reasoning, so a real
+  `service_role` leak would stand out instead of drowning in known noise.
+- semgrep's 3 ERROR findings are the same anon JWT.
+
+### Standing FLAGs (pre-existing, not introduced here)
+- CSP has no `script-src`/`default-src`: scripts are unrestricted site-wide.
+- `sharp` 0.34.5 high CVEs (GHSA-f88m-g3jw-g9cj, GHSA-rgj7-g3m4-5g8c). It is a
+  devDependency and never reaches the browser.
+- Security baseline 2/9 (legacy repo): no `.npmrc` script block, no cooldowns, no
+  CI workflow, no scheduled audit, no gitleaks pre-commit hook, no `security.txt`.
+- `SECURITY DEFINER` functions callable by `anon` via PostgREST:
+  `bootcamp_checkin_state(uuid)` and `is_coach()`.
+- Supabase leaked-password protection is disabled.
+- `short_name()` has a mutable `search_path`; the `vector` extension sits in `public`.
