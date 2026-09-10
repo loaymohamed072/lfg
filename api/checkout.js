@@ -1,5 +1,5 @@
 // POST /api/checkout - creates a Stripe Checkout Session (test mode).
-// Body: { kind:'single'|'package', package_id?, session_id?, promo_code? }
+// Body: { kind:'single'|'package'|'merch'|'sponsor', package_id?, session_id?, promo_code?, qty?, note? }
 // Returns: { url } to redirect the member to Stripe.
 const Stripe = require('stripe');
 const { admin, getUser, ensureMember, validatePromoCode, safeError } = require('./_lib');
@@ -77,6 +77,26 @@ module.exports = async (req, res) => {
       if (/^[A-Z]$/.test(body.section)) metadata.section = body.section; // preferred station
       lineItem = priceItem(amount, 'LFG Bootcamp - Single Session', new Date(sess.session_date).toDateString());
 
+    } else if (kind === 'sponsor') {
+      // Sponsored bootcamp tickets: pay N single sessions forward to the
+      // community. Nothing is booked for the buyer; the tickets land in a pool
+      // that admins hand out by name (see api/admin/sponsored.js). Priced at the
+      // single-session rate so "one ticket" means what it says on /packages.
+      // No promo codes: a discount on a gift to the community makes no sense,
+      // and referral codes are single-session only anyway.
+      const qty = Math.round(Number(body.qty));
+      if (!Number.isInteger(qty) || qty < 1 || qty > 50) return res.status(400).json({ error: 'Choose between 1 and 50 tickets' });
+      if (body.promo_code) return res.status(400).json({ error: 'Promo codes do not apply to sponsored tickets' });
+      const note = typeof body.note === 'string' ? body.note.replace(/\s+/g, ' ').trim().slice(0, 200) : '';
+      const perTicket = Number(process.env.SINGLE_SESSION_PRICE_AED || 99);
+      const amount = perTicket * qty;
+      metadata.qty = String(qty);
+      if (note) metadata.note = note;
+      lineItem = priceItem(
+        amount,
+        'LFG Bootcamp - Sponsored ticket' + (qty === 1 ? '' : 's') + ' × ' + qty,
+        'Paid forward to the LFG community · handed out by the coaches'
+      );
     } else if (kind === 'merch') {
       // The single LFG x PUMA tee. No address - handed over at the next run.
       const ALLOWED_SIZES = ['S', 'M', 'L', 'XL', 'XXL'];

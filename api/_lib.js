@@ -297,8 +297,14 @@ async function requireAdminOrCron(req, res) {
   const header = req.headers.authorization || req.headers.Authorization || '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : null;
   if (!token) { res.status(401).json({ error: 'Not authenticated' }); return null; }
-  if (process.env.LFG_CRON_TOKEN && token === process.env.LFG_CRON_TOKEN) {
-    return { db: admin(), mode: 'cron' };
+  // Constant-time compare, same as the webhook/HMAC check above: a plain ===
+  // on a bearer secret leaks its length and prefix through response timing.
+  if (process.env.LFG_CRON_TOKEN) {
+    const a = Buffer.from(token);
+    const b = Buffer.from(process.env.LFG_CRON_TOKEN);
+    if (a.length === b.length && crypto.timingSafeEqual(a, b)) {
+      return { db: admin(), mode: 'cron' };
+    }
   }
   const { data } = await authService().auth.getUser(token);
   const user = data && data.user;
@@ -788,6 +794,49 @@ async function fulfillCheckoutSession(db, sessionObj) {
         paidAmount
       };
     }
+  } else if (md.kind === 'sponsor') {
+    // Sponsored tickets go into the pool, not onto the buyer's account. The
+    // unique payment_intent makes a replayed webhook a no-op, and
+    // claim_fulfilment above already stops a second pass reaching here.
+    const qty = Math.max(1, Math.min(50, parseInt(md.qty, 10) || 1));
+    const { error: spErr } = await db.from('sponsored_tickets').insert({
+      sponsor_member_id: md.member_id,
+      qty: qty,
+      amount_aed: paidAmount,
+      note: md.note || null,
+      stripe_session_id: sessionObj.id,
+      stripe_payment_intent: sessionObj.payment_intent
+    });
+    if (spErr && !/duplicate key|unique/i.test(spErr.message || '')) {
+      return { ok: false, error: 'sponsored tickets: ' + spErr.message };
+    }
+    // Tell the owner there are tickets to hand out. Best-effort: the money
+    // and the pool row are already in, so a mail failure must not fail
+    // fulfilment or trigger a Stripe retry. Required lazily because _email
+    // depends on this file.
+    try {
+      const to = process.env.LFG_OWNER_EMAIL;
+      if (to) {
+        const { sendEmail, emailShell, escapeHtml } = require('./_email');
+        const { data: who } = await db.from('members').select('full_name,email').eq('id', md.member_id).maybeSingle();
+        const name = (who && (who.full_name || who.email)) || 'A member';
+        const origin = process.env.SITE_ORIGIN || 'https://lfgdubai.com';
+        await sendEmail({
+          to: to,
+          subject: qty + ' bootcamp ticket' + (qty === 1 ? '' : 's') + ' sponsored by ' + name,
+          html: emailShell({
+            preheader: qty + ' sponsored ticket' + (qty === 1 ? '' : 's') + ' waiting to be handed out.',
+            bodyHtml:
+              '<p><b>' + escapeHtml(name) + '</b> paid forward <b>' + qty + ' bootcamp ticket' + (qty === 1 ? '' : 's') + '</b> (AED ' + paidAmount + ').</p>' +
+              (md.note ? '<p>Their note: <i>' + escapeHtml(md.note) + '</i></p>' : '') +
+              '<p>Hand them out by name in <a href="' + origin + '/admin.html">Admin &rarr; Sponsored</a>.</p>'
+          }),
+          text: name + ' sponsored ' + qty + ' bootcamp ticket(s). Allocate them in Admin -> Sponsored.'
+        });
+      }
+    } catch (mailErr) {
+      console.warn('[fulfill] sponsor mail failed:', mailErr && mailErr.message);
+    }
   } else if (md.kind === 'merch') {
     // Record the paid t-shirt order. Idempotent via the unique index on payment_intent
     // (claim_fulfilment above already guarantees we only reach here once per session).
@@ -1028,7 +1077,8 @@ async function fulfillCheckoutSession(db, sessionObj) {
   // its own try/catch and won't throw. Honors GHL_DRY_RUN + GHL_DISABLED.
   // Merch buyers + paid-run entries aren't bootcamp purchasers - skip the bootcamp tag.
   // (Run registrants already synced to GHL via run-register's onRunRegister.)
-  if (md.kind !== 'merch' && md.kind !== 'run') {
+  // A sponsor paid for someone else's seat and booked nothing, so no tag either.
+  if (md.kind !== 'merch' && md.kind !== 'run' && md.kind !== 'sponsor') {
     try {
       const ghl = require('./_ghl');
       const { data: m } = await db.from('members').select('email,full_name').eq('id', md.member_id).maybeSingle();
