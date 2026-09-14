@@ -24,6 +24,12 @@
   --bc-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
+html.bc-page {
+  /* The nav is fixed and 73px tall; without this an anchored section lands
+     underneath it. */
+  scroll-padding-top: 96px;
+}
+
 html.bc-page, .bc-page body {
   background: var(--bc-black);
   color: var(--bc-white);
