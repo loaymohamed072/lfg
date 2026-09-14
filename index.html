@@ -537,12 +537,18 @@ nav.scrolled {
   align-items: flex-end;
   justify-content: flex-end;
   padding: 0 64px 80px;
+  /* The strip runs the full width but only carries the timer on the right. It
+     paints over the hero CTAs, so without this its empty left side ate every
+     click on them (dead on all desktop sizes, mobile was fine only because the
+     strip is display:none there). */
+  pointer-events: none;
 }
 
 .hero-timer-box {
   text-align: right;
   opacity: 0;
   animation: fade-up 0.7s 1.4s ease forwards;
+  pointer-events: auto;
 }
 
 .hero-timer-label {
@@ -596,6 +602,8 @@ nav.scrolled {
   gap: 8px;
   opacity: 0;
   animation: fade-up 0.6s 2s ease forwards;
+  /* Decoration only, and it sits at the same height as the CTA row. */
+  pointer-events: none;
 }
 
 .scroll-line {

@@ -2,7 +2,9 @@
   "cleanUrls": true,
   "regions": ["hnd1"],
   "redirects": [
-    { "source": "/coaching", "destination": "/#coaching", "permanent": false }
+    { "source": "/coaching", "destination": "/#coaching", "permanent": false },
+    { "source": "/bootcamp/payitforward", "destination": "/bootcamp#give", "permanent": false },
+    { "source": "/payitforward", "destination": "/bootcamp#give", "permanent": false }
   ],
   "crons": [
     { "path": "/api/admin/send-roster", "schedule": "0 8 * * 6" },
