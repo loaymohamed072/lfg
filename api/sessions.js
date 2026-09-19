@@ -13,6 +13,16 @@ function stationLabels(n) {
   return out;
 }
 function sectionCap(total, idx, n) { return Math.floor(total / n) + (idx < (total % n) ? 1 : 0); }
+// Pair rounds, mirroring public.balanced_open_stations (the RPCs enforce it; keep the two
+// in sync). A station is open only below the next even level above the emptiest station,
+// so stations fill two at a time and stay equal for partner work.
+function openStations(total, n, counts) {
+  const min = Math.min(...counts);
+  const level = 2 * Math.floor(min / 2) + 2;
+  const open = counts.map((c, i) => c < Math.min(level, sectionCap(total, i, n)));
+  if (open.some(Boolean)) return open;
+  return counts.map((c, i) => c < sectionCap(total, i, n)); // uneven legacy caps
+}
 
 module.exports = async (req, res) => {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
@@ -76,10 +86,14 @@ module.exports = async (req, res) => {
       const e = bySession[s.id] || { total: 0, sections: {}, mine: false };
       const n = s.stations || 4;
       const spotsLeft = Math.max(0, s.capacity - e.total);
-      const sections = stationLabels(n).map((label, i) => {
+      const labels = stationLabels(n);
+      const counts = labels.map(l => e.sections[l] || 0);
+      const open = openStations(s.capacity, n, counts);
+      const sections = labels.map((label, i) => {
         const cap = sectionCap(s.capacity, i, n);
-        const booked = e.sections[label] || 0;
-        return { label, spots_left: Math.max(0, cap - booked), full: booked >= cap };
+        const booked = counts[i];
+        // waiting: has room, but the others must catch up first (picker disables it).
+        return { label, spots_left: Math.max(0, cap - booked), full: booked >= cap, waiting: booked < cap && !open[i] };
       });
       return {
         id: s.id,

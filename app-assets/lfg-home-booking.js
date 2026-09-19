@@ -332,8 +332,8 @@
           : 'Pick a station, then book a single for <b>' + singlePrice + ' AED</b>.') + '</div>' +
         '<div class="lfgw-seclabel">Pick your station</div>' +
         '<div class="lfgw-secgrid">' + s.sections.map(function (sec) {
-          return '<div class="lfgw-sec' + (sec.full ? ' full' : '') + '" data-sec="' + sec.label + '">' +
-            '<div class="l">' + sec.label + '</div><div class="n">' + (sec.full ? 'Full' : sec.spots_left + ' left') + '</div></div>';
+          return '<div class="lfgw-sec' + (sec.full || sec.waiting ? ' full' : '') + '" data-sec="' + sec.label + '">' +
+            '<div class="l">' + sec.label + '</div><div class="n">' + (sec.full ? 'Full' : sec.waiting ? 'Opens soon' : sec.spots_left + ' left') + '</div></div>';
         }).join('') + '</div>' +
         promoHtml +
         '<div class="lfgw-actions" id="lfgwActions"></div>' +
