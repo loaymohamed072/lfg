@@ -197,17 +197,19 @@
       if (!s) { featuredEl.style.display = 'none'; bookBtn.style.display = 'none'; return; }
       featuredEl.style.display = ''; bookBtn.style.display = '';
       var c = fmtCard(s);
-      var pct = s.capacity ? Math.min(100, Math.round(s.booked / s.capacity * 100)) : 0;
-      var hot = s.spots_left <= 8 ? ' hot' : '';
-      var stats = s.booked === 0
-        ? 'Be the first in · <span class="urge' + hot + '">' + s.spots_left + ' spots open</span>'
-        : '<b>' + s.booked + '</b> booked · <span class="urge' + hot + '">' + s.spots_left + ' spot' + (s.spots_left === 1 ? '' : 's') + ' left</span>';
-      if (s.spots_left <= 8 && !s.sold_out) stats += ' &nbsp;·&nbsp; <span class="urge hot">Filling fast</span>';
+      // No headcount or seats-left total: capacity auto-grows, so a big "33 left" undersells
+      // demand. Urgency comes from the stations the balancer has nearly closed, which is live.
+      var tight = (s.sections || []).filter(function (x) { return !x.full && !x.waiting && x.spots_now != null && x.spots_now <= 2; })
+        .map(function (x) { return x.label; });
+      var names = tight.length > 1 ? tight.slice(0, -1).join(', ') + ' and ' + tight[tight.length - 1] : tight[0];
+      var stats = s.sold_out ? '<span class="urge hot">Sold out</span>'
+        : tight.length ? '<span class="urge hot">Last spots in ' + (tight.length > 1 ? 'stations ' : 'station ') + names + '</span> · Book now'
+        : s.booked === 0 ? 'Be the first in · <span class="urge">Booking open</span>'
+        : '<span class="urge">Pick your station before it fills</span>';
       featuredEl.innerHTML =
         '<div class="lfgw-feat-tag">Next session · Sunday</div>' +
         '<div class="lfgw-feat-date">' + c.full + ' · ' + fmtTime(s) + '</div>' +
         '<div class="lfgw-feat-sub">' + (s.location || 'CrossFit Alioth') + '</div>' +
-        '<div class="lfgw-feat-bar"><i style="width:' + pct + '%"></i></div>' +
         '<div class="lfgw-feat-stats">' + stats + '</div>';
     }
 
@@ -218,7 +220,7 @@
         var c = fmtCard(s), sold = s.sold_out ? ' lfgw-soldout' : '';
         return '<button class="bootcamp-date-card' + sold + '" type="button" data-sid="' + s.id + '"' + (s.sold_out ? ' disabled' : '') + '>' +
           '<span class="bdc-day">SUN</span><span class="bdc-date">' + c.date + '</span>' +
-          '<span class="bdc-time">' + (s.sold_out ? 'Sold out' : s.spots_left + ' left') + '</span></button>';
+          '<span class="bdc-time">' + (s.sold_out ? 'Sold out' : 'Open') + '</span></button>';
       }).join('');
       datesWrap.querySelectorAll('[data-sid]').forEach(function (b) {
         b.addEventListener('click', function () { startBooking(b.getAttribute('data-sid')); });
