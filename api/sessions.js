@@ -13,15 +13,19 @@ function stationLabels(n) {
   return out;
 }
 function sectionCap(total, idx, n) { return Math.floor(total / n) + (idx < (total % n) ? 1 : 0); }
-// Pair rounds, mirroring public.balanced_open_stations (the RPCs enforce it; keep the two
-// in sync). A station is open only below the next even level above the emptiest station,
-// so stations fill two at a time and stay equal for partner work.
-function openStations(total, n, counts) {
+// Soft balancing, mirroring public.balanced_open_stations (the RPCs enforce it; keep the
+// two in sync). A station can run up to 4 ahead of the emptiest one (two pairs, so friends
+// can still join each other), and an odd station always takes one more to complete a pair.
+// Returns how many each station can take right now; 0 = waiting or full.
+function stationRoom(total, n, counts) {
   const min = Math.min(...counts);
-  const level = 2 * Math.floor(min / 2) + 2;
-  const open = counts.map((c, i) => c < Math.min(level, sectionCap(total, i, n)));
-  if (open.some(Boolean)) return open;
-  return counts.map((c, i) => c < sectionCap(total, i, n)); // uneven legacy caps
+  const level = 2 * Math.floor(min / 2) + 4;
+  const room = counts.map((c, i) => {
+    const allow = Math.min(sectionCap(total, i, n), Math.max(level, c % 2 ? c + 1 : 0));
+    return Math.max(0, allow - c);
+  });
+  if (room.some(Boolean)) return room;
+  return counts.map((c, i) => Math.max(0, sectionCap(total, i, n) - c)); // uneven legacy caps
 }
 
 module.exports = async (req, res) => {
@@ -88,12 +92,13 @@ module.exports = async (req, res) => {
       const spotsLeft = Math.max(0, s.capacity - e.total);
       const labels = stationLabels(n);
       const counts = labels.map(l => e.sections[l] || 0);
-      const open = openStations(s.capacity, n, counts);
+      const room = stationRoom(s.capacity, n, counts);
       const sections = labels.map((label, i) => {
         const cap = sectionCap(s.capacity, i, n);
         const booked = counts[i];
-        // waiting: has room, but the others must catch up first (picker disables it).
-        return { label, spots_left: Math.max(0, cap - booked), full: booked >= cap, waiting: booked < cap && !open[i] };
+        // spots_now: what this station can take before the others catch up (the picker's
+        // number). waiting: has room, but the others must catch up first.
+        return { label, spots_left: Math.max(0, cap - booked), spots_now: room[i], full: booked >= cap, waiting: booked < cap && !room[i] };
       });
       return {
         id: s.id,

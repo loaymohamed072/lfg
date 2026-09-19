@@ -163,3 +163,27 @@ end; $function$;
 -- Round every upcoming session's capacity now (the trigger fires on this update).
 update public.sessions set capacity = capacity, max_capacity = max_capacity
  where session_date >= current_date;
+
+-- Follow-up (same day, applied as balanced_stations_flex): strict pair rounds pushed
+-- friends apart, so the rule softened. A station can run up to 4 ahead of the emptiest
+-- one (two pairs), and an odd station always takes one more to complete its pair.
+create or replace function public.balanced_open_stations(p_cap int, p_n int, p_counts int[])
+returns text[] language plpgsql immutable set search_path to 'public' as $$
+declare v_min int; v_level int; v_c int; v_cap int; v_allow int; v_out text[] := '{}';
+begin
+  select min(coalesce(p_counts[i], 0)) into v_min from generate_series(1, p_n) i;
+  v_level := 2 * (v_min / 2) + 4;
+  for i in 1..p_n loop
+    v_c := coalesce(p_counts[i], 0);
+    v_cap := public.section_cap(p_cap, i - 1, p_n);
+    v_allow := least(v_cap, greatest(v_level, case when v_c % 2 = 1 then v_c + 1 else 0 end));
+    if v_c < v_allow then v_out := v_out || chr(64 + i); end if;
+  end loop;
+  if cardinality(v_out) = 0 then
+    select coalesce(array_agg(chr(64 + i) order by coalesce(p_counts[i], 0), i), '{}') into v_out
+      from generate_series(1, p_n) i where coalesce(p_counts[i], 0) < public.section_cap(p_cap, i - 1, p_n);
+  end if;
+  return v_out;
+end; $$;
+revoke execute on function public.balanced_open_stations(int,int,int[]), public.session_station_counts(uuid,int)
+  from public, anon, authenticated;

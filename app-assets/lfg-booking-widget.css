@@ -18,6 +18,7 @@
 .lfgw-sec .l { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 20px; line-height: 1; }
 .lfgw-sec .n { font-size: 10px; color: rgba(255,255,255,0.45); margin-top: 4px; text-transform: uppercase; }
 .lfgw-sec.sel .n { color: #999966; }
+.lfgw-sec .n.hot { color: #e9b949; font-weight: 700; }
 .lfgw-actions { display: flex; gap: 10px; }
 .lfgw-btn { flex: 1; padding: 14px; border: none; cursor: pointer; font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; transition: all .2s; }
 .lfgw-btn-primary { background: #999966; color: #0A0A0A; }
