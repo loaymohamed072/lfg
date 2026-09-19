@@ -611,3 +611,31 @@ unauthenticated, and `GET /api/sponsor` is public.
   `bootcamp_checkin_state(uuid)` and `is_coach()`.
 - Supabase leaked-password protection is disabled.
 - `short_name()` has a mutable `search_path`; the `vector` extension sits in `public`.
+
+## 2026-09-19 — Balanced bootcamp stations (site-security lane, scoped, ASVS L2)
+
+Scope: commits `9cb3ae1`, `07acf18`, `d837917`. Replaced `SECURITY DEFINER` RPCs
+`book_with_credit` and `book_paid`; new helpers `balanced_open_stations`,
+`session_station_counts`; new trigger `sessions_even_capacity` on `public.sessions`;
+`/api/sessions` gained `spots_now` and `waiting` per station; public booking card
+no longer shows headcount.
+
+Tested:
+- Grants: only `service_role` can execute the booking RPCs and helpers
+  (`has_function_privilege`); `EXECUTE` on the trigger function revoked from
+  `public`/`anon`/`authenticated`.
+- Runtime anon-key probe (V8 authz): `POST /rest/v1/rpc/{book_paid, book_with_credit,
+  maybe_bump_capacity, balanced_open_stations, session_station_counts}` with the
+  site's public key and exact arguments: all 401 `42501 permission denied`.
+- RLS on `sessions`, `bookings`, `member_packages`: enabled, no write policies;
+  `bookings`/`member_packages` read limited to `auth.uid() = member_id`.
+- Supabase security advisors: no finding names anything changed here; no ERROR level.
+- XSS: the new card markup interpolates only server-generated station letters
+  (A-Z from `stationLabels`) and existing fields; no new user-controlled input.
+- Leak scan: 122 hits, none tracked in this repo (local test scripts and a research
+  export; Vercel builds from git). Semgrep's 3 JWT hits decode to `role: anon`.
+- Web-vuln BLOCKs are all in `coaching-app/.next/dev` (untracked, other project).
+
+Verdict: FLAG. Nothing introduced by this change; the carried-over items in the
+09-10 entry above (CSP `script-src`, `sharp` CVEs, legacy baseline 2/9, two anon-
+callable definer functions, leaked-password protection off) still stand.
