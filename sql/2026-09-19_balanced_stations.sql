@@ -187,3 +187,30 @@ begin
 end; $$;
 revoke execute on function public.balanced_open_stations(int,int,int[]), public.session_station_counts(uuid,int)
   from public, anon, authenticated;
+
+-- Follow-up 2026-09-20 (applied as balanced_stations_dynamic_window): a fixed 4-wide
+-- window showed "4 left" on every tile once the stations levelled, which reads as plenty
+-- of room and lets the gap sit at 4 late in the week. The window now moves with the
+-- session: 4 while it is under half full (friends can group), 2 once it passes half
+-- (stations converge, tiles read "Only 2 left" when it matters). Odd-completion unchanged.
+create or replace function public.balanced_open_stations(p_cap int, p_n int, p_counts int[])
+returns text[] language plpgsql immutable set search_path to 'public' as $$
+declare v_min int; v_booked int; v_win int; v_level int; v_c int; v_cap int; v_allow int; v_out text[] := '{}';
+begin
+  select min(coalesce(p_counts[i], 0)), sum(coalesce(p_counts[i], 0)) into v_min, v_booked
+    from generate_series(1, p_n) i;
+  v_win := case when p_cap > 0 and v_booked * 2 >= p_cap then 2 else 4 end;
+  v_level := 2 * (v_min / 2) + v_win;
+  for i in 1..p_n loop
+    v_c := coalesce(p_counts[i], 0);
+    v_cap := public.section_cap(p_cap, i - 1, p_n);
+    v_allow := least(v_cap, greatest(v_level, case when v_c % 2 = 1 then v_c + 1 else 0 end));
+    if v_c < v_allow then v_out := v_out || chr(64 + i); end if;
+  end loop;
+  if cardinality(v_out) = 0 then
+    select coalesce(array_agg(chr(64 + i) order by coalesce(p_counts[i], 0), i), '{}') into v_out
+      from generate_series(1, p_n) i where coalesce(p_counts[i], 0) < public.section_cap(p_cap, i - 1, p_n);
+  end if;
+  return v_out;
+end; $$;
+revoke execute on function public.balanced_open_stations(int,int,int[]) from public, anon, authenticated;

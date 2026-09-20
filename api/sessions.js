@@ -14,12 +14,15 @@ function stationLabels(n) {
 }
 function sectionCap(total, idx, n) { return Math.floor(total / n) + (idx < (total % n) ? 1 : 0); }
 // Soft balancing, mirroring public.balanced_open_stations (the RPCs enforce it; keep the
-// two in sync). A station can run up to 4 ahead of the emptiest one (two pairs, so friends
-// can still join each other), and an odd station always takes one more to complete a pair.
-// Returns how many each station can take right now; 0 = waiting or full.
+// two in sync). The window moves with the session: a station may run 4 ahead of the
+// emptiest one while the Sunday is under half full (friends can group), 2 once it passes
+// half (stations converge and each tile reads "Only 2 left"). An odd station always takes
+// one more to complete a pair. Returns what each station can take now; 0 = waiting or full.
 function stationRoom(total, n, counts) {
   const min = Math.min(...counts);
-  const level = 2 * Math.floor(min / 2) + 4;
+  const booked = counts.reduce((a, b) => a + b, 0);
+  const win = total > 0 && booked * 2 >= total ? 2 : 4;
+  const level = 2 * Math.floor(min / 2) + win;
   const room = counts.map((c, i) => {
     const allow = Math.min(sectionCap(total, i, n), Math.max(level, c % 2 ? c + 1 : 0));
     return Math.max(0, allow - c);
