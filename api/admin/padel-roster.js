@@ -163,7 +163,7 @@ module.exports = async (req, res) => {
     // Selectable night: explicit ?date=, else the current resolved night.
     const q = (req.query && req.query.date) || '';
     const date = /^\d{4}-\d{2}-\d{2}$/.test(String(q)) ? String(q) : (current ? current.ymd : null);
-    if (!date) return res.status(200).json({ event: null, dates: [], players: [] });
+    if (!date) return res.status(200).json({ event: null, dates: [], players: [], waitlist: [] });
 
     // Past nights with money on them, for the date selector.
     const { data: paidDates } = await db.from('payments')
@@ -213,6 +213,33 @@ module.exports = async (req, res) => {
       };
     });
 
+    // Waiting list for this night, join order. It is written by /api/padel-waitlist
+    // when a member hits a sold-out night, and until now nothing displayed it, so
+    // the names sat in the table unseen. Carries contact details because the whole
+    // point of seeing the list is messaging the next person when a spot frees up.
+    const { data: wl } = await db.from('padel_waitlist')
+      .select('member_id, created_at').eq('event_date', date)
+      .order('created_at', { ascending: true });
+    let waitlist = [];
+    if ((wl || []).length) {
+      const wlIds = wl.map(w => w.member_id);
+      const { data: wlMems } = await db.from('members')
+        .select('id, full_name, email, phone').in('id', wlIds);
+      const wlById = {};
+      (wlMems || []).forEach(m => { wlById[m.id] = m; });
+      waitlist = wl.map((w, i) => {
+        const m = wlById[w.member_id] || {};
+        return {
+          member_id: w.member_id,
+          position: i + 1,
+          name: m.full_name || null,
+          email: m.email || null,
+          phone: m.phone || null,
+          joined_at: w.created_at
+        };
+      });
+    }
+
     return res.status(200).json({
       event: {
         date,
@@ -223,7 +250,8 @@ module.exports = async (req, res) => {
         enabled: !!(cfg && cfg.padel_enabled)
       },
       dates,
-      players
+      players,
+      waitlist
     });
   } catch (e) {
     return safeError(res, 'padel-roster', e, 'Could not load the padel roster.');

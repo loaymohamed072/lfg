@@ -933,6 +933,17 @@
         <p id="padel-add-msg" class="note" style="margin-top:6px;"></p>
       </div>
 
+      <!-- Waiting list: members who hit this night when it was sold out. In join
+           order, with contact links, so when someone rolls their spot forward the
+           next person can be messaged straight from here. -->
+      <div class="card">
+        <div class="runs-header">
+          <h3 style="margin:0;">Waiting list</h3>
+          <span id="padel-wait-count" class="runs-count">—</span>
+        </div>
+        <div id="padel-waitlist">Loading…</div>
+      </div>
+
       <div class="card">
         <div class="runs-header">
           <h3 style="margin:0;">Courts — matched by level</h3>
@@ -2379,7 +2390,35 @@
     }).join('');
     sel.value = padelDate;
     renderPadelRoster();
+    renderPadelWaitlist();
     renderPadelCourts();
+  }
+
+  // Who is queued for the selected night, in join order. Read-only: the invite
+  // itself goes out over WhatsApp or email, and they pay through normal checkout
+  // once a spot frees up.
+  function renderPadelWaitlist() {
+    var wrap = el('padel-waitlist');
+    var list = (padelRoster && padelRoster.waitlist) || [];
+    el('padel-wait-count').textContent = list.length;
+    if (!list.length) {
+      wrap.innerHTML = '<p style="color:var(--muted);font-size:14px;">Nobody waiting for this night.</p>';
+      return;
+    }
+    wrap.innerHTML = list.map(function (w) {
+      var waDigits = String(w.phone || '').replace(/[^\d]/g, '');
+      var joined = w.joined_at
+        ? new Date(w.joined_at).toLocaleString('en-GB', { timeZone: 'Asia/Dubai', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+        : '—';
+      return '<div class="td-ci-row" style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);">'
+        + '<span style="color:var(--muted);font-size:13px;min-width:22px;">' + w.position + '.</span>'
+        + '<span style="min-width:150px;font-weight:600;color:var(--white);">' + esc(w.name || String(w.email || '').split('@')[0] || '—') + '</span>'
+        + '<span style="color:var(--muted);font-size:13px;">joined ' + esc(joined) + '</span>'
+        + '<span style="margin-left:auto;display:flex;gap:6px;align-items:center;">'
+        + (waDigits ? '<a class="wa-link" href="https://wa.me/' + waDigits + '" target="_blank" rel="noopener">WA</a>' : '')
+        + (w.email ? '<a class="wa-link" href="mailto:' + esc(w.email) + '">Email</a>' : '')
+        + '</span></div>';
+    }).join('');
   }
   el('padel-date').addEventListener('change', function () { loadPadelRoster(el('padel-date').value); });
   el('padel-search').addEventListener('input', function () { padelSearch = el('padel-search').value.trim().toLowerCase(); renderPadelRoster(); });
