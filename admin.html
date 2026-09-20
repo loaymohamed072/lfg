@@ -2444,7 +2444,11 @@
     var podium = ranked.length
       ? ' · podium: ' + ranked.map(function (p, i) { return (i + 1) + '. ' + esc(padelName(p)) + ' (' + p.points + ')'; }).join(' · ')
       : '';
-    el('padel-summary').innerHTML = '<b>' + paid.length + ' paid</b> of ' + (ev.capacity || 16) + ' · AED ' + revenue.toLocaleString() + podium;
+    // The waiting list lives in its own card below, which is easy to scroll past on a
+    // full night. The count rides here too so a queued player is visible at a glance.
+    var waiting = ((padelRoster && padelRoster.waitlist) || []).length;
+    var waitTag = waiting ? ' · <b style="color:var(--gold,#999966);">' + waiting + ' waiting</b>' : '';
+    el('padel-summary').innerHTML = '<b>' + paid.length + ' paid</b> of ' + (ev.capacity || 16) + ' · AED ' + revenue.toLocaleString() + waitTag + podium;
     if (!all.length) { listEl.innerHTML = '<p style="color:var(--muted);font-size:14px;">Nobody signed up yet for this night.</p>'; return; }
     var players = padelPlayers();
     if (!players.length) { listEl.innerHTML = '<p style="color:var(--muted);font-size:14px;">No players match &ldquo;' + esc(padelSearch) + '&rdquo;.</p>'; return; }
