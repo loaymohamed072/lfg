@@ -28,4 +28,4 @@ Allow: /
 User-agent: Google-Extended
 Allow: /
 
-Sitemap: https://lfgdubai.com/sitemap.xml
+Sitemap: https://www.lfgdubai.com/sitemap.xml
