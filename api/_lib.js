@@ -557,7 +557,7 @@ async function fetchAllRows(makeQuery, pageSize = 1000) {
 // Owner dashboard rollup: totals, per-member rows, upcoming session fill. Shared by stats + CSV export.
 async function ownerStats(db) {
   const now = new Date();
-  const [membersR, pkgR, bookR, payR, sessR, pointsMap] = await Promise.all([
+  const [membersR, pkgR, bookR, payR, sessR, pointsMap, coachPayR] = await Promise.all([
     db.from('members').select('id,email,full_name,created_at,is_admin'),
     db.from('member_packages').select('member_id,sessions_total,sessions_remaining,status,expires_at'),
     db.from('bookings').select('member_id,session_id,section,status,booked_at'),
@@ -570,12 +570,20 @@ async function ownerStats(db) {
       .eq('status', 'paid').order('id', { ascending: true })),
     db.from('sessions').select('id,session_date,start_time,location,capacity,status,stations,photo_url')
       .gte('session_date', new Date(now.toDateString()).toISOString().slice(0, 10)).order('session_date'),
-    pointsByMember(db)
+    pointsByMember(db),
+    // Coaching is billed by the coaching app into its own table. Live money only:
+    // a paid one-off package or a live subscription; pending checkouts and test
+    // mode are not spend. Feeds the per-member Spend column ONLY, so the site
+    // revenue totals and chart below stay exactly what they were.
+    db.from('coaching_payments').select('member_id,amount_aed').eq('livemode', true)
+      .or('and(kind.eq.one_time,status.eq.paid),and(kind.eq.subscription,status.eq.active)')
+      .then(r => r, () => ({ data: [] }))
   ]);
   const members = membersR.data || [], pkgs = pkgR.data || [], bookings = bookR.data || [], payments = payR.data || [], sessions = sessR.data || [];
 
   const spendBy = {}, creditsBy = {}, attendedBy = {}, bookedBy = {}, lastBy = {};
   payments.forEach(p => { if (p.member_id) spendBy[p.member_id] = (spendBy[p.member_id] || 0) + Number(p.amount_aed || 0); });
+  ((coachPayR && coachPayR.data) || []).forEach(p => { if (p.member_id) spendBy[p.member_id] = (spendBy[p.member_id] || 0) + Number(p.amount_aed || 0); });
   pkgs.forEach(p => {
     if (p.status === 'active' && p.sessions_remaining > 0 && new Date(p.expires_at) > now) {
       creditsBy[p.member_id] = (creditsBy[p.member_id] || 0) + p.sessions_remaining;

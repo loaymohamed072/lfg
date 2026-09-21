@@ -692,6 +692,7 @@
         <h3>Members</h3>
         <div class="tbl-tools">
           <input type="text" id="member-search" placeholder="Search name or email…">
+          <select id="member-sort" class="runs-filtersel"><option value="">Sort: default</option><option value="spend">Sort: biggest spenders</option></select>
           <button class="mini" id="export-btn">Export CSV</button>
         </div>
         <div class="tbl-wrap"><table class="tbl" id="members-tbl"></table></div>
@@ -1868,7 +1869,8 @@
     renderLatestOrders(d.latest_payments);
     renderSignups(d.signups_series); renderFill(d.sessions); renderSections(d.sessions[0]);
     renderSessions(d.sessions, d.recent_sessions);
-    allMembers = d.members; renderMembers(allMembers);
+    allMembers = d.members; applyMemberView();
+    el('member-sort').style.display = canViewRevenue ? '' : 'none';
     // Make the Lapsed card open the "gone quiet" list (only useful when there are any).
     var lapEl = el('kpi-lapsed');
     if (lapEl && t.lapsed) { lapEl.style.cursor = 'pointer'; lapEl.addEventListener('click', openLapsedModal); }
@@ -2208,10 +2210,16 @@
     loadStats();  // refresh members table with new points
   });
 
-  el('member-search').addEventListener('input', function () {
-    var q = this.value.toLowerCase();
-    renderMembers(allMembers.filter(function (m) { return (m.email + ' ' + (m.name || '')).toLowerCase().includes(q); }));
-  });
+  // Search and sort share one pass so each keeps the other, and a reload after
+  // awarding points lands back on the same view. Spend already includes coaching.
+  function applyMemberView() {
+    var q = el('member-search').value.toLowerCase();
+    var list = allMembers.filter(function (m) { return (m.email + ' ' + (m.name || '')).toLowerCase().includes(q); });
+    if (el('member-sort').value === 'spend') list = list.slice().sort(function (a, b) { return (b.spend || 0) - (a.spend || 0); });
+    renderMembers(list);
+  }
+  el('member-search').addEventListener('input', applyMemberView);
+  el('member-sort').addEventListener('change', applyMemberView);
   el('export-btn').addEventListener('click', async function () {
     var t = await token(); if (!t) return;
     var r = await fetch('/api/admin/export', { headers: { Authorization: 'Bearer ' + t } });
