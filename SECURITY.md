@@ -639,3 +639,32 @@ Tested:
 Verdict: FLAG. Nothing introduced by this change; the carried-over items in the
 09-10 entry above (CSP `script-src`, `sharp` CVEs, legacy baseline 2/9, two anon-
 callable definer functions, leaked-password protection off) still stand.
+
+## 2026-09-21 — Padel waiting list, spend sort, dynamic station window (site-security lane, scoped, ASVS L2)
+
+Scope: commits `1b686dc`, `18b838d`, `60fa989`, `58ce4d1`. `/api/admin/padel-roster` GET
+now returns the waiting list with name, email and phone; `ownerStats` (served by
+`/api/admin/stats` and `/api/admin/export`) adds live coaching payments to per-member
+spend only; `admin.html` renders both; `balanced_open_stations` replaced.
+
+Tested:
+- Runtime authz (V8), all three endpoints: no token 401, forged token 401, a real
+  signed-in non-admin session (demo client, minted via the auth admin API) 403
+  "Admins only". The phone numbers and spend never leave the server for non-admins.
+- Staff admins without revenue access: `stats` deletes `spend` and `export` drops the
+  column server-side; coaching money rides the same field, so it is covered.
+- `padel_waitlist` and `coaching_payments` read only with the service role; the
+  waitlist table has RLS on and no policy, so the public key cannot read it.
+- Grants: `balanced_open_stations`, `session_station_counts`, `book_with_credit`,
+  `book_paid`, `sessions_even_capacity` not executable by `anon`/`authenticated`.
+- XSS: the waitlist card escapes every field; the WhatsApp link is digits only and the
+  mail link has a fixed `mailto:` prefix. The booking-widget sinks the scanner flags
+  (lines 209, 219, 329) predate this work; the values added to them are server-built
+  station letters, fixed words and integers.
+- Security gate on the committed snapshot (`git archive HEAD`, so untracked local files
+  no longer pollute it): leak scan PASS, gitleaks clean including history.
+- Supabase advisors: identical to the 09-19 run, no ERROR level.
+
+Verdict: FLAG. Nothing introduced by these changes; the carried-over items above still
+stand (CSP `script-src`, `sharp` CVEs, legacy baseline 2/9, two anon-callable definer
+functions, leaked-password protection off).
