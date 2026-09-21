@@ -16,30 +16,33 @@
   "sport": "Padel",
   "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
   "eventStatus": "https://schema.org/EventScheduled",
+  "startDate": "2026-09-28T20:30:00+04:00",
+  "endDate": "2026-09-28T22:00:00+04:00",
   "eventSchedule": {
     "@type": "Schedule",
     "byDay": "https://schema.org/Monday",
     "startTime": "20:30",
-    "duration": "PT2H"
+    "duration": "PT1H30M"
   },
   "location": {
     "@type": "Place",
-    "name": "Dubai (court announced weekly)",
+    "name": "Padel AE, Al Quoz",
     "address": { "@type": "PostalAddress", "addressLocality": "Dubai", "addressCountry": "AE" }
   },
   "organizer": { "@type": "SportsOrganization", "name": "LFG Dubai", "url": "https://lfgdubai.com/" },
   "offers": {
     "@type": "Offer",
-    "price": "99",
+    "price": "120",
     "priceCurrency": "AED",
     "availability": "https://schema.org/InStock",
     "url": "https://lfgdubai.com/padel"
   }
 }
 </script>
+<script src="/app-assets/lfg-event-schema.js?v=1" defer></script>
 <meta property="og:title" content="Padel Nights · LFG Dubai">
 <meta property="og:description" content="King of the Court, every week. Win and move up. Court, balls and matchmaking covered.">
-<meta property="og:image" content="/og-image.jpg">
+<meta property="og:image" content="https://lfgdubai.com/og-image.jpg">
 <meta property="og:type" content="website">
 <link rel="icon" type="image/png" href="/lfg-logo.png">
 <link rel="manifest" href="/site.webmanifest">
@@ -139,8 +142,8 @@
       <div>
         <div class="pd-book-date"><span id="pdDate">Monday</span><small>Courts and match groups drop before the night.</small></div>
         <div class="pd-book-meta">
-          <div class="pd-meta-chip"><span class="k">Start</span><span class="v" id="pdStartTime">8:00 PM</span></div>
-          <div class="pd-meta-chip"><span class="k">Play time</span><span class="v" id="pdPlayTime">2 hours</span></div>
+          <div class="pd-meta-chip"><span class="k">Start</span><span class="v" id="pdStartTime">8:30 PM</span></div>
+          <div class="pd-meta-chip"><span class="k">Play time</span><span class="v" id="pdPlayTime">90 minutes</span></div>
           <div class="pd-meta-chip"><span class="k">Spots</span><span class="v" id="pdCapChip">16 per night</span></div>
         </div>
       </div>
@@ -437,6 +440,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.1"></script>
 <script src="/app-assets/lfg-supabase.js?v=3"></script>
-<script src="/app-assets/lfg-padel-page.js?v=15" defer></script>
+<script src="/app-assets/lfg-padel-page.js?v=16" defer></script>
 </body>
 </html>

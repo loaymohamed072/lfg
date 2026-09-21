@@ -549,6 +549,10 @@
       var sc = el('pdSchema');
       var data = JSON.parse(sc.textContent);
       data.startDate = d.event_iso;
+      if (d.duration_min) {
+        data.endDate = new Date(new Date(d.event_iso).getTime() + d.duration_min * 60000).toISOString();
+        if (data.eventSchedule) data.eventSchedule.duration = 'PT' + d.duration_min + 'M';
+      }
       // The recurring schedule follows the configured night too, otherwise
       // Google keeps advertising the old weekday and start time after Ahmed
       // moves the event.
