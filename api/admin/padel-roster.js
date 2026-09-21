@@ -142,7 +142,7 @@ module.exports = async (req, res) => {
       }
 
       const { data: prof } = await db.from('padel_profiles')
-        .select('level').eq('member_id', memberId).maybeSingle();
+        .select('level, level_adjust').eq('member_id', memberId).maybeSingle();
       if (!prof) return res.status(404).json({ error: 'No padel profile for that member' });
       let next;
       if (typeof body.level === 'number') next = body.level;
@@ -151,8 +151,11 @@ module.exports = async (req, res) => {
       next = Math.min(7, Math.max(1, Math.round(next * 2) / 2));
       // An admin setting the level by hand IS the human check the estimate flag
       // was asking for, so the flag clears with the nudge.
+      // The nudge is also banked as an offset, so ending a night re-rates from
+      // results and then puts Ahmed's judgment back on top (api/_padel-rating.js).
+      const adjust = (Number(prof.level_adjust) || 0) + (next - Number(prof.level));
       const { error: uErr } = await db.from('padel_profiles')
-        .update({ level: next, estimated: false, updated_at: new Date().toISOString() })
+        .update({ level: next, level_adjust: adjust, estimated: false, updated_at: new Date().toISOString() })
         .eq('member_id', memberId);
       if (uErr) return safeError(res, 'padel-roster', uErr, 'Could not update the level.');
       return res.status(200).json({ ok: true, level: next });

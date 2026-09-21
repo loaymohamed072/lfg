@@ -58,7 +58,7 @@ async function computeLevels(db) {
     await Promise.all([
       db.from('padel_teams').select('event_date, round, team_no, player_a, player_b'),
       db.from('padel_matches').select('event_date, round, court, team_a, team_b, score_a, score_b'),
-      db.from('padel_profiles').select('member_id, level, initial_level, estimated'),
+      db.from('padel_profiles').select('member_id, level, initial_level, estimated, level_adjust'),
       db.from('members').select('id, full_name'),
     ]);
 
@@ -142,13 +142,19 @@ async function computeLevels(db) {
       .map((id) => {
         const p = profileOf.get(id);
         const current = Number(p?.level ?? seedLevel.get(id));
-        const proposed = toLevel(rating.get(id));
+        // A level Ahmed set by hand is an offset on top of the results, not a
+        // value the replay may overwrite: the first real finish on 21 Sep wrote
+        // Khalfan from his hand-set 3 back to the 2 his results gave. The lvl
+        // buttons in admin/padel-roster.js keep the offset, this applies it.
+        const adjust = Number(p?.level_adjust) || 0;
+        const proposed = toLevel(rating.get(id) + adjust * PER_LEVEL);
         return {
           id,
           name: nameOf.get(id) || 'Unknown',
           matches: rated.get(id),
           seed: seedLevel.get(id),
           current,
+          adjust,
           proposed,
           move: Number((proposed - current).toFixed(1)),
           rating: Math.round(rating.get(id)),
