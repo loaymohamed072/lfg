@@ -28,13 +28,33 @@ function publicKey() { return process.env.VAPID_PUBLIC_KEY || null; }
 // not abort an announcement going to 600 others. Endpoints the push service has
 // retired (404/410) are deleted so the list stays honest about its real reach.
 async function sendToAll(db, payload) {
-  if (!configurePush()) return { sent: 0, failed: 0, pruned: 0, skipped: true };
+  if (!configurePush()) return { sent: 0, failed: 0, pruned: 0, skipped: true, members: [] };
 
   const { data: subs, error } = await db
     .from('run_push_subscriptions')
-    .select('id, endpoint, p256dh, auth');
+    .select('id, member_id, endpoint, p256dh, auth');
   if (error) throw error;
-  if (!subs || !subs.length) return { sent: 0, failed: 0, pruned: 0, skipped: false };
+  return deliver(db, subs || [], payload);
+}
+
+// The same send, to a named list of members only. For a message that is
+// personal (a pack offer after four Sundays), never for announcements.
+async function sendToMembers(db, memberIds, payload) {
+  if (!configurePush()) return { sent: 0, failed: 0, pruned: 0, skipped: true, members: [] };
+  if (!memberIds || !memberIds.length) return { sent: 0, failed: 0, pruned: 0, skipped: false, members: [] };
+
+  const { data: subs, error } = await db
+    .from('run_push_subscriptions')
+    .select('id, member_id, endpoint, p256dh, auth')
+    .in('member_id', memberIds);
+  if (error) throw error;
+  return deliver(db, subs || [], payload);
+}
+
+// `members` lists who had at least one device reached, so a caller can record
+// which channel actually carried the message.
+async function deliver(db, subs, payload) {
+  if (!subs.length) return { sent: 0, failed: 0, pruned: 0, skipped: false, members: [] };
 
   const body = JSON.stringify({
     title: payload.title,
@@ -46,6 +66,7 @@ async function sendToAll(db, payload) {
   let sent = 0, failed = 0;
   const dead = [];
   const alive = [];
+  const reached = new Set();
 
   // Chunked so a big list does not open 600 sockets at once.
   const CHUNK = 50;
@@ -60,6 +81,7 @@ async function sendToAll(db, payload) {
         );
         sent++;
         alive.push(s.id);
+        if (s.member_id) reached.add(s.member_id);
       } catch (e) {
         const code = e && e.statusCode;
         if (code === 404 || code === 410) dead.push(s.id);
@@ -77,7 +99,7 @@ async function sendToAll(db, payload) {
       .in('id', alive);
   }
 
-  return { sent, failed, pruned: dead.length, skipped: false };
+  return { sent, failed, pruned: dead.length, skipped: false, members: [...reached] };
 }
 
 // Run one campaign row end to end and write the outcome back.
@@ -114,4 +136,4 @@ async function runCampaign(db, campaign) {
   }
 }
 
-module.exports = { configurePush, publicKey, sendToAll, runCampaign };
+module.exports = { configurePush, publicKey, sendToAll, sendToMembers, runCampaign };

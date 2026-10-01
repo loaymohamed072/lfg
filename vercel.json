@@ -8,7 +8,8 @@
   ],
   "crons": [
     { "path": "/api/admin/send-roster", "schedule": "0 8 * * 6" },
-    { "path": "/api/admin/push-dispatch", "schedule": "* * * * *" }
+    { "path": "/api/admin/push-dispatch", "schedule": "* * * * *" },
+    { "path": "/api/admin/bootcamp-upsell", "schedule": "0 6 * * 1" }
   ],
   "headers": [
     {

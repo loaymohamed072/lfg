@@ -159,6 +159,12 @@ a.lfgw-btn { display: inline-flex; align-items: center; justify-content: center;
 .lfgw-pack-buy { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: .05em; text-transform: uppercase; padding: 8px 14px; border: 1px solid rgba(153,153,102,0.5); background: transparent; color: #999966; cursor: pointer; white-space: nowrap; transition: all .18s; }
 .lfgw-pack-buy:hover { background: #999966; color: #0A0A0A; }
 
+/* Streak nudge inside the single-session modal (4+ Sundays in a row, no credits) */
+.lfgw-streak { margin: 12px 0 4px; padding: 12px 14px; border: 1px solid rgba(153,153,102,0.45); background: rgba(153,153,102,0.08); font-size: 13px; line-height: 1.5; color: rgba(255,255,255,0.82); }
+.lfgw-streak b { color: #fff; }
+.lfgw-streak-go { display: inline-block; margin-top: 8px; font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; padding: 7px 12px; border: 1px solid rgba(153,153,102,0.6); background: transparent; color: #999966; cursor: pointer; transition: all .18s; }
+.lfgw-streak-go:hover { background: #999966; color: #0A0A0A; }
+
 /* ===== Promo input (in booking + package confirm modals) ===== */
 .lfgw-promo { margin: 14px 0 18px; }
 .lfgw-promo-toggle {

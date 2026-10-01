@@ -668,3 +668,23 @@ Tested:
 Verdict: FLAG. Nothing introduced by these changes; the carried-over items above still
 stand (CSP `script-src`, `sharp` CVEs, legacy baseline 2/9, two anon-callable definer
 functions, leaked-password protection off).
+
+## 2026-10-01 — Bootcamp pack nudge (change-scoped review)
+
+**Change:** `api/admin/bootcamp-upsell.js` (Vercel Cron, Monday 06:00 UTC, or an
+admin by hand; `?dry=1` lists candidates), `sendToMembers` in `api/_push.js`,
+table `bootcamp_upsell_nudges` (service role only), a streak line inside the
+single-session booking modal (`lfg-home-booking.js`, reads `streak.current` the
+member already gets from `/api/me`).
+
+**Change-scoped verdict: PASS.**
+- Auth on the new route is the existing pattern: Vercel's `CRON_SECRET` bearer
+  (plain compare, Vercel-managed) or `requireAdminOrCron` (constant-time
+  `LFG_CRON_TOKEN`, else an admin JWT). Unauthenticated → 401.
+- Writes: inserts into `bootcamp_upsell_nudges` only, keyed to members who
+  attended all of the last four sessions; capped at 50 per run; 28-day cooldown
+  per member so a bug cannot spam. Email goes through the existing Resend
+  helper; push through `run_push_subscriptions` filtered by member id.
+- Nothing new is exposed to the browser: the modal uses data `/api/me` already
+  returned to the signed-in member about themselves.
+- Dry run against prod data on 1 Oct: 5 candidates, 0 sends.

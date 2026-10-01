@@ -24,7 +24,7 @@
     bookBtn.setAttribute('href', '#book');
     var ARROW = ' <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><path d="M3 8h10M9 4l4 4-4 4"/></svg>';
 
-    var sessions = [], packages = [], singlePrice = 99, credits = 0, loggedIn = false;
+    var sessions = [], packages = [], singlePrice = 99, credits = 0, streak = 0, loggedIn = false;
     var pickedSection = null, activeBookingId = null;
     var featuredEl = null, labelEl = null, offersEl = null, laidOut = false;
     // Applied promo for the currently-open modal. Wiped when the modal closes.
@@ -290,7 +290,7 @@
         }
       }
       loggedIn = !!session;
-      if (loggedIn) { var me = await window.lfg.api('/api/me'); credits = (me.ok && me.data.sessions_remaining) || 0; }
+      if (loggedIn) { var me = await window.lfg.api('/api/me'); credits = (me.ok && me.data.sessions_remaining) || 0; streak = (me.ok && me.data.streak && me.data.streak.current) || 0; }
       setBookBtnLabel();
       injectHeader();
     }
@@ -317,6 +317,18 @@
       activeBookingId = sessionId; pickedSection = null; appliedPromo = null;
       var c = fmtCard(s);
       var hasCredits = credits > 0;
+      // Four Sundays in a row on single tickets: say what a pack would cost THEM,
+      // in the one place they are about to pay again (Omar, 30 Sep 2026). The
+      // 8-credit pack is the one the site pushes; the biggest stands in if it
+      // is ever off sale.
+      var streakPack = (!hasCredits && streak >= 4 && packages.length)
+        ? (packages.filter(function (p) { return p.sessions_count === 8; })[0] || packages[packages.length - 1])
+        : null;
+      var streakHtml = streakPack
+        ? '<div class="lfgw-streak" id="lfgwStreak"><b>' + streak + ' Sundays in a row.</b> The ' + streakPack.sessions_count +
+          '-credit pack makes each one <b>AED ' + Math.round(streakPack.price_aed / streakPack.sessions_count) + '</b> instead of ' + singlePrice + '. ' +
+          '<button type="button" class="lfgw-streak-go" data-pkg="' + streakPack.id + '">See the pack</button></div>'
+        : '';
       var upsell = hasCredits ? '' :
         '<div class="lfgw-upsell"><div class="lfgw-upsell-h">Train more, pay less</div>' +
         packages.map(function (p) {
@@ -332,6 +344,7 @@
         '<div class="lfgw-text">' + (hasCredits
           ? 'You have <b>' + credits + ' credit' + (credits === 1 ? '' : 's') + '</b>. Pick a station, then book.'
           : 'Pick a station, then book a single for <b>' + singlePrice + ' AED</b>.') + '</div>' +
+        streakHtml +
         '<div class="lfgw-seclabel">Pick your station</div>' +
         '<div class="lfgw-secgrid">' + s.sections.map(function (sec) {
           var now = sec.spots_now != null ? sec.spots_now : sec.spots_left;
@@ -352,7 +365,7 @@
           t.classList.add('sel'); pickedSection = t.getAttribute('data-sec'); renderActions();
         });
       });
-      modalEl.querySelectorAll('.lfgw-pack-buy').forEach(function (b) {
+      modalEl.querySelectorAll('.lfgw-pack-buy, .lfgw-streak-go').forEach(function (b) {
         b.addEventListener('click', function () { openPackageModal(Number(b.getAttribute('data-pkg'))); });
       });
       overlay.classList.add('show');
@@ -557,7 +570,7 @@
     // Promote to the logged-in state (used after a tap-time re-verify finds a session).
     async function markLoggedIn() {
       loggedIn = true;
-      try { var me = await window.lfg.api('/api/me'); credits = (me.ok && me.data.sessions_remaining) || 0; } catch (e) {}
+      try { var me = await window.lfg.api('/api/me'); credits = (me.ok && me.data.sessions_remaining) || 0; streak = (me.ok && me.data.streak && me.data.streak.current) || 0; } catch (e) {}
       setBookBtnLabel();
       injectHeader();
     }
@@ -569,7 +582,7 @@
       window.lfg.sb.auth.onAuthStateChange(function (evt, session) {
         var nowLogged = !!session;
         if (nowLogged && !loggedIn) { markLoggedIn(); }
-        else if (!nowLogged && loggedIn) { loggedIn = false; credits = 0; setBookBtnLabel(); injectHeader(); }
+        else if (!nowLogged && loggedIn) { loggedIn = false; credits = 0; streak = 0; setBookBtnLabel(); injectHeader(); }
       });
     }
 
