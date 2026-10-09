@@ -44,6 +44,9 @@ html.ms-page { background: var(--ms-ink); scroll-behavior: smooth; }
 
 /* The one grade: the operator's phone shots read as one set. */
 .ms-img { filter: saturate(0.78) contrast(1.04); }
+/* The daylight frames (cyan water, bright sky) sit next to the dusky hero: one step further. */
+.ms-tile img, .ms-pan-track img { filter: saturate(0.62) contrast(1.05); }
+.ms-hero-copy .ms-kicker { color: #D6D6B8; }
 
 /* grain: one shared overlay, above grounds, below content */
 .ms-grain {
@@ -80,7 +83,7 @@ html.ms-page { background: var(--ms-ink); scroll-behavior: smooth; }
   text-transform: uppercase;
 }
 .ms-deck {
-  max-width: 62ch;
+  max-width: 54ch;
   margin: 28px 0 0;
   font-size: 19px;
   font-weight: 300;
@@ -156,7 +159,7 @@ html.ms-page { background: var(--ms-ink); scroll-behavior: smooth; }
   content: ""; position: absolute; inset: 0;
   background:
     linear-gradient(to bottom, rgba(10, 10, 10, 0.62) 0%, rgba(10, 10, 10, 0.28) 16%, rgba(10, 10, 10, 0) 34%),
-    linear-gradient(to top, var(--ms-ink) 0%, rgba(10, 10, 10, 0.78) 28%, rgba(10, 10, 10, 0.3) 60%, rgba(10, 10, 10, 0.05) 100%);
+    linear-gradient(to top, var(--ms-ink) 0%, var(--ms-ink) 7%, rgba(10, 10, 10, 0.82) 30%, rgba(10, 10, 10, 0.3) 62%, rgba(10, 10, 10, 0.05) 100%);
 }
 .ms-hero-inner {
   position: relative; z-index: 1;
