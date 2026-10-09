@@ -27,7 +27,7 @@
       "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }]
     },
     {
-      "source": "/(account|login|admin|checkin|register|bootcamp|shop|auth|padel|padel-board|padel-score|track)",
+      "source": "/(account|login|admin|checkin|register|bootcamp|shop|auth|padel|padel-board|padel-score|track|musandam)",
       "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }]
     },
     {

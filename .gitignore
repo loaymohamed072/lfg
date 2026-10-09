@@ -36,3 +36,6 @@ lfg-coach-mcp/
 
 # Security scan artifacts (site-security lane)
 .security/
+
+# reference captures (screenshots + video, large)
+.references/

@@ -47,7 +47,8 @@
       if (!p.startsWith('/') || p.startsWith('//')) return '/account';
       var base = p.split('?')[0].split('#')[0];
       var allowed = ['/', '/bootcamp.html', '/bootcamp', '/checkin', '/checkin.html',
-        '/run-checkin', '/run-checkin.html', '/leaderboard', '/leaderboard.html', '/account', '/shop'];
+        '/run-checkin', '/run-checkin.html', '/leaderboard', '/leaderboard.html', '/account', '/shop',
+        '/padel', '/musandam'];
       return allowed.indexOf(base) >= 0 ? p : '/account';
     }
     var dest = safeReturn(rawNext);

@@ -1016,6 +1016,73 @@ async function fulfillCheckoutSession(db, sessionObj) {
         });
       }
     } catch (e) { console.warn('[fulfill] padel email skipped:', e && e.message); }
+  } else if (md.kind === 'trip') {
+    // Paid trip (the Musandam day escape). claim_fulfilment above already
+    // recorded the payment; flip every seat on this checkout to paid (the
+    // buyer's own unless they were already in, plus any friends), then one
+    // confirmation to the buyer with the day in it and a calendar file.
+    const slug = md.trip_slug;
+    const seatIds = [];
+    if (md.self === '1') seatIds.push(md.member_id);
+    String(md.guest_ids || '').split(',').filter(Boolean).forEach((id) => seatIds.push(id));
+    const perSeat = seatIds.length ? Math.round((paidAmount / seatIds.length) * 100) / 100 : paidAmount;
+    for (const id of seatIds) {
+      const { error: tErr } = await db.from('trip_signups').upsert(
+        { trip_slug: slug, member_id: id, booked_by: id === md.member_id ? null : md.member_id,
+          paid: true, amount_aed: perSeat, stripe_session_id: sessionObj.id,
+          stripe_payment_intent: sessionObj.payment_intent, updated_at: new Date().toISOString() },
+        { onConflict: 'trip_slug,member_id' }
+      );
+      if (tErr) console.warn('[fulfill] trip seat mark-paid failed:', tErr.message);
+    }
+    try {
+      const { sendEmail, emailShell, escapeHtml, buildIcs } = require('./_email');
+      const [{ data: m }, { data: trip }] = await Promise.all([
+        db.from('members').select('email,full_name').eq('id', md.member_id).maybeSingle(),
+        db.from('trips').select('slug,title,trip_date,pickup_time,pickup_note,location').eq('slug', slug).maybeSingle()
+      ]);
+      if (m && m.email && trip) {
+        const first = escapeHtml((m.full_name || '').split(/\s+/)[0] || 'there');
+        let dayLine = trip.trip_date;
+        try {
+          dayLine = new Date(trip.trip_date + 'T12:00:00Z').toLocaleDateString('en-GB',
+            { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Asia/Dubai' });
+        } catch (e) { /* keep the ymd */ }
+        const pickup = /^\d{2}:\d{2}$/.test(trip.pickup_time || '') ? trip.pickup_time : '06:00';
+        const seats = seatIds.length;
+        const body = `
+          <h1 style="font-family:'Barlow Condensed','Helvetica Neue',sans-serif;font-weight:800;font-size:26px;text-transform:uppercase;letter-spacing:0.04em;margin:0 0 8px;color:#fff;">You&rsquo;re on <span style="color:#999966;">the dhow.</span></h1>
+          <p style="margin:0 0 22px;color:rgba(255,255,255,0.65);font-size:15px;line-height:1.55;">Hey ${first}, ${seats > 1 ? seats + ' seats are' : 'your seat is'} locked for ${escapeHtml(dayLine)}.</p>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);">
+            <tr><td style="padding:20px 22px;">
+              <div style="font-family:'Barlow Condensed','Helvetica Neue',sans-serif;font-size:11px;letter-spacing:0.26em;text-transform:uppercase;color:#999966;margin-bottom:6px;">${escapeHtml(trip.title)}</div>
+              <div style="font-family:'Barlow Condensed','Helvetica Neue',sans-serif;font-weight:700;font-size:22px;letter-spacing:0.02em;color:#fff;">${escapeHtml(dayLine)} &middot; pick-up ${escapeHtml(pickup)}</div>
+              <div style="margin-top:8px;color:rgba(255,255,255,0.6);font-size:13px;">Paid &middot; AED ${escapeHtml(String(paidAmount))}${seats > 1 ? ' &middot; ' + seats + ' seats' : ''}</div>
+            </td></tr>
+          </table>
+          <p style="margin:22px 0 0;color:rgba(255,255,255,0.7);font-size:14px;line-height:1.6;">${escapeHtml(trip.pickup_note || 'The Dubai pick-up point comes on WhatsApp the week before.')} Bring a valid passport (Oman border check), swimwear and a towel, sunscreen and a hat, a change of clothes and a light layer. Trainers or climbing shoes if you want to climb.</p>
+          <p style="margin:14px 0 0;font-size:13px;color:rgba(255,255,255,0.5);line-height:1.6;">Change of plans? Message us on WhatsApp and we&rsquo;ll sort it.</p>
+        `;
+        const ics = buildIcs({
+          uid: 'lfg-trip-' + slug + '-' + md.member_id + '@lfgdubai.com',
+          startDubaiIso: trip.trip_date + 'T' + pickup + ':00+04:00',
+          durationMinutes: 13 * 60,
+          summary: trip.title,
+          location: trip.location || 'Musandam, Oman',
+          description: trip.pickup_note || 'Pick-up in Dubai, back by evening.'
+        });
+        await sendEmail({
+          to: m.email,
+          subject: "You're in · " + trip.title,
+          html: emailShell({ preheader: 'Your seat for ' + dayLine + ' is locked.', bodyHtml: body }),
+          attachments: [{
+            filename: 'lfg-' + slug + '.ics',
+            content: Buffer.from(ics, 'utf-8').toString('base64'),
+            content_type: 'text/calendar; method=PUBLISH; charset=utf-8'
+          }]
+        });
+      }
+    } catch (e) { console.warn('[fulfill] trip email skipped:', e && e.message); }
   }
 
   if (md.promo_code) {
