@@ -43,7 +43,7 @@ html.ms-page { background: var(--ms-ink); scroll-behavior: smooth; }
 .ms-wrap { width: var(--ms-wrap); margin: 0 auto; }
 
 /* The one grade: the operator's phone shots read as one set. */
-.ms-img { filter: saturate(0.88) contrast(1.04); }
+.ms-img { filter: saturate(0.78) contrast(1.04); }
 
 /* grain: one shared overlay, above grounds, below content */
 .ms-grain {
@@ -145,13 +145,18 @@ html.ms-page { background: var(--ms-ink); scroll-behavior: smooth; }
 .ms-nav-cta::after { display: none; }
 
 /* ---------- hero: the cliff cut ---------- */
-.ms-hero { position: relative; min-height: 100svh; display: grid; align-items: end; isolation: isolate; }
+.ms-hero { position: relative; z-index: 2; min-height: 100svh; display: grid; align-items: end; isolation: isolate; }
 .ms-hero-media { position: absolute; inset: 0; overflow: hidden; z-index: 0; }
-.ms-hero-media img { width: 100%; height: 100%; object-fit: cover; object-position: 60% 45%; }
+.ms-hero-media img { width: 100%; height: 100%; object-fit: cover; object-position: 30% 45%; }
+/* Wide screens: the photo fits by width, so object-position cannot move the two women out from
+   under the headline; a zoom anchored bottom-left slides them into the gap before the plate. */
+@media (min-width: 961px) { .ms-hero-media img { transform: scale(1.32); transform-origin: 0% 100%; } }
 /* Carried from muchbetteradventures: the scrim rises from the foot into the ground colour. */
 .ms-hero-media::after {
   content: ""; position: absolute; inset: 0;
-  background: linear-gradient(to top, var(--ms-ink) 0%, rgba(10, 10, 10, 0.78) 28%, rgba(10, 10, 10, 0.3) 60%, rgba(10, 10, 10, 0.05) 100%);
+  background:
+    linear-gradient(to bottom, rgba(10, 10, 10, 0.62) 0%, rgba(10, 10, 10, 0.28) 16%, rgba(10, 10, 10, 0) 34%),
+    linear-gradient(to top, var(--ms-ink) 0%, rgba(10, 10, 10, 0.78) 28%, rgba(10, 10, 10, 0.3) 60%, rgba(10, 10, 10, 0.05) 100%);
 }
 .ms-hero-inner {
   position: relative; z-index: 1;
@@ -207,6 +212,7 @@ html.ms-page { background: var(--ms-ink); scroll-behavior: smooth; }
 .ms-pan-track figure { flex: 0 0 72vw; height: 100%; margin: 0; position: relative; }
 .ms-pan-track figure + figure { margin-left: 8px; }
 .ms-pan-track img { width: 100%; height: 100%; object-fit: cover; }
+.ms-pan-track figure:nth-child(3) img { object-position: 50% 18%; }
 .ms-pan-track figure::after {
   content: ""; position: absolute; inset: 0;
   background: linear-gradient(to top, rgba(10, 10, 10, 0.55) 0%, rgba(10, 10, 10, 0) 45%);
@@ -227,6 +233,15 @@ html.ms-page { background: var(--ms-ink); scroll-behavior: smooth; }
 .ms-tile-b { grid-column: 7 / 13; grid-row: 1; aspect-ratio: 16 / 10; width: calc(100% + var(--ms-bleed, 0px)); }
 .ms-tile-c { grid-column: 7 / 10; grid-row: 2; aspect-ratio: 1; }
 .ms-tile-d { grid-column: 10 / 13; grid-row: 2; aspect-ratio: 1; }
+/* Above the phone layout the tall tile sets the height, the three others fill their rows,
+   and the top-right tile runs to the viewport edge (dial D2). The bleed is the wrap margin:
+   24px until the wrap caps at 1160px, then half the leftover viewport. */
+@media (min-width: 761px) {
+  .ms-mosaic { grid-template-rows: 1.3fr 1fr; --ms-bleed: 24px; }
+  .ms-tile-b, .ms-tile-c, .ms-tile-d { aspect-ratio: auto; min-height: 0; }
+  .ms-tile-b > img, .ms-tile-c > img, .ms-tile-d > img { position: absolute; inset: 0; }
+}
+@media (min-width: 1208px) { .ms-mosaic { --ms-bleed: calc((100vw - 1160px) / 2); } }
 .ms-tile figcaption {
   position: absolute; left: 0; right: 0; bottom: 0; padding: 40px 20px 18px;
   background: linear-gradient(to top, rgba(10, 10, 10, 0.86) 0%, rgba(10, 10, 10, 0.35) 55%, rgba(10, 10, 10, 0) 100%);
