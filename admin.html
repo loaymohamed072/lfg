@@ -522,6 +522,7 @@
     <button class="nav-btn" data-view="runs"><span class="ico"></span> Runs</button>
     <button class="nav-btn" data-view="padel"><span class="ico"></span> Padel</button>
     <button class="nav-btn" data-view="trips"><span class="ico"></span> Trips</button>
+    <button class="nav-btn" data-view="events"><span class="ico"></span> Events</button>
     <button class="nav-btn" data-view="leads"><span class="ico"></span> Leads <span class="nav-badge" id="leads-nav-badge"></span></button>
     <button class="nav-btn" data-view="sponsored"><span class="ico"></span> Sponsored <span class="nav-badge" id="sponsored-nav-badge"></span></button>
     <button class="nav-btn" data-view="orders"><span class="ico"></span> Merch <span class="nav-badge" id="orders-nav-badge"></span></button>
@@ -1009,6 +1010,80 @@
           <button class="mini" id="trip-add-btn" type="button">Add seat</button>
         </div>
         <p id="trip-add-msg" class="note" style="margin-top:6px;"></p>
+      </div>
+    </section>
+
+    <!-- EVENTS (anything with a date; each gets /events/<slug>) -->
+    <section class="view hidden" id="view-events">
+      <div class="card">
+        <div class="runs-header">
+          <h3 style="margin:0;">Your events</h3>
+          <button class="mini" id="ev-new-btn" type="button">+ New event</button>
+        </div>
+        <div class="tbl-wrap"><table class="tbl" id="ev-list-tbl"></table></div>
+      </div>
+
+      <form id="ev-form" class="hidden">
+        <div class="card">
+          <div class="runs-header">
+            <h3 style="margin:0;" id="ev-form-title">New event</h3>
+            <span class="runs-count" id="ev-form-link"></span>
+          </div>
+          <div class="toggle-row"><div class="tl">Live on the website<small>Off = the page says the event is not open and nobody can sign up</small></div>
+            <label class="switch"><input type="checkbox" id="ev_enabled"><span class="slider"></span></label></div>
+          <label>Title</label><input type="text" id="ev_title" maxlength="120" placeholder="e.g. LFG x Zawaya Walk">
+          <label>Web address</label><input type="text" id="ev_slug" maxlength="60" placeholder="auto from the title, e.g. zawaya-walk">
+          <p class="note">lfgdubai.com/events/<b id="ev-slug-preview">…</b> · letters, numbers and dashes. Fixed once saved.</p>
+          <label>One-line tagline</label><input type="text" id="ev_tagline" maxlength="160" placeholder="Shown under the title and in the share preview">
+          <label>Description</label><textarea id="ev_description" rows="6" maxlength="4000" placeholder="What happens, who it is for, what to bring. Blank line = new paragraph."></textarea>
+          <label>Starts</label><input type="datetime-local" id="ev_starts_at">
+          <label>Ends (optional)</label><input type="datetime-local" id="ev_ends_at">
+          <p class="note">Dubai time.</p>
+          <label>Location</label><input type="text" id="ev_location" maxlength="160" placeholder="e.g. Zawaya Walk, Sharjah">
+          <label>Map link (optional)</label><input type="text" id="ev_map_url" maxlength="400" placeholder="https://maps.app.goo.gl/… (blank = a Maps search for the location)">
+          <div class="toggle-row"><div class="tl">Limit places<small>Off = unlimited</small></div>
+            <label class="switch"><input type="checkbox" id="ev_cap_on"><span class="slider"></span></label></div>
+          <div id="ev-cap-fields" class="disabled-fields"><label>Places</label><input type="number" id="ev_capacity" min="1" step="1" placeholder="e.g. 40"></div>
+          <div class="toggle-row"><div class="tl">Paid event<small>Off = free sign-up. On = card payment on the page, price per person</small></div>
+            <label class="switch"><input type="checkbox" id="ev_paid_on"><span class="slider"></span></label></div>
+          <div id="ev-price-fields" class="disabled-fields"><label>Price per person (AED)</label><input type="number" id="ev_price_aed" min="1" step="1" placeholder="e.g. 99"></div>
+          <label>Cover photo</label>
+          <div class="runs-toolbar">
+            <input type="file" id="ev_cover_file" accept="image/jpeg,image/png,image/webp" class="runs-search" style="flex:1 1 220px;">
+            <button class="mini" id="ev-cover-btn" type="button" disabled>Upload</button>
+          </div>
+          <p class="note" id="ev-cover-note">Landscape works best. Up to 8MB. Save the event first, then upload.</p>
+          <img id="ev-cover-preview" alt="" style="display:none;max-width:320px;border-radius:4px;margin-top:8px;">
+        </div>
+        <div class="runs-toolbar">
+          <button type="submit" id="ev-save-btn" class="btn-gold" style="max-width:240px">Save event</button>
+          <button type="button" id="ev-cancel-btn" class="mini">Close</button>
+          <button type="button" id="ev-delete-btn" class="mini" style="margin-left:auto;display:none;">Delete</button>
+        </div>
+        <p id="ev-save-msg" class="msg-ok"></p>
+      </form>
+
+      <div class="card hidden" id="ev-signups-card">
+        <div class="runs-header">
+          <h3 style="margin:0;" id="ev-signups-title">Who's coming</h3>
+          <span id="ev-count" class="runs-count">—</span>
+        </div>
+        <div class="runs-toolbar">
+          <input type="text" id="ev-search" class="runs-search" placeholder="Search by name, email or phone…" autocomplete="off">
+          <button class="mini" id="ev-export-btn" type="button">Export CSV</button>
+          <button class="mini" id="ev-copy-link" type="button">Copy page link</button>
+        </div>
+        <div id="ev-summary" class="paid-summary">—</div>
+        <div class="tbl-wrap"><table class="tbl" id="ev-tbl"></table></div>
+        <div class="runs-toolbar" style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px;">
+          <input type="text" id="ev-add-name" class="runs-search" placeholder="Add by hand: name" autocomplete="off" style="flex:1 1 150px;">
+          <input type="email" id="ev-add-email" class="runs-search" placeholder="Email (optional)" autocomplete="off" style="flex:1 1 180px;">
+          <input type="tel" id="ev-add-phone" class="runs-search" placeholder="Phone (optional)" autocomplete="off" style="flex:1 1 130px;">
+          <input type="number" id="ev-add-guests" class="runs-search" placeholder="+ friends" min="0" max="10" style="max-width:100px;">
+          <label id="ev-add-paid-wrap" style="display:none;align-items:center;gap:8px;color:var(--muted);font-size:13px;"><input type="checkbox" id="ev-add-paid" checked> Paid</label>
+          <button class="mini" id="ev-add-btn" type="button">Add</button>
+        </div>
+        <p id="ev-add-msg" class="note" style="margin-top:6px;"></p>
       </div>
     </section>
 
@@ -1605,6 +1680,7 @@
     runs:     ['Runs', 'Everyone who signed up to run with LFG'],
     padel:    ['Padel', 'Tuesday nights — config, roster, courts'],
     trips:    ['Trips', 'Musandam and any day trip: settings, seats, payments'],
+    events:   ['Events', 'Anything with a date: edit it here, share its page, see who is coming'],
     leads:    ['Leads', 'Your call list, warmest first'],
     orders:   ['Merch', 'Tee stock, orders & fulfilment'],
     reviews:  ['Reviews', 'What members wrote. Approve to publish on the bootcamp page'],
@@ -1616,6 +1692,7 @@
   var runsLoaded = false;
   var padelLoaded = false;
   var tripsLoaded = false;
+  var eventsLoaded = false;
   var leadsLoaded = false;
   var todayLoaded = false;
   var ordersLoaded = false;
@@ -1634,6 +1711,7 @@
       if (v === 'runs' && !runsLoaded) { runsLoaded = true; loadRunners(); }
       if (v === 'padel' && !padelLoaded) { padelLoaded = true; loadPadel(); }
       if (v === 'trips' && !tripsLoaded) { tripsLoaded = true; loadTrips(); }
+      if (v === 'events' && !eventsLoaded) { eventsLoaded = true; loadEvents(); }
       if (v === 'leads' && !leadsLoaded) { leadsLoaded = true; loadLeads(); }
       if (v === 'orders' && !ordersLoaded) { ordersLoaded = true; loadMerchOrders(); }
       if (v === 'today' && !todayLoaded) { todayLoaded = true; loadToday(); }
@@ -2519,6 +2597,143 @@
     var csv = [head].concat(rows.map(function (s) { return [s.name, s.email, s.phone, s.booked_by_name || '', s.status, s.paid_at || '', s.created_at || '', s.source].concat(cvr ? [s.amount_aed != null ? s.amount_aed : '', s.refund_aed || ''] : []).concat([s.note || '']); }))
       .map(function (r) { return r.map(function (v) { var x = String(v == null ? '' : v); return /[",\n]/.test(x) ? '"' + x.replace(/"/g, '""') + '"' : x; }).join(','); }).join('\r\n');
     var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = (d.trip ? d.trip.slug : 'trip') + '-seats.csv'; a.click();
+  });
+
+  // ---------- Events ----------
+  var evDesk = null, evSearch = '', evEditing = null;
+  function evSlugify(t) { return String(t || '').toLowerCase().normalize('NFKD').replace(/[^\w\s-]/g, '').trim().replace(/[\s_]+/g, '-').replace(/-+/g, '-').slice(0, 60); }
+  function evDubaiLocal(iso) { if (!iso) return ''; try { var p = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dubai', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date(iso)); var g = {}; p.forEach(function (x) { g[x.type] = x.value; }); return g.year + '-' + g.month + '-' + g.day + 'T' + (g.hour === '24' ? '00' : g.hour) + ':' + g.minute; } catch (e) { return ''; } }
+  function evLocalToIso(v) { return v ? new Date(v + ':00+04:00').toISOString() : ''; }
+  function evWhen(iso) { try { return new Date(iso).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Dubai' }); } catch (e) { return iso || ''; } }
+  async function loadEvents(slug) {
+    var r = await api('/api/admin/events' + (slug ? '?slug=' + encodeURIComponent(slug) : ''));
+    if (!r.ok) { el('ev-list-tbl').innerHTML = '<tbody><tr><td class="empty">' + esc((r.data && r.data.error) || 'Could not load events.') + '</td></tr></tbody>'; return; }
+    evDesk = r.data; renderEventList(); if (evEditing) { var cur = (evDesk.events || []).find(function (e) { return e.slug === evEditing; }); if (cur) fillEventForm(cur); } renderEventSignups();
+  }
+  function renderEventList() {
+    var list = (evDesk && evDesk.events) || [];
+    var head = '<thead><tr><th>Event</th><th>When</th><th>Going</th><th>Live</th><th></th></tr></thead>';
+    if (!list.length) { el('ev-list-tbl').innerHTML = head + '<tbody><tr><td colspan="5" class="empty">No events yet. Make one and share its page.</td></tr></tbody>'; return; }
+    el('ev-list-tbl').innerHTML = head + '<tbody>' + list.map(function (e) {
+      var price = e.price_aed != null && Number(e.price_aed) > 0 ? 'AED ' + Number(e.price_aed) : 'Free';
+      return '<tr><td><b style="color:var(--white);">' + esc(e.title) + '</b><br><span class="ae" style="color:var(--muted);font-size:12px;">' + price + (e.capacity != null ? ' · ' + e.capacity + ' places' : '') + ' · <a href="/events/' + esc(e.slug) + '" target="_blank" rel="noopener" style="color:var(--gold);">lfgdubai.com/events/' + esc(e.slug) + '</a></span></td>'
+        + '<td>' + esc(evWhen(e.starts_at)) + '</td><td>' + Number(e.going || 0) + (e.pending ? '<br><span class="ae" style="color:var(--muted);font-size:11px;">+' + e.pending + ' unpaid</span>' : '') + '</td>'
+        + '<td>' + (e.enabled ? '<span class="badge-ok">Live</span>' : '<span class="badge-lapsed">Off</span>') + '</td>'
+        + '<td><div class="member-acts"><button class="mini" type="button" data-ev-open="' + esc(e.slug) + '">Open</button></div></td></tr>';
+    }).join('') + '</tbody>';
+    el('ev-list-tbl').querySelectorAll('[data-ev-open]').forEach(function (b) { b.addEventListener('click', function () { openEvent(b.getAttribute('data-ev-open')); }); });
+  }
+  function fillEventForm(e) {
+    evEditing = e ? e.slug : null;
+    el('ev-form').classList.remove('hidden');
+    el('ev-form-title').textContent = e ? 'Edit: ' + e.title : 'New event';
+    el('ev-form-link').innerHTML = e ? '<a href="/events/' + esc(e.slug) + '" target="_blank" rel="noopener" style="color:var(--gold);">open page ↗</a>' : '';
+    el('ev_enabled').checked = e ? !!e.enabled : false;
+    el('ev_title').value = e ? e.title : ''; el('ev_slug').value = e ? e.slug : ''; el('ev_slug').disabled = !!e; el('ev-slug-preview').textContent = e ? e.slug : '…';
+    el('ev_tagline').value = e ? (e.tagline || '') : ''; el('ev_description').value = e ? (e.description || '') : '';
+    el('ev_starts_at').value = e ? evDubaiLocal(e.starts_at) : ''; el('ev_ends_at').value = e && e.ends_at ? evDubaiLocal(e.ends_at) : '';
+    el('ev_location').value = e ? (e.location || '') : ''; el('ev_map_url').value = e ? (e.map_url || '') : '';
+    el('ev_cap_on').checked = !!(e && e.capacity != null); el('ev_capacity').value = e && e.capacity != null ? e.capacity : ''; el('ev-cap-fields').classList.toggle('disabled-fields', !el('ev_cap_on').checked);
+    el('ev_paid_on').checked = !!(e && e.price_aed != null && Number(e.price_aed) > 0); el('ev_price_aed').value = e && e.price_aed != null ? e.price_aed : ''; el('ev-price-fields').classList.toggle('disabled-fields', !el('ev_paid_on').checked);
+    el('ev-cover-btn').disabled = !e; el('ev-cover-note').textContent = e ? 'Landscape works best. Up to 8MB.' : 'Landscape works best. Up to 8MB. Save the event first, then upload.';
+    var pv = el('ev-cover-preview'); if (e && e.cover_url) { pv.src = e.cover_url; pv.style.display = ''; } else { pv.removeAttribute('src'); pv.style.display = 'none'; }
+    el('ev-delete-btn').style.display = e ? '' : 'none';
+    el('ev-save-msg').textContent = '';
+  }
+  function openEvent(slug) { var e = ((evDesk && evDesk.events) || []).find(function (x) { return x.slug === slug; }); if (!e) return; fillEventForm(e); loadEvents(slug); el('ev-form').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  function evRows() { var q = evSearch.trim().toLowerCase(), rows = (evDesk && evDesk.signups) || []; if (!q) return rows; return rows.filter(function (s) { return (s.name + ' ' + s.email + ' ' + s.phone).toLowerCase().indexOf(q) >= 0; }); }
+  function renderEventSignups() {
+    var d = evDesk || {}, e = d.event, sm = d.summary || {}, cvr = !!d.can_view_revenue, card = el('ev-signups-card');
+    if (!e || !evEditing || e.slug !== evEditing) { card.classList.add('hidden'); return; }
+    card.classList.remove('hidden');
+    el('ev-signups-title').textContent = 'Who’s coming · ' + e.title;
+    el('ev-count').textContent = String((d.signups || []).length);
+    el('ev-add-paid-wrap').style.display = sm.paid_event ? 'flex' : 'none';
+    var money = cvr && sm.paid_event ? ' · AED ' + Number(sm.revenue_aed || 0).toLocaleString() + ' paid' : '';
+    el('ev-summary').innerHTML = '<b>' + (sm.going || 0) + ' going</b> (' + (sm.people || 0) + ' sign-ups' + (sm.going > sm.people ? ' incl. friends' : '') + ')' + (sm.capacity != null ? ' of ' + sm.capacity + ' · ' + sm.left + ' left' : '') + (sm.paid_event ? ' · ' + (sm.reserved || 0) + ' reserved, unpaid' : '') + ' · ' + (sm.cancelled || 0) + ' cancelled' + money;
+    var rows = evRows();
+    var head = '<thead><tr><th>Who</th><th>Contact</th><th>Status</th>' + (cvr && sm.paid_event ? '<th>AED</th>' : '') + '<th>Note</th><th></th></tr></thead>';
+    if (!rows.length) { el('ev-tbl').innerHTML = head + '<tbody><tr><td colspan="6" class="empty">' + ((d.signups || []).length ? 'Nobody matches that search.' : 'Nobody yet. Share the page link.') + '</td></tr></tbody>'; return; }
+    el('ev-tbl').innerHTML = head + '<tbody>' + rows.map(function (s) {
+      var who = '<b style="color:var(--white);">' + esc(s.name) + '</b>' + (s.guests ? ' <span class="ae" style="color:var(--muted);font-size:12px;">+' + s.guests + '</span>' : '') + (s.source === 'manual' ? '<br><span class="badge-staff">Added by hand</span>' : '');
+      var contact = (s.email && !/\.invalid$/.test(s.email) ? '<span class="ae" style="font-size:12px;">' + esc(s.email) + '</span><br>' : '') + (s.phone ? '<a href="' + esc(waLink(s.phone)) + '" target="_blank" rel="noopener" style="color:var(--gold);font-size:12px;">' + esc(s.phone) + '</a>' : '<span style="color:var(--muted);font-size:12px;">no phone</span>');
+      var status = s.status === 'going' ? '<span class="badge-ok">Going</span>' : s.status === 'paid' ? '<span class="badge-ok">Paid</span>' : s.status === 'cancelled' ? '<span class="badge-lapsed">Cancelled</span>' : '<span style="color:var(--muted);">Reserved, unpaid</span>';
+      status += '<br><span class="ae" style="color:var(--muted);font-size:11px;">' + esc(tripWhen(s.status === 'paid' ? (s.paid_at || s.created_at) : s.status === 'cancelled' ? s.cancelled_at : s.created_at)) + (s.cancel_reason ? ' · ' + esc(s.cancel_reason) : '') + '</span>';
+      var amount = cvr && sm.paid_event ? '<td>' + (s.amount_aed != null ? Number(s.amount_aed).toLocaleString() : '—') + '</td>' : '';
+      var acts = '<div class="member-acts">';
+      if (sm.paid_event && s.status === 'reserved') acts += '<button class="mini" type="button" data-ev-act="mark_paid" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Mark paid</button><button class="mini" type="button" data-ev-act="drop" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Remove</button>';
+      if (s.status === 'going' || s.status === 'paid') { acts += '<button class="mini" type="button" data-ev-act="cancel" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Cancel</button>'; if (s.status === 'paid' && s.has_stripe_payment) acts += '<button class="mini" type="button" data-ev-act="refund" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Refund &amp; cancel</button>'; }
+      if (s.status === 'cancelled') acts += '<button class="mini" type="button" data-ev-act="restore" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Restore</button>';
+      acts += '<button class="mini" type="button" data-ev-act="note" data-id="' + esc(s.id) + '" data-note="' + esc(s.note || '') + '">Note</button></div>';
+      return '<tr' + (s.status === 'cancelled' ? ' style="opacity:.55;"' : '') + '><td>' + who + '</td><td>' + contact + '</td><td>' + status + '</td>' + amount + '<td><span class="ae" style="font-size:12px;">' + esc(s.note || '') + '</span></td><td>' + acts + '</td></tr>';
+    }).join('') + '</tbody>';
+    el('ev-tbl').querySelectorAll('[data-ev-act]').forEach(function (b) { b.addEventListener('click', function () { evAct(b.getAttribute('data-ev-act'), b.getAttribute('data-id'), b.getAttribute('data-name') || '', b.getAttribute('data-note') || '', b); }); });
+  }
+  async function evPost(body, btn) {
+    if (btn) { btn.disabled = true; var was = btn.textContent; btn.textContent = 'Saving…'; }
+    var r = await api('/api/admin/events', 'POST', Object.assign({ slug: evEditing || '' }, body));
+    if (btn) { btn.disabled = false; btn.textContent = was; }
+    if (!r.ok) { alert((r.data && r.data.error) || 'That did not save. Try again.'); return null; }
+    evDesk = r.data; return r.data;
+  }
+  async function evAct(act, id, name, note, btn) {
+    var out = null;
+    if (act === 'mark_paid') { var amt = prompt('Mark ' + name + ' as paid. Amount in AED:', ''); if (amt === null) return; out = await evPost({ action: 'mark_paid', signup_id: id, amount_aed: amt === '' ? undefined : Number(amt) }, btn); }
+    else if (act === 'cancel') { var why = prompt('Cancel ' + name + '. Reason, optional:', ''); if (why === null) return; out = await evPost({ action: 'cancel', signup_id: id, reason: why, refund: false }, btn); }
+    else if (act === 'refund') { if (!confirm('Refund ' + name + ' through Stripe and cancel their place?')) return; var r2 = prompt('Reason, optional:', ''); if (r2 === null) return; out = await evPost({ action: 'cancel', signup_id: id, reason: r2, refund: true }, btn); }
+    else if (act === 'drop') { if (!confirm('Remove ' + name + "'s unpaid reservation?")) return; out = await evPost({ action: 'cancel', signup_id: id, refund: false }, btn); }
+    else if (act === 'restore') { out = await evPost({ action: 'restore', signup_id: id }, btn); }
+    else if (act === 'note') { var n = prompt('Note for ' + (name || 'this sign-up') + ':', note || ''); if (n === null) return; out = await evPost({ action: 'note', signup_id: id, note: n }, btn); }
+    if (out) { renderEventList(); renderEventSignups(); }
+  }
+  el('ev-new-btn').addEventListener('click', function () { fillEventForm(null); el('ev-signups-card').classList.add('hidden'); el('ev-form').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+  el('ev-cancel-btn').addEventListener('click', function () { evEditing = null; el('ev-form').classList.add('hidden'); el('ev-signups-card').classList.add('hidden'); });
+  el('ev_title').addEventListener('input', function () { if (!el('ev_slug').disabled && !el('ev_slug').dataset.touched) { el('ev_slug').value = evSlugify(this.value); el('ev-slug-preview').textContent = el('ev_slug').value || '…'; } });
+  el('ev_slug').addEventListener('input', function () { this.dataset.touched = '1'; this.value = evSlugify(this.value); el('ev-slug-preview').textContent = this.value || '…'; });
+  el('ev_cap_on').addEventListener('change', function () { el('ev-cap-fields').classList.toggle('disabled-fields', !this.checked); });
+  el('ev_paid_on').addEventListener('change', function () { el('ev-price-fields').classList.toggle('disabled-fields', !this.checked); });
+  el('ev-form').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var btn = el('ev-save-btn'); btn.disabled = true; btn.textContent = 'Saving…';
+    var r = await api('/api/admin/events', 'POST', {
+      action: 'save', slug: evEditing || el('ev_slug').value, title: el('ev_title').value, tagline: el('ev_tagline').value, description: el('ev_description').value,
+      starts_at: evLocalToIso(el('ev_starts_at').value), ends_at: evLocalToIso(el('ev_ends_at').value), location: el('ev_location').value, map_url: el('ev_map_url').value,
+      capacity: el('ev_cap_on').checked ? el('ev_capacity').value : '', price_aed: el('ev_paid_on').checked ? el('ev_price_aed').value : '', enabled: el('ev_enabled').checked
+    });
+    btn.disabled = false; btn.textContent = 'Save event';
+    if (!r.ok) { el('ev-save-msg').textContent = ''; alert((r.data && r.data.error) || 'That did not save.'); return; }
+    evDesk = r.data; var saved = r.data.event; evEditing = saved ? saved.slug : evEditing;
+    renderEventList(); if (saved) fillEventForm(saved); renderEventSignups();
+    el('ev-save-msg').textContent = 'Saved. Page: lfgdubai.com/events/' + (saved ? saved.slug : ''); setTimeout(function () { el('ev-save-msg').textContent = ''; }, 5000);
+  });
+  el('ev-delete-btn').addEventListener('click', async function () {
+    if (!evEditing || !confirm('Delete this event? Only possible while nobody has signed up.')) return;
+    var out = await evPost({ action: 'delete' }, this); if (out) { evEditing = null; el('ev-form').classList.add('hidden'); el('ev-signups-card').classList.add('hidden'); renderEventList(); }
+  });
+  el('ev_cover_file').addEventListener('change', function () { el('ev-cover-btn').disabled = !(this.files && this.files[0] && evEditing); });
+  el('ev-cover-btn').addEventListener('click', function () {
+    var f = el('ev_cover_file').files && el('ev_cover_file').files[0]; if (!f || !evEditing) return;
+    var btn = this; btn.disabled = true; btn.textContent = 'Uploading…';
+    var reader = new FileReader();
+    reader.onload = async function () {
+      var out = await evPost({ action: 'upload_cover', image_base64: reader.result, content_type: f.type || 'image/jpeg' });
+      btn.disabled = false; btn.textContent = 'Upload';
+      if (out && out.event) { fillEventForm(out.event); el('ev-save-msg').textContent = 'Cover uploaded.'; setTimeout(function () { el('ev-save-msg').textContent = ''; }, 4000); }
+    };
+    reader.readAsDataURL(f);
+  });
+  el('ev-search').addEventListener('input', function () { evSearch = this.value; renderEventSignups(); });
+  el('ev-copy-link').addEventListener('click', function () { if (!evEditing) return; var link = 'https://www.lfgdubai.com/events/' + evEditing; (navigator.clipboard ? navigator.clipboard.writeText(link) : Promise.reject()).then(function () { el('ev-add-msg').textContent = 'Link copied: ' + link; }, function () { prompt('Copy this link:', link); }); });
+  el('ev-add-btn').addEventListener('click', async function () {
+    var out = await evPost({ action: 'add_signup', name: el('ev-add-name').value, email: el('ev-add-email').value, phone: el('ev-add-phone').value, guests: el('ev-add-guests').value || 0, paid: el('ev-add-paid').checked }, this);
+    if (out) { ['ev-add-name', 'ev-add-email', 'ev-add-phone', 'ev-add-guests'].forEach(function (i) { el(i).value = ''; }); renderEventList(); renderEventSignups(); el('ev-add-msg').textContent = 'Added.'; setTimeout(function () { el('ev-add-msg').textContent = ''; }, 4000); }
+  });
+  el('ev-export-btn').addEventListener('click', function () {
+    var d = evDesk || {}, rows = (d.signups || []), cvr = !!d.can_view_revenue;
+    var head = ['Name', 'Email', 'Phone', 'Friends', 'Status', 'Signed up', 'Paid at', 'Source'].concat(cvr ? ['AED'] : []).concat(['Note']);
+    var csv = [head].concat(rows.map(function (s) { return [s.name, /\.invalid$/.test(s.email || '') ? '' : s.email, s.phone, s.guests, s.status, s.created_at || '', s.paid_at || '', s.source].concat(cvr ? [s.amount_aed != null ? s.amount_aed : ''] : []).concat([s.note || '']); }))
+      .map(function (r) { return r.map(function (v) { var x = String(v == null ? '' : v); return /[",\n]/.test(x) ? '"' + x.replace(/"/g, '""') + '"' : x; }).join(','); }).join('\r\n');
+    var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = (evEditing || 'event') + '-signups.csv'; a.click();
   });
 
   async function loadPadel() { loadPadelConfig(); loadPadelRoster(''); }

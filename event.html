@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" class="ev-page">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Event · LFG Dubai</title>
+<meta name="description" content="An LFG Dubai event. Sign up on this page.">
+<meta name="robots" content="index,follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Event · LFG Dubai">
+<meta property="og:description" content="Sign up on this page.">
+<meta property="og:image" content="https://www.lfgdubai.com/og-image.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" href="/lfg-logo.png">
+<link rel="apple-touch-icon" href="/icon-512.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@300;400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@300;400;500;600&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@300;400;500;600&display=swap"></noscript>
+<link rel="stylesheet" href="/app-assets/lfg-event-page.css?v=1">
+<script type="application/ld+json" id="evSchema">{}</script>
+</head>
+<body>
+<div class="ev-noise" aria-hidden="true"></div>
+
+<nav class="ev-nav" aria-label="Site">
+  <a href="/" aria-label="LFG Dubai home"><img src="/app-assets/musandam/lfg-logo-120.webp" alt="LFG" class="ev-nav-logo" width="40" height="40"></a>
+  <ul class="ev-nav-links">
+    <li class="ev-hide-m"><a href="/bootcamp">Bootcamp</a></li>
+    <li class="ev-hide-m"><a href="/padel">Padel</a></li>
+    <li><a href="#evPlate" class="ev-nav-cta" id="evHeroCta">Save my place</a></li>
+  </ul>
+</nav>
+
+<header class="ev-hero" id="evHero" hidden>
+  <div class="ev-hero-media" id="evHeroMedia" hidden>
+    <!-- img-ignore: the cover is set by the admin at runtime; the hero's min-height reserves the box -->
+    <img id="evCover" src="" alt="" fetchpriority="high" decoding="async">
+  </div>
+  <div class="ev-hero-inner">
+    <p class="ev-kicker" id="evKicker"></p>
+    <h1 class="ev-h1" id="evTitle"></h1>
+    <p class="ev-deck" id="evDeck" hidden></p>
+    <div class="ev-chips">
+      <div class="ev-chip"><span class="k">When</span><span class="v" id="evChipWhen"></span></div>
+      <div class="ev-chip"><span class="k">Where</span><span class="v" id="evChipWhere"></span></div>
+      <div class="ev-chip"><span class="k">Price</span><span class="v" id="evChipPrice"></span></div>
+      <div class="ev-chip" id="evChipPlacesWrap" hidden><span class="k">Places</span><span class="v" id="evChipPlaces"></span></div>
+    </div>
+  </div>
+</header>
+
+<main class="ev-body" id="evBody" hidden>
+  <div class="ev-wrap ev-grid">
+    <section class="ev-reveal">
+      <h2 class="ev-h2">The plan</h2>
+      <div class="ev-story" id="evStory" style="margin-top:20px;"></div>
+      <ul class="ev-details" id="evDetails"></ul>
+    </section>
+
+    <aside class="ev-plate ev-reveal" id="evPlate">
+      <p class="ev-kicker" id="evPlateKicker">Save your place</p>
+      <div class="ev-plate-price"><span class="ev-price" id="evPrice"></span><span class="ev-per" id="evPer"></span></div>
+      <p class="ev-spots" id="evSpots"></p>
+
+      <form id="evForm" novalidate>
+        <label class="ev-field" for="evName"><span>Your name</span><input class="ev-input" id="evName" name="name" type="text" autocomplete="name" required maxlength="80"></label>
+        <label class="ev-field" for="evEmail"><span>Email</span><input class="ev-input" id="evEmail" name="email" type="email" autocomplete="email" inputmode="email" required maxlength="120"></label>
+        <label class="ev-field" for="evPhone"><span>WhatsApp number (optional)</span><input class="ev-input" id="evPhone" name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="050 123 4567" maxlength="24"></label>
+        <label class="ev-field" for="evGuests"><span>Bringing friends?</span>
+          <select class="ev-input" id="evGuests" name="guests">
+            <option value="0">Just me</option>
+            <option value="1">Me + 1</option>
+            <option value="2">Me + 2</option>
+            <option value="3">Me + 3</option>
+          </select>
+        </label>
+        <p class="ev-err" id="evErr" hidden></p>
+        <button class="ev-btn" id="evSubmit" type="submit">Save my place</button>
+        <div class="ev-mount" id="evMount"></div>
+        <p class="ev-foot" id="evFootLine"></p>
+      </form>
+
+      <div class="ev-done" id="evDone" hidden>
+        <h3 id="evDoneTitle">You're on the list.</h3>
+        <p id="evDoneBody"></p>
+        <a class="ev-btn" id="evDoneWa" href="#" target="_blank" rel="noopener">Message us on WhatsApp</a>
+      </div>
+
+      <div class="ev-done" id="evSoldout" hidden>
+        <h3>It's full.</h3>
+        <p>Every place is taken. Message us and we ping you if one opens up.</p>
+        <a class="ev-btn" id="evSoldoutWa" href="#" target="_blank" rel="noopener">Message us on WhatsApp</a>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<section class="ev-closed" id="evClosed" hidden>
+  <div class="ev-wrap">
+    <p class="ev-kicker">LFG Dubai</p>
+    <h1 class="ev-h1" id="evClosedTitle" style="font-size:clamp(40px,6vw,72px);max-width:16ch;">Loading…</h1>
+    <p class="ev-deck" id="evClosedBody"></p>
+    <p style="margin-top:28px;"><a class="ev-btn" style="width:auto;" href="/">Back to LFG</a></p>
+  </div>
+</section>
+
+<footer class="ev-foot-bar">
+  <div class="ev-wrap">
+    <span>© LFG Dubai</span>
+    <span><a href="/">Home</a> · <a href="/bootcamp">Bootcamp</a> · <a href="/padel">Padel</a> · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a></span>
+  </div>
+</footer>
+
+<script src="/app-assets/lfg-event-page.js?v=1" defer></script>
+</body>
+</html>

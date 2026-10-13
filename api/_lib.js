@@ -1021,6 +1021,45 @@ async function fulfillCheckoutSession(db, sessionObj) {
         });
       }
     } catch (e) { console.warn('[fulfill] padel email skipped:', e && e.message); }
+  } else if (md.kind === 'event') {
+    // Paid event (see api/event-pay.js). Flip the sign-up to paid, then one
+    // confirmation with the when/where and a calendar file.
+    const slug = md.event_slug;
+    const { error: eErr } = await db.from('event_signups').update({
+      paid: true, paid_at: new Date().toISOString(), amount_aed: paidAmount,
+      stripe_session_id: sessionObj.id, stripe_payment_intent: sessionObj.payment_intent,
+      cancelled_at: null, cancel_reason: null, updated_at: new Date().toISOString()
+    }).eq('id', md.signup_id);
+    if (eErr) console.warn('[fulfill] event sign-up mark-paid failed:', eErr.message);
+    try {
+      const { sendEmail, emailShell, escapeHtml, buildIcs, formatDubaiDate } = require('./_email');
+      const { data: ev } = await db.from('events').select('slug,title,tagline,starts_at,ends_at,location,map_url').eq('slug', slug).maybeSingle();
+      const to = md.email || (sessionObj.customer_details && sessionObj.customer_details.email);
+      if (ev && to) {
+        const first = escapeHtml((md.name || '').split(/\s+/)[0] || 'there');
+        const when = formatDubaiDate ? formatDubaiDate(ev.starts_at) : ev.starts_at;
+        const places = Number(md.places || 1);
+        const body = `
+          <h1 style="font-family:'Barlow Condensed','Helvetica Neue',sans-serif;font-weight:800;font-size:26px;text-transform:uppercase;letter-spacing:0.04em;margin:0 0 8px;color:#fff;">You&rsquo;re <span style="color:#999966;">in.</span></h1>
+          <p style="margin:0 0 22px;color:rgba(255,255,255,0.65);font-size:15px;line-height:1.55;">Hey ${first}, ${places > 1 ? places + ' places are' : 'your place is'} paid for ${escapeHtml(ev.title)}.</p>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);">
+            <tr><td style="padding:20px 22px;">
+              <div style="font-family:'Barlow Condensed','Helvetica Neue',sans-serif;font-size:11px;letter-spacing:0.26em;text-transform:uppercase;color:#999966;margin-bottom:6px;">${escapeHtml(ev.title)}</div>
+              <div style="font-family:'Barlow Condensed','Helvetica Neue',sans-serif;font-weight:700;font-size:22px;letter-spacing:0.02em;color:#fff;">${escapeHtml(when)}</div>
+              ${ev.location ? `<div style="margin-top:6px;color:rgba(255,255,255,0.65);font-size:14px;">${escapeHtml(ev.location)}${ev.map_url ? ` &middot; <a href="${escapeHtml(ev.map_url)}" style="color:#C9C9A8;">map</a>` : ''}</div>` : ''}
+            </td></tr>
+          </table>
+          <p style="margin:22px 0 0;color:rgba(255,255,255,0.65);font-size:14px;line-height:1.55;">Calendar file attached. Questions? Reply to this email.</p>`;
+        const durationMin = ev.ends_at ? Math.max(30, Math.round((new Date(ev.ends_at) - new Date(ev.starts_at)) / 60000)) : 120;
+        const ics = buildIcs({ uid: 'event-' + slug + '-' + to, startDubaiIso: ev.starts_at, durationMinutes: durationMin, summary: ev.title, location: ev.location || '', description: ev.tagline || '' });
+        await sendEmail({
+          to, subject: 'You’re in · ' + ev.title,
+          html: emailShell({ preheader: ev.title + ' · ' + when, bodyHtml: body }),
+          text: `Hey ${first}, your place is paid for ${ev.title} on ${when}${ev.location ? ' at ' + ev.location : ''}.`,
+          attachments: [{ filename: 'lfg-' + slug + '.ics', content: Buffer.from(ics).toString('base64'), contentType: 'text/calendar' }]
+        });
+      }
+    } catch (mailErr) { console.warn('[fulfill] event email failed:', mailErr && mailErr.message); }
   } else if (md.kind === 'trip') {
     // Paid trip (the Musandam day escape). claim_fulfilment above already
     // recorded the payment; flip every seat on this checkout to paid (the
