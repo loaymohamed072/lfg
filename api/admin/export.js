@@ -20,10 +20,10 @@ module.exports = async (req, res) => {
     const { members } = await ownerStats(db);
     const header = ['Email', 'Name', 'Joined']
       .concat(cvr ? ['Total Spend (AED)'] : [])
-      .concat(['Credits Left', 'Booked', 'Attended', 'Last Activity', 'Lapsed (30d)']);
+      .concat(['Credits Left', 'Booked', 'Attended', 'Padel', 'Last Activity', 'Lapsed (30d)']);
     const rows = members.map(m => [m.email, m.name, m.joined]
       .concat(cvr ? [m.spend] : [])
-      .concat([m.credits, m.booked, m.attended, m.last_activity, m.lapsed ? 'Yes' : 'No']));
+      .concat([m.credits, m.booked, m.attended, m.padel, m.last_activity, m.lapsed ? 'Yes' : 'No']));
     const csv = [header, ...rows].map(r => r.map(csvCell).join(',')).join('\r\n');
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.status(200).send(csv);

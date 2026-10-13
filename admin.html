@@ -521,6 +521,7 @@
     <button class="nav-btn" data-view="schedule"><span class="ico"></span> Schedule</button>
     <button class="nav-btn" data-view="runs"><span class="ico"></span> Runs</button>
     <button class="nav-btn" data-view="padel"><span class="ico"></span> Padel</button>
+    <button class="nav-btn" data-view="trips"><span class="ico"></span> Trips</button>
     <button class="nav-btn" data-view="leads"><span class="ico"></span> Leads <span class="nav-badge" id="leads-nav-badge"></span></button>
     <button class="nav-btn" data-view="sponsored"><span class="ico"></span> Sponsored <span class="nav-badge" id="sponsored-nav-badge"></span></button>
     <button class="nav-btn" data-view="orders"><span class="ico"></span> Merch <span class="nav-badge" id="orders-nav-badge"></span></button>
@@ -951,6 +952,63 @@
           <button class="mini" id="padel-regroup-btn" type="button">Regroup</button>
         </div>
         <div id="padel-courts" class="sched-grid" style="margin-top:14px;">Loading…</div>
+      </div>
+    </section>
+
+    <!-- TRIPS (Musandam and any later day trip) -->
+    <section class="view hidden" id="view-trips">
+      <form id="trip-form">
+        <div class="card">
+          <div class="runs-header">
+            <h3 style="margin:0;">Trip</h3>
+            <select id="trip-select" class="runs-filtersel" style="display:none;"></select>
+          </div>
+          <div class="toggle-row"><div class="tl">Booking open on the website<small>Toggle off to close bookings (the page stays up, the plate says it is closed)</small></div>
+            <label class="switch"><input type="checkbox" id="trip_enabled"><span class="slider"></span></label></div>
+          <div class="cur-info" id="trip-info">Loading…</div>
+          <label>Title</label><input type="text" id="trip_title" maxlength="120">
+          <label>Subtitle</label><input type="text" id="trip_subtitle" maxlength="160">
+          <label>Date</label><input type="date" id="trip_date">
+          <label>Pick-up time</label><input type="time" id="trip_pickup_time">
+          <p class="note">Dubai time. Goes on the page, in the confirmation email and the calendar file.</p>
+          <label>Pick-up note</label><input type="text" id="trip_pickup_note" maxlength="300" placeholder="e.g. Dubai pick-up point confirmed on WhatsApp the week before">
+          <label>Location</label><input type="text" id="trip_location" maxlength="120">
+          <label>Price per seat (AED)</label><input type="number" id="trip_price_aed" min="1" step="1">
+          <label>Capacity (seats)</label><input type="number" id="trip_capacity" min="1" step="1">
+          <p class="note">Sold out at this number of paid seats. Reservations that never paid do not count.</p>
+        </div>
+        <button type="submit" id="trip-save-btn" class="btn-gold" style="max-width:280px">Save trip</button>
+        <p id="trip-save-msg" class="msg-ok"></p>
+      </form>
+
+      <div class="card">
+        <div class="runs-header">
+          <h3 style="margin:0;">Seats</h3>
+          <span id="trip-count" class="runs-count">—</span>
+        </div>
+        <div class="runs-toolbar">
+          <input type="text" id="trip-search" class="runs-search" placeholder="Search by name, email or phone…" autocomplete="off">
+          <button class="mini" id="trip-export-btn" type="button">Export CSV</button>
+        </div>
+        <div id="trip-summary" class="paid-summary">—</div>
+        <div class="tbl-wrap"><table class="tbl" id="trip-tbl"></table></div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin:0 0 10px;">Add a seat by hand</h3>
+        <p class="note" style="margin:0 0 10px;">Cash, bank transfer, or a seat you are holding. Uses their account when the email matches a member; otherwise a guest record with the name you type.</p>
+        <div class="runs-toolbar">
+          <input type="text" id="trip-add-name" class="runs-search" placeholder="Name" autocomplete="off" style="flex:1 1 160px;">
+          <input type="email" id="trip-add-email" class="runs-search" placeholder="Email (optional)" autocomplete="off" style="flex:1 1 200px;">
+          <input type="tel" id="trip-add-phone" class="runs-search" placeholder="Phone (optional)" autocomplete="off" style="flex:1 1 150px;">
+        </div>
+        <div class="runs-toolbar" style="margin-top:8px;">
+          <label style="display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;"><input type="checkbox" id="trip-add-paid" checked> Paid</label>
+          <input type="number" id="trip-add-amount" class="runs-search" placeholder="AED" min="0" step="1" style="max-width:110px;">
+          <input type="text" id="trip-add-note" class="runs-search" placeholder="Note (optional)" autocomplete="off" style="flex:1 1 200px;">
+          <button class="mini" id="trip-add-btn" type="button">Add seat</button>
+        </div>
+        <p id="trip-add-msg" class="note" style="margin-top:6px;"></p>
       </div>
     </section>
 
@@ -1546,6 +1604,7 @@
     schedule: ['Schedule', 'Run & bootcamp times on the site'],
     runs:     ['Runs', 'Everyone who signed up to run with LFG'],
     padel:    ['Padel', 'Tuesday nights — config, roster, courts'],
+    trips:    ['Trips', 'Musandam and any day trip: settings, seats, payments'],
     leads:    ['Leads', 'Your call list, warmest first'],
     orders:   ['Merch', 'Tee stock, orders & fulfilment'],
     reviews:  ['Reviews', 'What members wrote. Approve to publish on the bootcamp page'],
@@ -1556,6 +1615,7 @@
   var promosLoaded = false;
   var runsLoaded = false;
   var padelLoaded = false;
+  var tripsLoaded = false;
   var leadsLoaded = false;
   var todayLoaded = false;
   var ordersLoaded = false;
@@ -1573,6 +1633,7 @@
       if (v === 'promos' && !promosLoaded) { promosLoaded = true; loadPromos(); }
       if (v === 'runs' && !runsLoaded) { runsLoaded = true; loadRunners(); }
       if (v === 'padel' && !padelLoaded) { padelLoaded = true; loadPadel(); }
+      if (v === 'trips' && !tripsLoaded) { tripsLoaded = true; loadTrips(); }
       if (v === 'leads' && !leadsLoaded) { leadsLoaded = true; loadLeads(); }
       if (v === 'orders' && !ordersLoaded) { ordersLoaded = true; loadMerchOrders(); }
       if (v === 'today' && !todayLoaded) { todayLoaded = true; loadToday(); }
@@ -2074,7 +2135,7 @@
   function renderMembers(list, keepPage) {
     if (list !== membersView) { membersView = list; if (!keepPage) pageState.members = 1; }
     var spendTh = canViewRevenue ? '<th>Spend</th>' : '';
-    var head = '<thead><tr><th>Email</th><th>Joined</th>' + spendTh + '<th>Credits</th><th>Booked</th><th>Runs</th><th>Bootcamps</th><th>Points</th><th>Last active</th><th>Status</th><th></th></tr></thead>';
+    var head = '<thead><tr><th>Email</th><th>Joined</th>' + spendTh + '<th>Credits</th><th>Booked</th><th>Runs</th><th>Bootcamps</th><th>Padel</th><th>Points</th><th>Last active</th><th>Status</th><th></th></tr></thead>';
     var page = pageSlice('members', list);
     var body = page.length ? page.map(function (m) {
       var adjustBtn = '<button class="lfg-adjust-btn" data-email="' + esc(m.email) + '" data-name="' + esc(m.name || '') + '" data-credits="' + Number(m.credits || 0) + '">Adjust</button>';
@@ -2082,8 +2143,8 @@
       var ptsCell = '<b>' + Number(m.points || 0) + '</b><br><span class="ae" style="color:var(--muted);font-size:11px">' + Number(m.points_runs || 0) + ' run·' + Number(m.points_bootcamps || 0) + ' bc·' + Number(m.points_bonus || 0) + ' bonus</span>';
       var spendTd = canViewRevenue ? '<td>' + money(m.spend) + '</td>' : '';
       var staffTag = m.is_admin ? ' <span class="badge-staff">Staff</span>' : '';
-      return '<tr><td>' + (m.name ? esc(m.name) + staffTag + '<br><span class="ae" style="color:var(--muted);font-size:12px">' + esc(m.email) + '</span>' : esc(m.email) + staffTag) + '</td><td>' + esc(m.joined) + '</td>' + spendTd + '<td>' + Number(m.credits || 0) + '</td><td>' + Number(m.booked || 0) + '</td><td>' + Number(m.points_runs || 0) + '</td><td>' + Number(m.attended || 0) + '</td><td>' + ptsCell + '</td><td>' + esc(m.last_activity) + '</td><td>' + (m.lapsed ? '<span class="badge-lapsed">Lapsed</span>' : '<span class="badge-ok">Active</span>') + '</td><td><div class="member-acts">' + adjustBtn + awardBtn + '</div></td></tr>';
-    }).join('') : '<tr><td colspan="' + (canViewRevenue ? 11 : 10) + '" class="empty">No members yet.</td></tr>';
+      return '<tr><td>' + (m.name ? esc(m.name) + staffTag + '<br><span class="ae" style="color:var(--muted);font-size:12px">' + esc(m.email) + '</span>' : esc(m.email) + staffTag) + '</td><td>' + esc(m.joined) + '</td>' + spendTd + '<td>' + Number(m.credits || 0) + '</td><td>' + Number(m.booked || 0) + '</td><td>' + Number(m.points_runs || 0) + '</td><td>' + Number(m.attended || 0) + '</td><td>' + Number(m.padel || 0) + '</td><td>' + ptsCell + '</td><td>' + esc(m.last_activity) + '</td><td>' + (m.lapsed ? '<span class="badge-lapsed">Lapsed</span>' : '<span class="badge-ok">Active</span>') + '</td><td><div class="member-acts">' + adjustBtn + awardBtn + '</div></td></tr>';
+    }).join('') : '<tr><td colspan="' + (canViewRevenue ? 12 : 11) + '" class="empty">No members yet.</td></tr>';
     el('members-tbl').innerHTML = head + '<tbody>' + body + '</tbody>';
     el('members-tbl').querySelectorAll('.lfg-adjust-btn').forEach(function (b) {
       b.addEventListener('click', function () { openAdjustModal(b.getAttribute('data-email'), b.getAttribute('data-name'), Number(b.getAttribute('data-credits')) || 0); });
@@ -2345,6 +2406,120 @@
   // "Tue 12 Aug, 8:00 PM" in Dubai time - the resolved current night after weekly advancing.
   function padelNightLabel(iso) { var dt = new Date(iso), o = { timeZone: 'Asia/Dubai' };
     return dt.toLocaleDateString('en-GB', Object.assign({ weekday: 'short', day: 'numeric', month: 'short' }, o)) + ', ' + dt.toLocaleTimeString('en-US', Object.assign({ hour: 'numeric', minute: '2-digit' }, o)); }
+
+  // ---------- Trips (Musandam) ----------
+  var tripDesk = null, tripSearch = '';
+  function tripDay(ymd) { try { return new Date(ymd + 'T12:00:00Z').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Asia/Dubai' }); } catch (e) { return ymd || ''; } }
+  function tripWhen(iso) { if (!iso) return ''; try { return new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Dubai' }); } catch (e) { return ''; } }
+  function waLink(phone) { var d = String(phone || '').replace(/[^\d]/g, ''); return d ? 'https://wa.me/' + d : ''; }
+  async function loadTrips(slug) {
+    var r = await api('/api/admin/trips' + (slug ? '?slug=' + encodeURIComponent(slug) : ''));
+    if (!r.ok) { el('trip-info').textContent = (r.data && r.data.error) || 'Could not load the trip.'; return; }
+    tripDesk = r.data; renderTripDesk();
+  }
+  function renderTripDesk() {
+    var d = tripDesk || {}, t = d.trip, sel = el('trip-select');
+    if (!t) { el('trip-info').textContent = 'No trips yet.'; el('trip-tbl').innerHTML = ''; return; }
+    if ((d.trips || []).length > 1) {
+      sel.style.display = '';
+      sel.innerHTML = d.trips.map(function (x) { return '<option value="' + esc(x.slug) + '"' + (x.slug === t.slug ? ' selected' : '') + '>' + esc(x.title) + '</option>'; }).join('');
+    } else { sel.style.display = 'none'; }
+    el('trip_enabled').checked = !!t.enabled;
+    el('trip_title').value = t.title || ''; el('trip_subtitle').value = t.subtitle || '';
+    el('trip_date').value = t.trip_date || ''; el('trip_pickup_time').value = t.pickup_time || '';
+    el('trip_pickup_note').value = t.pickup_note || ''; el('trip_location').value = t.location || '';
+    el('trip_price_aed').value = t.price_aed != null ? t.price_aed : ''; el('trip_capacity').value = t.capacity != null ? t.capacity : '';
+    el('trip-info').innerHTML = 'Page: <a href="/' + esc(t.slug) + '" target="_blank" rel="noopener" style="color:var(--gold);">lfgdubai.com/' + esc(t.slug) + '</a> · ' + esc(tripDay(t.trip_date)) + ' · AED ' + esc(String(t.price_aed)) + ' · ' + (t.enabled ? 'bookings open' : 'bookings closed');
+    renderTripSeats();
+  }
+  function tripRows() {
+    var q = tripSearch.trim().toLowerCase(), rows = (tripDesk && tripDesk.seats) || [];
+    if (!q) return rows;
+    return rows.filter(function (s) { return (s.name + ' ' + s.email + ' ' + s.phone + ' ' + (s.booked_by_name || '')).toLowerCase().indexOf(q) >= 0; });
+  }
+  function renderTripSeats() {
+    var d = tripDesk || {}, sm = d.summary || {}, cvr = !!d.can_view_revenue;
+    el('trip-count').textContent = String((d.seats || []).length);
+    var money = cvr ? ' · AED ' + Number(sm.revenue_aed || 0).toLocaleString() + ' paid' + (sm.refunded_aed ? ' · AED ' + Number(sm.refunded_aed).toLocaleString() + ' refunded' : '') : '';
+    el('trip-summary').innerHTML = '<b>' + (sm.paid || 0) + ' paid</b> of ' + (sm.capacity || 0) + ' · ' + (sm.left || 0) + ' left · ' + (sm.reserved || 0) + ' reserved, unpaid · ' + (sm.cancelled || 0) + ' cancelled' + money;
+    var rows = tripRows();
+    var head = '<thead><tr><th>Who</th><th>Contact</th><th>Status</th>' + (cvr ? '<th>AED</th>' : '') + '<th>Note</th><th></th></tr></thead>';
+    if (!rows.length) { el('trip-tbl').innerHTML = head + '<tbody><tr><td colspan="' + (cvr ? 6 : 5) + '" class="empty">' + ((d.seats || []).length ? 'Nobody matches that search.' : 'No seats yet.') + '</td></tr></tbody>'; return; }
+    var body = rows.map(function (s) {
+      var who = '<b style="color:var(--white);">' + esc(s.name) + '</b>'
+        + (s.booked_by_name ? '<br><span class="ae" style="color:var(--muted);font-size:12px;">friend of ' + esc(s.booked_by_name) + '</span>' : '')
+        + (s.source === 'manual' ? '<br><span class="badge-staff">Added by hand</span>' : '');
+      var contact = (s.email ? '<span class="ae" style="font-size:12px;">' + esc(s.email) + '</span><br>' : '')
+        + (s.phone ? '<a href="' + esc(waLink(s.phone)) + '" target="_blank" rel="noopener" style="color:var(--gold);font-size:12px;">' + esc(s.phone) + '</a>' : '<span style="color:var(--muted);font-size:12px;">no phone</span>');
+      var status = s.status === 'paid'
+        ? '<span class="badge-ok">Paid</span><br><span class="ae" style="color:var(--muted);font-size:11px;">' + esc(tripWhen(s.paid_at || s.created_at)) + '</span>'
+        : s.status === 'cancelled'
+          ? '<span class="badge-lapsed">Cancelled</span><br><span class="ae" style="color:var(--muted);font-size:11px;">' + esc(tripWhen(s.cancelled_at)) + (s.refunded ? ' · refunded' : '') + (s.cancel_reason ? ' · ' + esc(s.cancel_reason) : '') + '</span>'
+          : '<span style="color:var(--muted);">Reserved, unpaid</span><br><span class="ae" style="color:var(--muted);font-size:11px;">' + esc(tripWhen(s.created_at)) + '</span>';
+      var amount = cvr ? '<td>' + (s.amount_aed != null ? Number(s.amount_aed).toLocaleString() : '—') + (s.refund_aed ? '<br><span class="ae" style="color:var(--muted);font-size:11px;">−' + Number(s.refund_aed).toLocaleString() + '</span>' : '') + '</td>' : '';
+      var acts = '<div class="member-acts">';
+      if (s.status !== 'paid') acts += '<button class="mini" type="button" data-trip-act="mark_paid" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Mark paid</button>';
+      if (s.status === 'paid') {
+        acts += '<button class="mini" type="button" data-trip-act="cancel" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Cancel seat</button>';
+        if (s.has_stripe_payment && !s.refunded) acts += '<button class="mini" type="button" data-trip-act="refund" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Refund &amp; cancel</button>';
+      }
+      if (s.status === 'reserved') acts += '<button class="mini" type="button" data-trip-act="drop" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Remove</button>';
+      if (s.status === 'cancelled' && !s.refunded) acts += '<button class="mini" type="button" data-trip-act="restore" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Restore</button>';
+      acts += '<button class="mini" type="button" data-trip-act="note" data-id="' + esc(s.id) + '" data-note="' + esc(s.note || '') + '">Note</button></div>';
+      return '<tr' + (s.status === 'cancelled' ? ' style="opacity:.55;"' : '') + '><td>' + who + '</td><td>' + contact + '</td><td>' + status + '</td>' + amount + '<td><span class="ae" style="font-size:12px;">' + esc(s.note || '') + '</span></td><td>' + acts + '</td></tr>';
+    }).join('');
+    el('trip-tbl').innerHTML = head + '<tbody>' + body + '</tbody>';
+    el('trip-tbl').querySelectorAll('[data-trip-act]').forEach(function (b) {
+      b.addEventListener('click', function () { tripAct(b.getAttribute('data-trip-act'), b.getAttribute('data-id'), b.getAttribute('data-name') || '', b.getAttribute('data-note') || '', b); });
+    });
+  }
+  async function tripPost(body, btn) {
+    if (btn) { btn.disabled = true; var was = btn.textContent; btn.textContent = 'Saving…'; }
+    var r = await api('/api/admin/trips', 'POST', Object.assign({ slug: tripDesk && tripDesk.trip ? tripDesk.trip.slug : 'musandam' }, body));
+    if (btn) { btn.disabled = false; btn.textContent = was; }
+    if (!r.ok) { alert((r.data && r.data.error) || 'That did not save. Try again.'); return false; }
+    tripDesk = r.data; renderTripDesk(); return true;
+  }
+  async function tripAct(act, id, name, note, btn) {
+    if (act === 'mark_paid') {
+      var amt = prompt('Mark ' + name + ' as paid. Amount in AED:', tripDesk && tripDesk.trip ? String(tripDesk.trip.price_aed) : '');
+      if (amt === null) return; return tripPost({ action: 'mark_paid', signup_id: id, amount_aed: Number(amt) || undefined }, btn);
+    }
+    if (act === 'cancel') {
+      var reason = prompt('Cancel ' + name + "'s seat (no refund through here). Reason, optional:", '');
+      if (reason === null) return; return tripPost({ action: 'cancel', signup_id: id, reason: reason, refund: false }, btn);
+    }
+    if (act === 'refund') {
+      if (!confirm('Refund ' + name + ' through Stripe and free the seat? The money goes back to their card in 5 to 10 days.')) return;
+      var why = prompt('Reason, optional:', ''); if (why === null) return;
+      return tripPost({ action: 'cancel', signup_id: id, reason: why, refund: true }, btn);
+    }
+    if (act === 'drop') { if (!confirm('Remove ' + name + "'s unpaid reservation?")) return; return tripPost({ action: 'cancel', signup_id: id, refund: false }, btn); }
+    if (act === 'restore') { return tripPost({ action: 'restore', signup_id: id }, btn); }
+    if (act === 'note') { var n = prompt('Note for ' + (name || 'this seat') + ':', note || ''); if (n === null) return; return tripPost({ action: 'note', signup_id: id, note: n }, btn); }
+  }
+  el('trip-form').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var btn = el('trip-save-btn'); btn.disabled = true; btn.textContent = 'Saving…';
+    var ok = await tripPost({ action: 'save_settings', title: el('trip_title').value, subtitle: el('trip_subtitle').value, trip_date: el('trip_date').value, pickup_time: el('trip_pickup_time').value, pickup_note: el('trip_pickup_note').value, location: el('trip_location').value, price_aed: el('trip_price_aed').value, capacity: el('trip_capacity').value, enabled: el('trip_enabled').checked });
+    btn.disabled = false; btn.textContent = 'Save trip';
+    el('trip-save-msg').textContent = ok ? 'Saved. The page reads these live.' : '';
+    if (ok) setTimeout(function () { el('trip-save-msg').textContent = ''; }, 4000);
+  });
+  el('trip-select').addEventListener('change', function () { loadTrips(this.value); });
+  el('trip-search').addEventListener('input', function () { tripSearch = this.value; renderTripSeats(); });
+  el('trip-add-btn').addEventListener('click', async function () {
+    var msg = el('trip-add-msg'); msg.textContent = '';
+    var ok = await tripPost({ action: 'add_seat', name: el('trip-add-name').value, email: el('trip-add-email').value, phone: el('trip-add-phone').value, paid: el('trip-add-paid').checked, amount_aed: el('trip-add-amount').value || undefined, note: el('trip-add-note').value }, this);
+    if (ok) { ['trip-add-name', 'trip-add-email', 'trip-add-phone', 'trip-add-amount', 'trip-add-note'].forEach(function (i) { el(i).value = ''; }); msg.textContent = 'Seat added.'; setTimeout(function () { msg.textContent = ''; }, 4000); }
+  });
+  el('trip-export-btn').addEventListener('click', function () {
+    var d = tripDesk || {}, rows = (d.seats || []), cvr = !!d.can_view_revenue;
+    var head = ['Name', 'Email', 'Phone', 'Friend of', 'Status', 'Paid at', 'Reserved at', 'Source'].concat(cvr ? ['AED', 'Refunded AED'] : []).concat(['Note']);
+    var csv = [head].concat(rows.map(function (s) { return [s.name, s.email, s.phone, s.booked_by_name || '', s.status, s.paid_at || '', s.created_at || '', s.source].concat(cvr ? [s.amount_aed != null ? s.amount_aed : '', s.refund_aed || ''] : []).concat([s.note || '']); }))
+      .map(function (r) { return r.map(function (v) { var x = String(v == null ? '' : v); return /[",\n]/.test(x) ? '"' + x.replace(/"/g, '""') + '"' : x; }).join(','); }).join('\r\n');
+    var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = (d.trip ? d.trip.slug : 'trip') + '-seats.csv'; a.click();
+  });
 
   async function loadPadel() { loadPadelConfig(); loadPadelRoster(''); }
 

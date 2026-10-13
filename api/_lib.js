@@ -557,7 +557,7 @@ async function fetchAllRows(makeQuery, pageSize = 1000) {
 // Owner dashboard rollup: totals, per-member rows, upcoming session fill. Shared by stats + CSV export.
 async function ownerStats(db) {
   const now = new Date();
-  const [membersR, pkgR, bookR, payR, sessR, pointsMap, coachPayR] = await Promise.all([
+  const [membersR, pkgR, bookR, payR, sessR, pointsMap, coachPayR, padelR] = await Promise.all([
     db.from('members').select('id,email,full_name,created_at,is_admin'),
     db.from('member_packages').select('member_id,sessions_total,sessions_remaining,status,expires_at'),
     db.from('bookings').select('member_id,session_id,section,status,booked_at'),
@@ -577,8 +577,12 @@ async function ownerStats(db) {
     // revenue totals and chart below stay exactly what they were.
     db.from('coaching_payments').select('member_id,amount_aed').eq('livemode', true)
       .or('and(kind.eq.one_time,status.eq.paid),and(kind.eq.subscription,status.eq.active)')
-      .then(r => r, () => ({ data: [] }))
+      .then(r => r, () => ({ data: [] })),
+    // Padel nights paid for, per member (Omar's ask: the members table shows padel too).
+    db.from('padel_signups').select('member_id').eq('paid', true).then(r => r, () => ({ data: [] }))
   ]);
+  const padelBy = {};
+  ((padelR && padelR.data) || []).forEach(p => { if (p.member_id) padelBy[p.member_id] = (padelBy[p.member_id] || 0) + 1; });
   const members = membersR.data || [], pkgs = pkgR.data || [], bookings = bookR.data || [], payments = payR.data || [], sessions = sessR.data || [];
 
   const spendBy = {}, creditsBy = {}, attendedBy = {}, bookedBy = {}, lastBy = {};
@@ -610,6 +614,7 @@ async function ownerStats(db) {
       credits: creditsBy[m.id] || 0,
       booked: bookedBy[m.id] || 0,
       attended: attendedBy[m.id] || 0,
+      padel: padelBy[m.id] || 0,
       points: (pointsMap[m.id] && pointsMap[m.id].points) || 0,
       points_runs: (pointsMap[m.id] && pointsMap[m.id].runs) || 0,
       points_bootcamps: (pointsMap[m.id] && pointsMap[m.id].bootcamps) || 0,
@@ -1029,8 +1034,9 @@ async function fulfillCheckoutSession(db, sessionObj) {
     for (const id of seatIds) {
       const { error: tErr } = await db.from('trip_signups').upsert(
         { trip_slug: slug, member_id: id, booked_by: id === md.member_id ? null : md.member_id,
-          paid: true, amount_aed: perSeat, stripe_session_id: sessionObj.id,
-          stripe_payment_intent: sessionObj.payment_intent, updated_at: new Date().toISOString() },
+          paid: true, paid_at: new Date().toISOString(), amount_aed: perSeat, stripe_session_id: sessionObj.id,
+          stripe_payment_intent: sessionObj.payment_intent, cancelled_at: null, cancel_reason: null,
+          updated_at: new Date().toISOString() },
         { onConflict: 'trip_slug,member_id' }
       );
       if (tErr) console.warn('[fulfill] trip seat mark-paid failed:', tErr.message);
