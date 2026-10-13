@@ -6,7 +6,7 @@
   root.classList.add('ev-js');
   function el(id) { return document.getElementById(id); }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
-  var WA = 'https://wa.me/971506767364?text=';
+  var WA = 'https://wa.me/971504264410?text=';
   var slug = window.__evSlug || (location.pathname.match(/\/events\/([a-z0-9-]+)/i) || [])[1] || new URLSearchParams(location.search).get('slug') || '';
   var EV = null, paySession = null, embedded = null, inflight = false;
 
