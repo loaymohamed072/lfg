@@ -2658,12 +2658,12 @@
       var who = '<b style="color:var(--white);">' + esc(s.name) + '</b>' + (s.guests ? ' <span class="ae" style="color:var(--muted);font-size:12px;">+' + s.guests + '</span>' : '') + (s.source === 'manual' ? '<br><span class="badge-staff">Added by hand</span>' : '');
       var contact = (s.email && !/\.invalid$/.test(s.email) ? '<span class="ae" style="font-size:12px;">' + esc(s.email) + '</span><br>' : '') + (s.phone ? '<a href="' + esc(waLink(s.phone)) + '" target="_blank" rel="noopener" style="color:var(--gold);font-size:12px;">' + esc(s.phone) + '</a>' : '<span style="color:var(--muted);font-size:12px;">no phone</span>');
       var status = s.status === 'going' ? '<span class="badge-ok">Going</span>' : s.status === 'paid' ? '<span class="badge-ok">Paid</span>' : s.status === 'cancelled' ? '<span class="badge-lapsed">Cancelled</span>' : '<span style="color:var(--muted);">Reserved, unpaid</span>';
-      status += '<br><span class="ae" style="color:var(--muted);font-size:11px;">' + esc(tripWhen(s.status === 'paid' ? (s.paid_at || s.created_at) : s.status === 'cancelled' ? s.cancelled_at : s.created_at)) + (s.cancel_reason ? ' · ' + esc(s.cancel_reason) : '') + '</span>';
+      status += '<br><span class="ae" style="color:var(--muted);font-size:11px;">' + esc(tripWhen(s.status === 'paid' ? (s.paid_at || s.created_at) : s.status === 'cancelled' ? s.cancelled_at : s.created_at)) + (s.refunded ? ' · refunded' : '') + (s.cancel_reason ? ' · ' + esc(s.cancel_reason) : '') + '</span>';
       var amount = cvr && sm.paid_event ? '<td>' + (s.amount_aed != null ? Number(s.amount_aed).toLocaleString() : '—') + '</td>' : '';
       var acts = '<div class="member-acts">';
       if (sm.paid_event && s.status === 'reserved') acts += '<button class="mini" type="button" data-ev-act="mark_paid" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Mark paid</button><button class="mini" type="button" data-ev-act="drop" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Remove</button>';
       if (s.status === 'going' || s.status === 'paid') { acts += '<button class="mini" type="button" data-ev-act="cancel" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Cancel</button>'; if (s.status === 'paid' && s.has_stripe_payment) acts += '<button class="mini" type="button" data-ev-act="refund" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Refund &amp; cancel</button>'; }
-      if (s.status === 'cancelled') acts += '<button class="mini" type="button" data-ev-act="restore" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Restore</button>';
+      if (s.status === 'cancelled' && !s.refunded) acts += '<button class="mini" type="button" data-ev-act="restore" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Restore</button>';
       acts += '<button class="mini" type="button" data-ev-act="note" data-id="' + esc(s.id) + '" data-note="' + esc(s.note || '') + '">Note</button></div>';
       return '<tr' + (s.status === 'cancelled' ? ' style="opacity:.55;"' : '') + '><td>' + who + '</td><td>' + contact + '</td><td>' + status + '</td>' + amount + '<td><span class="ae" style="font-size:12px;">' + esc(s.note || '') + '</span></td><td>' + acts + '</td></tr>';
     }).join('') + '</tbody>';
@@ -2696,7 +2696,7 @@
     e.preventDefault();
     var btn = el('ev-save-btn'); btn.disabled = true; btn.textContent = 'Saving…';
     var r = await api('/api/admin/events', 'POST', {
-      action: 'save', slug: evEditing || el('ev_slug').value, title: el('ev_title').value, tagline: el('ev_tagline').value, description: el('ev_description').value,
+      action: 'save', create: !evEditing, slug: evEditing || el('ev_slug').value, title: el('ev_title').value, tagline: el('ev_tagline').value, description: el('ev_description').value,
       starts_at: evLocalToIso(el('ev_starts_at').value), ends_at: evLocalToIso(el('ev_ends_at').value), location: el('ev_location').value, map_url: el('ev_map_url').value,
       capacity: el('ev_cap_on').checked ? el('ev_capacity').value : '', price_aed: el('ev_paid_on').checked ? el('ev_price_aed').value : '', enabled: el('ev_enabled').checked
     });

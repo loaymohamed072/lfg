@@ -29,6 +29,7 @@
   --ev-wrap: min(1120px, 100% - 48px);
 }
 html.ev-page { background: var(--ev-ink); scroll-behavior: smooth; }
+.ev-page [hidden] { display: none !important; }
 .ev-page body { margin: 0; background: var(--ev-ink); color: var(--ev-white); font-family: var(--ev-font-body); font-size: 17px; line-height: 1.55; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
 .ev-page * { box-sizing: border-box; }
 .ev-page img { max-width: 100%; display: block; }

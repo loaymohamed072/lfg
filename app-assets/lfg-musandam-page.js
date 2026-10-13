@@ -136,9 +136,11 @@
       var cta = el('msBookCta');
       if (cta) {
         cta.textContent = d.past ? 'Next trip on WhatsApp' : 'Sold out';
-        var waLine = document.createElement('p'); waLine.className = 'ms-plate-wa';
-        waLine.innerHTML = '<a href="' + WA + encodeURIComponent('Hey, the Musandam trip is sold out, ping me if a seat opens') + '">Message us and we ping you if a seat opens</a>';
-        cta.parentNode.appendChild(waLine);
+        if (!cta.parentNode.querySelector('.ms-plate-wa')) {
+          var waLine = document.createElement('p'); waLine.className = 'ms-plate-wa';
+          waLine.innerHTML = '<a href="' + WA + encodeURIComponent('Hey, the Musandam trip is sold out, ping me if a seat opens') + '">Message us and we ping you if a seat opens</a>';
+          cta.parentNode.appendChild(waLine);
+        }
       }
     }
     try {
@@ -362,6 +364,8 @@
         renderPayError((data && data.error) || 'Could not start payment. Try again or message us on WhatsApp.');
         return;
       }
+      // The server knows whether the buyer already holds a seat; the summary follows its count.
+      if (data.seats != null && data.seats !== seatCount()) selfIn = data.seats < seatCount();
       var StripeLib = window.Stripe || await ensureStripe(6000);
       if (!StripeLib) {
         renderPayError(isInAppBrowser()

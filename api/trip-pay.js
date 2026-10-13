@@ -152,8 +152,8 @@ module.exports = async (req, res) => {
     // webhook flips them to paid. Rows already paid never reach this list.
     const now = new Date().toISOString();
     const rows = [];
-    if (!selfIn) rows.push({ trip_slug: slug, member_id: memberId, paid: false, updated_at: now });
-    guestIds.forEach((gid) => rows.push({ trip_slug: slug, member_id: gid, booked_by: memberId, paid: false, updated_at: now }));
+    if (!selfIn) rows.push({ trip_slug: slug, member_id: memberId, paid: false, cancelled_at: null, cancel_reason: null, updated_at: now });
+    guestIds.forEach((gid) => rows.push({ trip_slug: slug, member_id: gid, booked_by: memberId, paid: false, cancelled_at: null, cancel_reason: null, updated_at: now }));
     if (rows.length) await db.from('trip_signups').upsert(rows, { onConflict: 'trip_slug,member_id' });
 
     const session = await stripe.checkout.sessions.create({

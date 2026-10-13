@@ -14,7 +14,7 @@ const { requireAdmin, safeError, canViewRevenue, authService } = require('../_li
 const { cleanSlug } = require('../event-status');
 
 const EV = 'slug,title,tagline,description,starts_at,ends_at,location,map_url,cover_url,cover_small_url,capacity,price_aed,enabled,created_at,updated_at';
-const SU = 'id,event_slug,member_id,name,email,phone,guests,paid,paid_at,amount_aed,stripe_session_id,stripe_payment_intent,source,cancelled_at,cancel_reason,note,created_at,updated_at';
+const SU = 'id,event_slug,member_id,name,email,phone,guests,paid,paid_at,amount_aed,stripe_session_id,stripe_payment_intent,stripe_refund_id,refund_aed,source,cancelled_at,cancel_reason,note,created_at,updated_at';
 const EXT = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
 function str(v, max) { return String(v == null ? '' : v).trim().slice(0, max || 200); }
 function num(v) { if (v === '' || v == null) return null; const n = Number(v); return Number.isFinite(n) ? n : null; }
@@ -43,9 +43,9 @@ async function desk(db, slug, cvr) {
       id: s.id, name: s.name, email: s.email, phone: s.phone || '', guests: Number(s.guests || 0),
       status: s.cancelled_at ? 'cancelled' : (paidEvent ? (s.paid ? 'paid' : 'reserved') : 'going'),
       paid_at: s.paid_at, source: s.source || 'online', cancelled_at: s.cancelled_at, cancel_reason: s.cancel_reason || '',
-      has_stripe_payment: !!s.stripe_payment_intent, note: s.note || '', created_at: s.created_at
+      has_stripe_payment: !!s.stripe_payment_intent, refunded: !!s.stripe_refund_id, note: s.note || '', created_at: s.created_at
     };
-    if (cvr) row.amount_aed = s.amount_aed;
+    if (cvr) { row.amount_aed = s.amount_aed; row.refund_aed = s.refund_aed; }
     return row;
   });
   const live = signups.filter((r) => r.status === 'going' || r.status === 'paid');
@@ -84,6 +84,7 @@ module.exports = async (req, res) => {
       let slug = cleanSlug(body.slug) || slugify(title);
       if (!slug) return res.status(400).json({ error: 'Could not make a web address from that title.' });
       const { data: existing } = await db.from('events').select('slug').eq('slug', slug).maybeSingle();
+      if (existing && (body.create === true || body.create === 'true')) return res.status(409).json({ error: 'An event already uses the web address "' + slug + '". Pick another, or open that event and edit it.' });
       const patch = {
         title, tagline: str(body.tagline, 160) || null, description: str(body.description, 4000) || null,
         starts_at: startsAt, ends_at: isoOrNull(body.ends_at),
@@ -147,6 +148,10 @@ module.exports = async (req, res) => {
       const paid = paidEvent && (body.paid === true || body.paid === 'true');
       const amount = num(body.amount_aed);
       const guests = Math.max(0, Math.min(10, parseInt(body.guests, 10) || 0));
+      if (email) {
+        const { data: already } = await db.from('event_signups').select('id,paid,cancelled_at').eq('event_slug', slug).eq('email', key).maybeSingle();
+        if (already && already.paid && !already.cancelled_at) return res.status(409).json({ error: name + ' already has a paid place.' });
+      }
       const row = {
         event_slug: slug, name, email: key, phone: str(body.phone, 24) || null, guests,
         paid, paid_at: paid ? now : null, source: 'manual',
@@ -184,18 +189,22 @@ module.exports = async (req, res) => {
       if (su.paid) patch.paid = false;
       if (body.refund === true || body.refund === 'true') {
         if (!su.stripe_payment_intent) return res.status(400).json({ error: 'Not paid through Stripe, nothing to refund here.' });
+        if (su.stripe_refund_id) return res.status(409).json({ error: 'This place was already refunded.' });
         const Stripe = require('stripe');
         const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
         const amount = Math.round(Number(su.amount_aed || 0) * 100);
-        const refund = await stripe.refunds.create({ payment_intent: su.stripe_payment_intent, amount: amount || undefined, metadata: { kind: 'event', event_slug: slug, signup_id: signupId, by: user.id } });
-        patch.note = ((su.note ? su.note + ' · ' : '') + 'refunded ' + (refund.amount / 100) + ' AED (' + refund.id + ')').slice(0, 300);
+        const refund = await stripe.refunds.create({ payment_intent: su.stripe_payment_intent, amount: amount || undefined, metadata: { kind: 'event', event_slug: slug, signup_id: signupId, by: user.id } }, { idempotencyKey: 'event-refund-' + signupId });
+        patch.stripe_refund_id = refund.id;
+        patch.refund_aed = refund.amount / 100;
+        await db.from('payments').update({ status: 'refunded', updated_at: now }).eq('stripe_payment_intent', su.stripe_payment_intent).then(() => null, () => null);
       }
       const { error } = await db.from('event_signups').update(patch).eq('id', signupId);
       if (error) throw error;
       return res.status(200).json(await desk(db, slug, cvr));
     }
     if (action === 'restore') {
-      if (/refunded/.test(su.note || '')) return res.status(409).json({ error: 'This one was refunded; add them again instead.' });
+      if (!su.cancelled_at) return res.status(409).json({ error: 'This place was not cancelled.' });
+      if (su.stripe_refund_id) return res.status(409).json({ error: 'This one was refunded; add them again instead.' });
       const { error } = await db.from('event_signups').update({ cancelled_at: null, cancel_reason: null, paid: paidEvent ? true : false, paid_at: paidEvent ? (su.paid_at || now) : null, updated_at: now }).eq('id', signupId);
       if (error) throw error;
       return res.status(200).json(await desk(db, slug, cvr));

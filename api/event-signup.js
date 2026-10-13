@@ -44,7 +44,7 @@ module.exports = async (req, res) => {
       return res.status(409).json({ sold_out: left === 0, spots_left: left,
         error: left === 0 ? 'All places are taken.' : 'Only ' + left + (left === 1 ? ' place is' : ' places are') + ' left.' });
     }
-    const { data: member } = await db.from('members').select('id').ilike('email', email).limit(1);
+    const { data: member } = await db.from('members').select('id').ilike('email', email.replace(/[%_\\]/g, '\\$&')).limit(1);
     const now = new Date().toISOString();
     const row = {
       event_slug: slug, member_id: member && member.length ? member[0].id : null,
@@ -55,8 +55,8 @@ module.exports = async (req, res) => {
     if (error) throw error;
 
     try {
-      const { sendEmail, emailShell, escapeHtml, buildIcs, formatDubaiDate } = require('./_email');
-      const when = formatDubaiDate ? formatDubaiDate(ev.starts_at) : ev.starts_at;
+      const { sendEmail, emailShell, escapeHtml, buildIcs } = require('./_email');
+      const when = (function () { try { return new Date(ev.starts_at).toLocaleString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Dubai' }); } catch (e) { return ev.starts_at; } })();
       const first = escapeHtml(name.split(/\s+/)[0]);
       const bodyHtml = `
         <h1 style="font-family:'Barlow Condensed','Helvetica Neue',sans-serif;font-weight:800;font-size:26px;text-transform:uppercase;letter-spacing:0.04em;margin:0 0 8px;color:#fff;">You&rsquo;re <span style="color:#999966;">on the list.</span></h1>

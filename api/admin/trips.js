@@ -125,7 +125,7 @@ module.exports = async (req, res) => {
       if (!name && !email) return res.status(400).json({ error: 'A name or an email is needed.' });
       let memberId = null;
       if (email) {
-        const { data: existing } = await db.from('members').select('id').ilike('email', email).limit(1);
+        const { data: existing } = await db.from('members').select('id').ilike('email', email.replace(/[%_\\]/g, '\\$&')).limit(1);
         if (existing && existing.length) memberId = existing[0].id;
       }
       if (!memberId) {
@@ -141,6 +141,7 @@ module.exports = async (req, res) => {
         trip_slug: slug, member_id: memberId, booked_by: null,
         paid, paid_at: paid ? now : null, source: 'manual',
         amount_aed: paid ? (amount != null ? amount : Number(trip.price_aed)) : null,
+        stripe_session_id: null, stripe_payment_intent: null, stripe_refund_id: null, refund_aed: null,
         note: str(body.note, 300) || null, cancelled_at: null, cancel_reason: null, updated_at: now
       };
       const { error } = await db.from('trip_signups').upsert(row, { onConflict: 'trip_slug,member_id' });
@@ -185,9 +186,10 @@ module.exports = async (req, res) => {
           payment_intent: seat.stripe_payment_intent,
           amount,
           metadata: { kind: 'trip', trip_slug: slug, signup_id: signupId, by: user.id }
-        });
+        }, { idempotencyKey: 'trip-refund-' + signupId });
         patch.stripe_refund_id = refund.id;
         patch.refund_aed = amount / 100;
+        await db.from('payments').update({ status: 'refunded', updated_at: now }).eq('stripe_payment_intent', seat.stripe_payment_intent).then(() => null, () => null);
       }
       const { error } = await db.from('trip_signups').update(patch).eq('id', signupId);
       if (error) throw error;
@@ -195,6 +197,7 @@ module.exports = async (req, res) => {
     }
 
     if (action === 'restore') {
+      if (!seat.cancelled_at) return res.status(409).json({ error: 'This seat was not cancelled.' });
       if (seat.stripe_refund_id) return res.status(409).json({ error: 'This seat was refunded; add it again as a new seat instead.' });
       const { error } = await db.from('trip_signups').update({ paid: true, paid_at: seat.paid_at || now, cancelled_at: null, cancel_reason: null, updated_at: now }).eq('id', signupId);
       if (error) throw error;

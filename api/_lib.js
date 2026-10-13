@@ -558,9 +558,9 @@ async function fetchAllRows(makeQuery, pageSize = 1000) {
 async function ownerStats(db) {
   const now = new Date();
   const [membersR, pkgR, bookR, payR, sessR, pointsMap, coachPayR, padelR] = await Promise.all([
-    db.from('members').select('id,email,full_name,created_at,is_admin'),
+    fetchAllRows(() => db.from('members').select('id,email,full_name,created_at,is_admin').order('id', { ascending: true })),
     db.from('member_packages').select('member_id,sessions_total,sessions_remaining,status,expires_at'),
-    db.from('bookings').select('member_id,session_id,section,status,booked_at'),
+    fetchAllRows(() => db.from('bookings').select('member_id,session_id,section,status,booked_at').order('id', { ascending: true })),
     // Lifetime spend per member, so this one genuinely needs every paid row: it was
     // at 911 of the 1000-row ceiling in Sep 2026 and would have started understating
     // revenue without a word. Paged rather than date-capped.
@@ -579,7 +579,7 @@ async function ownerStats(db) {
       .or('and(kind.eq.one_time,status.eq.paid),and(kind.eq.subscription,status.eq.active)')
       .then(r => r, () => ({ data: [] })),
     // Padel nights paid for, per member (Omar's ask: the members table shows padel too).
-    db.from('padel_signups').select('member_id').eq('paid', true).then(r => r, () => ({ data: [] }))
+    fetchAllRows(() => db.from('padel_signups').select('member_id').eq('paid', true).order('member_id', { ascending: true })).then(r => r, () => ({ data: [] }))
   ]);
   const padelBy = {};
   ((padelR && padelR.data) || []).forEach(p => { if (p.member_id) padelBy[p.member_id] = (padelBy[p.member_id] || 0) + 1; });
@@ -1026,19 +1026,31 @@ async function fulfillCheckoutSession(db, sessionObj) {
     // Paid event (see api/event-pay.js). Flip the sign-up to paid, then one
     // confirmation with the when/where and a calendar file.
     const slug = md.event_slug;
-    const { error: eErr } = await db.from('event_signups').update({
+    const paidPatch = {
       paid: true, paid_at: new Date().toISOString(), amount_aed: paidAmount,
       stripe_session_id: sessionObj.id, stripe_payment_intent: sessionObj.payment_intent,
+      stripe_refund_id: null, refund_aed: null,
       cancelled_at: null, cancel_reason: null, updated_at: new Date().toISOString()
-    }).eq('id', md.signup_id);
+    };
+    const { data: marked, error: eErr } = await db.from('event_signups').update(paidPatch).eq('id', md.signup_id).select('id');
     if (eErr) console.warn('[fulfill] event sign-up mark-paid failed:', eErr.message);
+    if (!eErr && (!marked || !marked.length) && md.email) {
+      // The reservation was removed while checkout was open; the money is real, so the
+      // place is rebuilt from the session itself.
+      const places = Math.max(1, parseInt(md.places, 10) || 1);
+      const { error: reErr } = await db.from('event_signups').upsert(Object.assign({
+        event_slug: slug, member_id: md.member_id || null, name: md.name || (sessionObj.customer_details && sessionObj.customer_details.name) || 'Guest',
+        email: String(md.email).toLowerCase(), guests: places - 1, source: 'online'
+      }, paidPatch), { onConflict: 'event_slug,email' });
+      if (reErr) console.warn('[fulfill] event sign-up rebuild failed:', reErr.message);
+    }
     try {
-      const { sendEmail, emailShell, escapeHtml, buildIcs, formatDubaiDate } = require('./_email');
+      const { sendEmail, emailShell, escapeHtml, buildIcs } = require('./_email');
       const { data: ev } = await db.from('events').select('slug,title,tagline,starts_at,ends_at,location,map_url').eq('slug', slug).maybeSingle();
       const to = md.email || (sessionObj.customer_details && sessionObj.customer_details.email);
       if (ev && to) {
         const first = escapeHtml((md.name || '').split(/\s+/)[0] || 'there');
-        const when = formatDubaiDate ? formatDubaiDate(ev.starts_at) : ev.starts_at;
+        const when = (function () { try { return new Date(ev.starts_at).toLocaleString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Dubai' }); } catch (e) { return ev.starts_at; } })();
         const places = Number(md.places || 1);
         const body = `
           <h1 style="font-family:'Barlow Condensed','Helvetica Neue',sans-serif;font-weight:800;font-size:26px;text-transform:uppercase;letter-spacing:0.04em;margin:0 0 8px;color:#fff;">You&rsquo;re <span style="color:#999966;">in.</span></h1>
@@ -1075,8 +1087,8 @@ async function fulfillCheckoutSession(db, sessionObj) {
       const { error: tErr } = await db.from('trip_signups').upsert(
         { trip_slug: slug, member_id: id, booked_by: id === md.member_id ? null : md.member_id,
           paid: true, paid_at: new Date().toISOString(), amount_aed: perSeat, stripe_session_id: sessionObj.id,
-          stripe_payment_intent: sessionObj.payment_intent, cancelled_at: null, cancel_reason: null,
-          updated_at: new Date().toISOString() },
+          stripe_payment_intent: sessionObj.payment_intent, stripe_refund_id: null, refund_aed: null,
+          cancelled_at: null, cancel_reason: null, updated_at: new Date().toISOString() },
         { onConflict: 'trip_slug,member_id' }
       );
       if (tErr) console.warn('[fulfill] trip seat mark-paid failed:', tErr.message);
@@ -1217,7 +1229,7 @@ async function fulfillCheckoutSession(db, sessionObj) {
   // Merch buyers + paid-run entries aren't bootcamp purchasers - skip the bootcamp tag.
   // (Run registrants already synced to GHL via run-register's onRunRegister.)
   // A sponsor paid for someone else's seat and booked nothing, so no tag either.
-  if (md.kind !== 'merch' && md.kind !== 'run' && md.kind !== 'sponsor') {
+  if (md.kind !== 'merch' && md.kind !== 'run' && md.kind !== 'sponsor' && md.kind !== 'trip' && md.kind !== 'event') {
     try {
       const ghl = require('./_ghl');
       const { data: m } = await db.from('members').select('email,full_name').eq('id', md.member_id).maybeSingle();

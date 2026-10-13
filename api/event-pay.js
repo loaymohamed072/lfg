@@ -61,7 +61,7 @@ module.exports = async (req, res) => {
       return res.status(409).json({ sold_out: left === 0, spots_left: left,
         error: left === 0 ? 'All places are taken.' : 'Only ' + left + (left === 1 ? ' place is' : ' places are') + ' left.' });
     }
-    const { data: member } = await db.from('members').select('id').ilike('email', email).limit(1);
+    const { data: member } = await db.from('members').select('id').ilike('email', email.replace(/[%_\\]/g, '\\$&')).limit(1);
     const memberId = member && member.length ? member[0].id : null;
     const now = new Date().toISOString();
     const amount = Math.round(Number(ev.price_aed) * places * 100) / 100;
