@@ -6,6 +6,9 @@
    cover photograph held under a scrim with the title cut into it; with
    no cover, a graphite ground with one olive glow and the house grain.
    ============================================================ */
+/* Metric-matched fallbacks so the headline keeps its box while Barlow loads (CLS). */
+@font-face { font-family: 'BC Fallback'; src: local('Arial Narrow'), local('ArialNarrow'), local('Arial'); size-adjust: 84%; ascent-override: 96%; descent-override: 22%; line-gap-override: 0%; }
+@font-face { font-family: 'B Fallback'; src: local('Arial'), local('Helvetica'); size-adjust: 97%; ascent-override: 92%; descent-override: 22%; line-gap-override: 0%; }
 :root {
   --ev-ink: #0A0A0A;
   --ev-graphite: #131313;
@@ -20,8 +23,8 @@
   --ev-olive-text: #C9C9A8;
   --ev-olive-glow: rgba(153, 153, 102, 0.22);
   --ev-radius: 4px;
-  --ev-font-head: 'Barlow Condensed', 'Arial Narrow', sans-serif;
-  --ev-font-body: 'Barlow', 'Helvetica Neue', Arial, sans-serif;
+  --ev-font-head: 'Barlow Condensed', 'BC Fallback', sans-serif;
+  --ev-font-body: 'Barlow', 'B Fallback', sans-serif;
   --ev-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --ev-wrap: min(1120px, 100% - 48px);
 }
@@ -43,8 +46,8 @@ html.ev-page { background: var(--ev-ink); scroll-behavior: smooth; }
 
 /* type */
 .ev-kicker { margin: 0; font-family: var(--ev-font-head); font-size: 11px; font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase; color: var(--ev-olive-text); }
-.ev-h1 { margin: 12px 0 0; font-family: var(--ev-font-head); font-weight: 800; font-size: clamp(52px, 8.5vw, 112px); line-height: 0.92; letter-spacing: -0.015em; text-transform: uppercase; max-width: 12ch; }
-.ev-deck { margin: 24px 0 0; font-size: 19px; font-weight: 300; color: var(--ev-dim); max-width: 54ch; }
+.ev-h1 { margin: 12px 0 0; min-height: 1.84em; font-family: var(--ev-font-head); font-weight: 800; font-size: clamp(52px, 8.5vw, 112px); line-height: 0.92; letter-spacing: -0.015em; text-transform: uppercase; max-width: 12ch; }
+.ev-deck { margin: 24px 0 0; min-height: 1.5em; font-size: 19px; font-weight: 300; color: var(--ev-dim); max-width: 54ch; }
 .ev-h2 { margin: 0; font-family: var(--ev-font-head); font-weight: 700; font-size: clamp(30px, 4vw, 44px); line-height: 0.98; letter-spacing: -0.01em; text-transform: uppercase; }
 
 /* hero: cover photograph with the scrim rising into ink; no cover = graphite + one glow */
@@ -53,7 +56,7 @@ html.ev-page { background: var(--ev-ink); scroll-behavior: smooth; }
 .ev-hero-media img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 40%; filter: saturate(0.8) contrast(1.04); }
 .ev-hero-media::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(10, 10, 10, 0.6) 0%, rgba(10, 10, 10, 0.2) 18%, rgba(10, 10, 10, 0) 34%), linear-gradient(to top, var(--ev-ink) 0%, var(--ev-ink) 6%, rgba(10, 10, 10, 0.82) 30%, rgba(10, 10, 10, 0.3) 62%, rgba(10, 10, 10, 0.05) 100%); }
 .ev-hero-inner { position: relative; z-index: 1; width: var(--ev-wrap); margin: 0 auto; padding: 140px 0 56px; }
-.ev-chips { display: flex; flex-wrap: wrap; gap: 14px 28px; margin: 32px 0 0; }
+.ev-chips { display: flex; flex-wrap: wrap; gap: 14px 28px; margin: 32px 0 0; min-height: 44px; }
 .ev-chip { border-left: 1px solid var(--ev-line-strong); padding-left: 14px; }
 .ev-chip .k { display: block; font-family: var(--ev-font-head); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ev-dim-2); }
 .ev-chip .v { display: block; margin-top: 2px; font-size: 15px; color: var(--ev-white); }
@@ -62,15 +65,16 @@ html.ev-page { background: var(--ev-ink); scroll-behavior: smooth; }
 /* body: the story on the left, the sign-up plate on the right */
 .ev-body { padding: 56px 0 96px; }
 .ev-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(320px, 5fr); gap: 48px 64px; align-items: start; }
+.ev-story { min-height: 120px; }
 .ev-story p { margin: 0 0 18px; color: var(--ev-dim); max-width: 62ch; }
 .ev-story p:first-child { color: var(--ev-white); font-size: 19px; }
-.ev-details { margin: 36px 0 0; padding: 0; list-style: none; border-top: 1px solid var(--ev-line); }
+.ev-details { margin: 36px 0 0; padding: 0; list-style: none; border-top: 1px solid var(--ev-line); min-height: 220px; }
 .ev-details li { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--ev-line); }
 .ev-details .k { font-family: var(--ev-font-head); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ev-dim-2); padding-top: 4px; }
 .ev-details .v { color: var(--ev-white); }
 .ev-details .v a { color: var(--ev-olive-text); }
 
-.ev-plate { position: sticky; top: 24px; background: var(--ev-graphite); border: 1px solid var(--ev-line-strong); border-radius: var(--ev-radius); padding: 26px 26px 22px; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45); }
+.ev-plate { position: sticky; top: 24px; min-height: 420px; background: var(--ev-graphite); border: 1px solid var(--ev-line-strong); border-radius: var(--ev-radius); padding: 26px 26px 22px; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45); }
 .ev-plate-price { display: flex; align-items: baseline; gap: 10px; margin: 10px 0 0; }
 .ev-price { font-family: var(--ev-font-head); font-weight: 800; font-size: 44px; line-height: 1; letter-spacing: -0.01em; }
 .ev-per { color: var(--ev-dim-2); font-size: 14px; }

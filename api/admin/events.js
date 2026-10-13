@@ -13,7 +13,7 @@
 const { requireAdmin, safeError, canViewRevenue, authService } = require('../_lib');
 const { cleanSlug } = require('../event-status');
 
-const EV = 'slug,title,tagline,description,starts_at,ends_at,location,map_url,cover_url,capacity,price_aed,enabled,created_at,updated_at';
+const EV = 'slug,title,tagline,description,starts_at,ends_at,location,map_url,cover_url,cover_small_url,capacity,price_aed,enabled,created_at,updated_at';
 const SU = 'id,event_slug,member_id,name,email,phone,guests,paid,paid_at,amount_aed,stripe_session_id,stripe_payment_intent,source,cancelled_at,cancel_reason,note,created_at,updated_at';
 const EXT = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
 function str(v, max) { return String(v == null ? '' : v).trim().slice(0, max || 200); }
@@ -109,12 +109,23 @@ module.exports = async (req, res) => {
       let buffer; try { buffer = Buffer.from(b64, 'base64'); } catch (_) { return res.status(400).json({ error: 'Bad image data' }); }
       if (!buffer.length) return res.status(400).json({ error: 'Empty image' });
       if (buffer.length > 8 * 1024 * 1024) return res.status(413).json({ error: 'Image too large (max 8MB)' });
-      const path = 'events/' + slug + '-' + Date.now() + '.' + EXT[ct];
+      const stamp = Date.now();
       const storage = authService().storage.from('bootcamp-photos');
+      const path = 'events/' + slug + '-' + stamp + '.' + EXT[ct];
       const up = await storage.upload(path, buffer, { contentType: ct, upsert: true });
       if (up.error) throw new Error(up.error.message);
       const { data: pub } = storage.getPublicUrl(path);
-      const { error } = await db.from('events').update({ cover_url: pub.publicUrl, updated_at: now }).eq('slug', slug);
+      let smallUrl = null;
+      const sb64 = String(body.image_small_base64 || '').replace(/^data:[^;]+;base64,/, '');
+      if (sb64) {
+        let sbuf = null; try { sbuf = Buffer.from(sb64, 'base64'); } catch (_) { sbuf = null; }
+        if (sbuf && sbuf.length && sbuf.length <= 8 * 1024 * 1024) {
+          const spath = 'events/' + slug + '-' + stamp + '-800.' + EXT[ct];
+          const sup = await storage.upload(spath, sbuf, { contentType: ct, upsert: true });
+          if (!sup.error) smallUrl = storage.getPublicUrl(spath).data.publicUrl;
+        }
+      }
+      const { error } = await db.from('events').update({ cover_url: pub.publicUrl, cover_small_url: smallUrl, updated_at: now }).eq('slug', slug);
       if (error) throw error;
       return res.status(200).json(await desk(db, slug, cvr));
     }

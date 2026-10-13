@@ -2714,13 +2714,20 @@
   el('ev-cover-btn').addEventListener('click', function () {
     var f = el('ev_cover_file').files && el('ev_cover_file').files[0]; if (!f || !evEditing) return;
     var btn = this; btn.disabled = true; btn.textContent = 'Uploading…';
-    var reader = new FileReader();
-    reader.onload = async function () {
-      var out = await evPost({ action: 'upload_cover', image_base64: reader.result, content_type: f.type || 'image/jpeg' });
-      btn.disabled = false; btn.textContent = 'Upload';
-      if (out && out.event) { fillEventForm(out.event); el('ev-save-msg').textContent = 'Cover uploaded.'; setTimeout(function () { el('ev-save-msg').textContent = ''; }, 4000); }
+    // Two sizes, made here: a phone never needs the 8MB original, and the page's speed
+    // depends on the cover more than on anything else.
+    var img = new Image();
+    img.onload = function () {
+      function shrink(maxW) { var r = Math.min(1, maxW / img.naturalWidth); var c = document.createElement('canvas'); c.width = Math.round(img.naturalWidth * r); c.height = Math.round(img.naturalHeight * r); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); return c.toDataURL('image/jpeg', 0.82); }
+      var big = shrink(1600), small = shrink(800);
+      URL.revokeObjectURL(img.src);
+      evPost({ action: 'upload_cover', image_base64: big, image_small_base64: small, content_type: 'image/jpeg' }).then(function (out) {
+        btn.disabled = false; btn.textContent = 'Upload';
+        if (out && out.event) { fillEventForm(out.event); el('ev-save-msg').textContent = 'Cover uploaded.'; setTimeout(function () { el('ev-save-msg').textContent = ''; }, 4000); }
+      });
     };
-    reader.readAsDataURL(f);
+    img.onerror = function () { btn.disabled = false; btn.textContent = 'Upload'; alert('That image could not be read. Try a JPG or PNG.'); };
+    img.src = URL.createObjectURL(f);
   });
   el('ev-search').addEventListener('input', function () { evSearch = this.value; renderEventSignups(); });
   el('ev-copy-link').addEventListener('click', function () { if (!evEditing) return; var link = 'https://www.lfgdubai.com/events/' + evEditing; (navigator.clipboard ? navigator.clipboard.writeText(link) : Promise.reject()).then(function () { el('ev-add-msg').textContent = 'Link copied: ' + link; }, function () { prompt('Copy this link:', link); }); });

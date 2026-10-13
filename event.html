@@ -18,8 +18,18 @@
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@300;400;500;600&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@300;400;500;600&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@300;400;500;600&display=swap"></noscript>
-<link rel="stylesheet" href="/app-assets/lfg-event-page.css?v=1">
+<link rel="stylesheet" href="/app-assets/lfg-event-page.css?v=4">
 <script type="application/ld+json" id="evSchema">{}</script>
+<script>
+  (function () {
+    var slug = (location.pathname.match(/\/events\/([a-z0-9-]+)/i) || [])[1] || new URLSearchParams(location.search).get('slug') || '';
+    window.__evSlug = slug;
+    window.__ev = window.__evData ? Promise.resolve(window.__evData) : slug ? fetch('/api/event-status?slug=' + encodeURIComponent(slug)).then(function (r) { return r.json(); }).then(function (d) {
+      if (d && d.cover_url) { var l = document.createElement('link'); l.rel = 'preload'; l.as = 'image'; l.href = (window.innerWidth <= 800 && d.cover_small_url) ? d.cover_small_url : d.cover_url; l.fetchPriority = 'high'; document.head.appendChild(l); }
+      return d;
+    }) : Promise.resolve(null);
+  })();
+</script>
 </head>
 <body>
 <div class="ev-noise" aria-hidden="true"></div>
@@ -33,15 +43,15 @@
   </ul>
 </nav>
 
-<header class="ev-hero" id="evHero" hidden>
+<header class="ev-hero" id="evHero">
   <div class="ev-hero-media" id="evHeroMedia" hidden>
     <!-- img-ignore: the cover is set by the admin at runtime; the hero's min-height reserves the box -->
-    <img id="evCover" src="" alt="" fetchpriority="high" decoding="async">
+    <img id="evCover" src="" alt="" sizes="100vw" fetchpriority="high" decoding="async">
   </div>
   <div class="ev-hero-inner">
     <p class="ev-kicker" id="evKicker"></p>
     <h1 class="ev-h1" id="evTitle"></h1>
-    <p class="ev-deck" id="evDeck" hidden></p>
+    <p class="ev-deck" id="evDeck"></p>
     <div class="ev-chips">
       <div class="ev-chip"><span class="k">When</span><span class="v" id="evChipWhen"></span></div>
       <div class="ev-chip"><span class="k">Where</span><span class="v" id="evChipWhere"></span></div>
@@ -51,7 +61,7 @@
   </div>
 </header>
 
-<main class="ev-body" id="evBody" hidden>
+<main class="ev-body" id="evBody">
   <div class="ev-wrap ev-grid">
     <section class="ev-reveal">
       <h2 class="ev-h2">The plan</h2>
@@ -59,7 +69,7 @@
       <ul class="ev-details" id="evDetails"></ul>
     </section>
 
-    <aside class="ev-plate ev-reveal" id="evPlate">
+    <aside class="ev-plate" id="evPlate">
       <p class="ev-kicker" id="evPlateKicker">Save your place</p>
       <div class="ev-plate-price"><span class="ev-price" id="evPrice"></span><span class="ev-per" id="evPer"></span></div>
       <p class="ev-spots" id="evSpots"></p>
@@ -100,7 +110,7 @@
 <section class="ev-closed" id="evClosed" hidden>
   <div class="ev-wrap">
     <p class="ev-kicker">LFG Dubai</p>
-    <h1 class="ev-h1" id="evClosedTitle" style="font-size:clamp(40px,6vw,72px);max-width:16ch;">Loading…</h1>
+    <p class="ev-h1" id="evClosedTitle" style="font-size:clamp(40px,6vw,72px);max-width:16ch;">Loading…</p>
     <p class="ev-deck" id="evClosedBody"></p>
     <p style="margin-top:28px;"><a class="ev-btn" style="width:auto;" href="/">Back to LFG</a></p>
   </div>
@@ -113,6 +123,6 @@
   </div>
 </footer>
 
-<script src="/app-assets/lfg-event-page.js?v=1" defer></script>
+<script src="/app-assets/lfg-event-page.js?v=4" defer></script>
 </body>
 </html>

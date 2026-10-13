@@ -6,7 +6,7 @@ function cleanSlug(v) {
   return String(v || '').trim().toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 60);
 }
 
-const PUBLIC = 'slug,title,tagline,description,starts_at,ends_at,location,map_url,cover_url,capacity,price_aed,enabled';
+const PUBLIC = 'slug,title,tagline,description,starts_at,ends_at,location,map_url,cover_url,cover_small_url,capacity,price_aed,enabled';
 
 async function publicEvent(db, slug) {
   const { data: ev } = await db.from('events').select(PUBLIC).eq('slug', slug).maybeSingle();
@@ -28,6 +28,7 @@ async function publicEvent(db, slug) {
     location: ev.location || null,
     map_url: ev.map_url || (ev.location ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(ev.location) : null),
     cover_url: ev.cover_url || null,
+    cover_small_url: ev.cover_small_url || null,
     paid: paidEvent,
     price_aed: paidEvent ? Number(ev.price_aed) : 0,
     capacity,

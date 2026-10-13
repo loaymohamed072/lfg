@@ -7,7 +7,7 @@
   function el(id) { return document.getElementById(id); }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   var WA = 'https://wa.me/971506767364?text=';
-  var slug = (location.pathname.match(/\/events\/([a-z0-9-]+)/i) || [])[1] || new URLSearchParams(location.search).get('slug') || '';
+  var slug = window.__evSlug || (location.pathname.match(/\/events\/([a-z0-9-]+)/i) || [])[1] || new URLSearchParams(location.search).get('slug') || '';
   var EV = null, paySession = null, embedded = null, inflight = false;
 
   function dubai(iso, opts) {
@@ -55,11 +55,11 @@
     } catch (e) { /* schema is a bonus */ }
 
     if (ev.cover_url) {
-      var img = el('evCover'); img.src = ev.cover_url; img.alt = ev.title; el('evHeroMedia').hidden = false;
+      var img = el('evCover'); if (!img.getAttribute('src')) { img.src = ev.cover_url; if (ev.cover_small_url) img.srcset = ev.cover_small_url + ' 800w, ' + ev.cover_url + ' 1600w'; } img.alt = ev.title; el('evHeroMedia').hidden = false;
     }
     el('evKicker').textContent = 'LFG · ' + dubai(ev.starts_at, { weekday: 'long', day: 'numeric', month: 'long' });
     el('evTitle').textContent = ev.title;
-    var deck = el('evDeck'); if (ev.tagline) { deck.textContent = ev.tagline; deck.hidden = false; }
+    var deck = el('evDeck'); deck.textContent = ev.tagline || ''; deck.style.display = ev.tagline ? '' : 'none';
     el('evChipWhen').textContent = dubai(ev.starts_at, { weekday: 'short', day: 'numeric', month: 'short' }) + ' · ' + dubai(ev.starts_at, { hour: 'numeric', minute: '2-digit' });
     var where = el('evChipWhere');
     where.innerHTML = ev.location ? (ev.map_url ? '<a href="' + esc(ev.map_url) + '" target="_blank" rel="noopener">' + esc(ev.location) + '</a>' : esc(ev.location)) : 'Dubai';
@@ -93,14 +93,12 @@
       var so = el('evSoldout'); so.hidden = false;
       el('evSoldoutWa').href = WA + encodeURIComponent('Hey, ' + ev.title + ' is full, ping me if a place opens');
     }
-    el('evHero').hidden = false; el('evBody').hidden = false;
     reveal();
   }
 
   function load() {
     if (!slug) { renderClosed('No event here.', 'The link is missing the event name. Ask whoever sent it for the right one.'); return; }
-    fetch('/api/event-status?slug=' + encodeURIComponent(slug))
-      .then(function (r) { return r.json(); })
+    (window.__ev || fetch('/api/event-status?slug=' + encodeURIComponent(slug)).then(function (r) { return r.json(); }))
       .then(function (d) {
         if (!d || !d.enabled) { renderClosed('This event is not open.', 'Either it has not been announced yet or it is over. Everything coming up is on WhatsApp first.'); return; }
         if (d.past) { renderClosed(d.title + ' has happened.', 'This one is done. The next one goes out on WhatsApp first.'); return; }
