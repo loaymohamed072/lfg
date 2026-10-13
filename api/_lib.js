@@ -728,11 +728,12 @@ async function ownerStats(db) {
 // faithful reconstruction from the webhook event).
 async function fulfillCheckoutSession(db, sessionObj) {
   const md = sessionObj.metadata || {};
-  // A sponsored-ticket purchase is the one kind that can arrive with no member:
-  // it is bought from the public homepage by someone who has no LFG account and
-  // must not be given one. Every other kind still requires the member id.
+  // Two kinds can arrive with no member: a sponsored ticket (bought from the public
+  // homepage by someone with no LFG account) and an event place (events take a name and
+  // an email, no account). Every other kind still requires the member id.
+  const NO_MEMBER_OK = { sponsor: true, event: true };
   if (!md.kind) return { ok: true, dedup: true, reason: 'no LFG metadata' };
-  if (!md.member_id && md.kind !== 'sponsor') return { ok: true, dedup: true, reason: 'no LFG metadata' };
+  if (!md.member_id && !NO_MEMBER_OK[md.kind]) return { ok: true, dedup: true, reason: 'no LFG metadata' };
 
   // Member must exist before we can FK against it.
   if (md.member_id) {
