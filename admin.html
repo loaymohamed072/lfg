@@ -4033,20 +4033,26 @@
         : (p.checked_in
           ? '<span style="font-family:var(--fh);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ok);background:rgba(126,199,126,0.12);border:1px solid rgba(126,199,126,0.4);padding:1px 6px;border-radius:3px;">Checked in</span>'
           : '<span style="font-family:var(--fh);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);padding:1px 6px;border-radius:3px;">No check-in</span>');
+      var firstTimer = p.first_timer
+        ? '<span style="font-family:var(--fh);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold,#999966);border:1px solid var(--gold,#999966);padding:1px 6px;border-radius:3px;" title="No run check-in or paid run before this one">First timer</span>'
+        : '';
+      var ig = p.instagram
+        ? '<a href="https://instagram.com/' + encodeURIComponent(p.instagram) + '" target="_blank" rel="noopener" style="color:var(--muted);font-size:13px;">@' + esc(p.instagram) + '</a>'
+        : '';
       return '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);">'
         + '<span style="min-width:150px;font-weight:600;color:var(--white);">' + esc(p.name) + '</span>'
-        + badge
+        + badge + firstTimer + ig
         + '<span style="color:var(--muted);font-size:13px;">AED ' + (Number(p.amount_aed) || 0) + '</span>'
         + '<span style="margin-left:auto;font-size:13px;">' + wa + '</span></div>';
     }).join('');
   }
 
   function buildPaidRunsCsv(runDate, payers) {
-    var headers = ['Run date', 'Name', 'Amount (AED)', 'Checked in', 'Check-in (Dubai)', 'WhatsApp', 'Email', 'Level', 'Nationality', 'Role'];
+    var headers = ['Run date', 'Name', 'First timer', 'Instagram', 'Amount (AED)', 'Checked in', 'Check-in (Dubai)', 'WhatsApp', 'Email', 'Level', 'Nationality', 'Role'];
     var lines = [headers.map(csvCell).join(',')];
     payers.forEach(function (p) {
       lines.push([
-        runDate, p.name, Number(p.amount_aed) || 0,
+        runDate, p.name, p.first_timer ? 'Yes' : '', p.instagram ? '@' + p.instagram : '', Number(p.amount_aed) || 0,
         p.checked_in ? 'Yes' : 'No', dubaiTime(p.checked_in_at),
         p.whatsapp, p.email, p.level, p.nationality, p.host ? 'Host' : ''
       ].map(csvCell).join(','));

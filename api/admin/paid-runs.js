@@ -16,6 +16,20 @@ module.exports = async (req, res) => {
       .order('run_date', { ascending: false });
     if (error) return res.status(500).json({ error: error.message });
 
+    // Omar's ask: flag the first-timers and show the Instagram handle. A first-timer
+    // is someone with no run check-in and no paid run before this run's date.
+    const memberIds = Array.from(new Set((rows || []).map(r => r.member_id).filter(Boolean)));
+    const igByMember = {}; const firstSeen = {};
+    if (memberIds.length) {
+      const [{ data: regs }, { data: att }] = await Promise.all([
+        db.from('run_registrations').select('member_id,instagram_handle').in('member_id', memberIds),
+        db.from('run_attendance').select('member_id,run_date').in('member_id', memberIds)
+      ]);
+      (regs || []).forEach(x => { if (x.member_id && x.instagram_handle && !igByMember[x.member_id]) igByMember[x.member_id] = String(x.instagram_handle).replace(/^@/, ''); });
+      (att || []).forEach(x => { if (!firstSeen[x.member_id] || x.run_date < firstSeen[x.member_id]) firstSeen[x.member_id] = x.run_date; });
+      (rows || []).forEach(x => { if (!firstSeen[x.member_id] || x.run_date < firstSeen[x.member_id]) firstSeen[x.member_id] = x.run_date; });
+    }
+
     // Group by run date, newest run first; payers sorted by name within each run.
     const byDate = {};
     let grandRevenue = 0, grandPaid = 0;
@@ -35,7 +49,9 @@ module.exports = async (req, res) => {
         amount_aed: amt,
         checked_in: !!r.checked_in,
         checked_in_at: r.checked_in_at || null,
-        host: !!r.is_admin
+        host: !!r.is_admin,
+        instagram: igByMember[r.member_id] || null,
+        first_timer: !r.is_admin && firstSeen[r.member_id] === r.run_date
       });
     });
 
