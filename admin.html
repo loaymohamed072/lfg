@@ -762,6 +762,12 @@
             <p class="note">Enter Dubai time (UTC+4)</p>
             <label>Stations (groups)</label><input type="number" id="bootcamp_stations" min="2" max="12" value="4">
             <p class="note">How many stations the group splits into when booking. Default 4. Applies to upcoming Sundays.</p>
+            <div class="toggle-row" style="margin-top:14px;"><div class="tl">Early-week discount<small>Monday to Wednesday (Dubai) the single and the packs cost less</small></div>
+              <label class="switch"><input type="checkbox" id="bootcamp_promo_enabled"><span class="slider"></span></label></div>
+            <div id="bc-promo-fields" class="disabled-fields">
+              <label>Discount (%)</label><input type="number" id="bootcamp_promo_pct" min="1" max="90" step="1" value="10">
+              <p class="note">Thursday to Sunday the site shows the list price. Promo codes never stack with this: a buyer gets whichever is worth more.</p>
+            </div>
           </div>
         </div>
         <div class="card">
@@ -2428,10 +2434,16 @@
   var runPaidToggle = el('run_paid'), runPaidFields = el('run-paid-fields');
   function syncRunPaid() { runPaidFields.classList.toggle('off', !runPaidToggle.checked); }
   runPaidToggle.addEventListener('change', syncRunPaid);
+  var promoToggle = el('bootcamp_promo_enabled'), promoFields = el('bc-promo-fields');
+  function syncPromo() { promoFields.classList.toggle('off', !promoToggle.checked); }
+  promoToggle.addEventListener('change', syncPromo);
 
   async function loadConfig() {
-    var { data } = await sb.from('event_config').select('location,event_datetime,bootcamp_location,bootcamp_datetime,bootcamp_stations,saturday_location,saturday_datetime,saturday_enabled,run_paid,run_price_aed,run_map_url,run_tagline').eq('id', 1).single();
+    var { data } = await sb.from('event_config').select('location,event_datetime,bootcamp_location,bootcamp_datetime,bootcamp_stations,saturday_location,saturday_datetime,saturday_enabled,run_paid,run_price_aed,run_map_url,run_tagline,bootcamp_promo_enabled,bootcamp_promo_pct').eq('id', 1).single();
     if (!data) return;
+    promoToggle.checked = !!data.bootcamp_promo_enabled;
+    el('bootcamp_promo_pct').value = (data.bootcamp_promo_pct != null ? data.bootcamp_promo_pct : 10);
+    syncPromo();
     runPaidToggle.checked = !!data.run_paid;
     el('run_price_aed').value = (data.run_price_aed != null ? data.run_price_aed : 30);
     el('run_map_url').value = data.run_map_url || '';
@@ -2453,6 +2465,8 @@
       bootcamp_location: el('bootcamp_location').value.trim(),
       bootcamp_datetime: new Date(el('bootcamp_datetime').value + ':00+04:00').toISOString(),
       bootcamp_stations: parseInt(el('bootcamp_stations').value, 10) || 4,
+      bootcamp_promo_enabled: promoToggle.checked,
+      bootcamp_promo_pct: Math.min(90, Math.max(1, parseInt(el('bootcamp_promo_pct').value, 10) || 10)),
       saturday_enabled: satToggle.checked,
       run_paid: runPaidToggle.checked,
       run_price_aed: parseFloat(el('run_price_aed').value) || 30,

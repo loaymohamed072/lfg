@@ -52,6 +52,17 @@ a.lfgw-btn { display: inline-flex; align-items: center; justify-content: center;
 .lfgw-feat-stats b { color: #fff; }
 .lfgw-feat-stats .urge { color: #999966; font-weight: 700; }
 .lfgw-feat-stats .urge.hot { color: #e9b949; }
+.lfgw-feat-promo { margin-top: 12px; padding: 9px 12px; border: 1px solid rgba(233,185,73,0.45); background: rgba(233,185,73,0.08); font-size: 13px; color: rgba(255,255,255,0.75); letter-spacing: .02em; line-height: 1.45; }
+.lfgw-feat-promo b { color: #e9b949; }
+.lfgw-feat-promo s { color: rgba(255,255,255,0.4); }
+.lfgw-promo-line { margin: 0 0 14px; padding: 9px 12px; border: 1px solid rgba(233,185,73,0.45); background: rgba(233,185,73,0.08); font-size: 13px; color: rgba(255,255,255,0.75); line-height: 1.45; }
+.lfgw-promo-line b { color: #e9b949; }
+.lfgw-promo-line s { color: rgba(255,255,255,0.4); }
+.lfgw-single-note s, .lfgw-text s { color: rgba(255,255,255,0.35); }
+/* Homepage: the offer pill on the bootcamp CTA (hero button on desktop, sticky bar on mobile). */
+.has-promo { position: relative; }
+.hero-promo-pill { position: absolute; top: -11px; right: -6px; padding: 4px 8px; background: #e9b949; color: #0A0A0A; font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; line-height: 1; white-space: nowrap; pointer-events: none; }
+.mobile-sticky-btn .hero-promo-pill { top: -9px; right: 4px; padding: 3px 6px; font-size: 9px; }
 .lfgw-more-label { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,0.4); margin: 18px 0 12px; }
 
 /* Package offer cards under the dates */

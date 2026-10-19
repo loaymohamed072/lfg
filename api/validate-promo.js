@@ -6,7 +6,7 @@
 // spamming common-word codes to discover hidden ones. Module-scoped Map resets
 // on serverless cold start, which is a soft floor (Stripe still requires the
 // final code be valid, so attackers gain nothing real). 429 with retry-after.
-const { admin, getUser, validatePromoCode } = require('./_lib');
+const { admin, getUser, validatePromoCode, earlyWeekPromo, earlyWeekPrice } = require('./_lib');
 
 const PROMO_LIMIT = 10;
 const PROMO_WINDOW_MS = 5 * 60 * 1000;
@@ -59,10 +59,15 @@ module.exports = async (req, res) => {
       return res.status(400).json({ ok: false, error: 'Invalid kind' });
     }
 
-    const result = await validatePromoCode(db, code, baseAmount, user.email);
+    const [result, promo] = await Promise.all([validatePromoCode(db, code, baseAmount, user.email), earlyWeekPromo(db)]);
     // Referral + reward (RWD-) codes are single-session only - reject them on package purchases.
     if (result.ok && kind === 'package' && (result.is_referral || /^RWD-/i.test(result.code || ''))) {
       return res.status(200).json({ ok: false, error: 'Referral and reward codes only work on a single session, not packages.' });
+    }
+    // Monday to Wednesday the early-week discount is already on the price. A code
+    // only applies when it is worth more; it never stacks (same rule in checkout).
+    if (result.ok && promo.active && result.final_amount >= earlyWeekPrice(baseAmount, promo)) {
+      return res.status(200).json({ ok: false, error: "This week's " + promo.percent + "% off is already on the price and beats this code." });
     }
     return res.status(200).json(result);
   } catch (e) {

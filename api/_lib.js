@@ -532,6 +532,25 @@ async function validatePromoCode(db, rawCode, originalAmountAed, userEmail) {
   };
 }
 
+// Bootcamp early-week discount (Omar, 18 Oct 2026): book Monday to Wednesday,
+// Dubai time, and the single and the packs cost less; Thursday to Sunday is the
+// list price. The switch and the percent live on the admin Schedule tab
+// (event_config.bootcamp_promo_enabled / bootcamp_promo_pct). Never stacks with a
+// promo code: the buyer gets whichever of the two is worth more (see checkout).
+const EARLY_WEEK_DAYS = ['Mon', 'Tue', 'Wed'];
+async function earlyWeekPromo(db) {
+  const { data } = await db.from('event_config').select('bootcamp_promo_enabled,bootcamp_promo_pct').eq('id', 1).maybeSingle();
+  const pct = data && data.bootcamp_promo_enabled ? Math.max(0, Math.min(90, Number(data.bootcamp_promo_pct) || 0)) : 0;
+  const day = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Dubai', weekday: 'short' }).format(new Date());
+  const active = pct > 0 && EARLY_WEEK_DAYS.indexOf(day) !== -1;
+  return { active, percent: active ? pct : 0, days: 'Monday to Wednesday', ends: 'Wednesday' };
+}
+// Whole dirhams, same rounding as the widget so the button and the charge agree.
+function earlyWeekPrice(amountAed, promo) {
+  const amount = Number(amountAed) || 0;
+  return promo && promo.active ? Math.round(amount * (100 - promo.percent) / 100) : amount;
+}
+
 function sectionCapN(total, idx, n) { return Math.floor(total / n) + (idx < (total % n) ? 1 : 0); }
 function stationLabelsN(n) { const o = []; for (let i = 0; i < (n || 4); i++) o.push(String.fromCharCode(65 + i)); return o; }
 
@@ -1280,7 +1299,7 @@ module.exports = {
   requireAdmin, requireAdminOrCron, requireGateAccess,
   safeError,
   buildMeResponse, formatDate, cancelCutoffOk,
-  ownerStats, validatePromoCode, fulfillCheckoutSession,
+  ownerStats, validatePromoCode, fulfillCheckoutSession, earlyWeekPromo, earlyWeekPrice,
   stationLabelsN, sectionCapN,
   POINTS_PER_RUN, POINTS_PER_BOOTCAMP, pointsByMember, memberPoints
 };

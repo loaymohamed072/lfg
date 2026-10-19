@@ -25,6 +25,13 @@
     var ARROW = ' <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><path d="M3 8h10M9 4l4 4-4 4"/></svg>';
 
     var sessions = [], packages = [], singlePrice = 99, credits = 0, streak = 0, loggedIn = false;
+    // Early-week discount from /api/packages: { active, percent, days, ends }.
+    // Monday to Wednesday the server prices singles and packs lower; the widget
+    // only mirrors that so the strikethrough and the charge agree.
+    var promo = { active: false, percent: 0, days: 'Monday to Wednesday', ends: 'Wednesday' };
+    function disc(x) { return promo.active ? Math.round(x * (100 - promo.percent) / 100) : x; }
+    function priceTag(x) { return promo.active ? '<s>' + x + '</s> ' + disc(x) : String(x); }
+    function promoLine() { return promo.active ? '<div class="lfgw-promo-line"><b>' + promo.percent + '% off this week.</b> Book by ' + promo.ends + ' and pay <s>AED ' + singlePrice + '</s> <b>AED ' + disc(singlePrice) + '</b> a session.</div>' : ''; }
     var pickedSection = null, activeBookingId = null;
     var featuredEl = null, labelEl = null, offersEl = null, laidOut = false;
     // Applied promo for the currently-open modal. Wiped when the modal closes.
@@ -49,7 +56,7 @@
       if (appliedPromo) {
         var moneyRow;
         if (appliedPromo.kind === 'single') {
-          moneyRow = '<s>AED ' + singlePrice + '</s> <b>AED ' + appliedPromo.final_amount + '</b>';
+          moneyRow = '<s>AED ' + disc(singlePrice) + '</s> <b>AED ' + appliedPromo.final_amount + '</b>';
         } else {
           moneyRow = '<b>You save AED ' + appliedPromo.discount_amount + '</b>';
         }
@@ -176,7 +183,7 @@
     })();
 
     function setBookBtnLabel() {
-      var label = (loggedIn && credits > 0) ? 'Book Now · 1 credit' : 'Book Now · ' + singlePrice + ' AED';
+      var label = (loggedIn && credits > 0) ? 'Book Now · 1 credit' : 'Book Now · ' + disc(singlePrice) + ' AED';
       bookBtn.innerHTML = label + ARROW;
     }
 
@@ -210,7 +217,19 @@
         '<div class="lfgw-feat-tag">Next session · Sunday</div>' +
         '<div class="lfgw-feat-date">' + c.full + ' · ' + fmtTime(s) + '</div>' +
         '<div class="lfgw-feat-sub">' + (s.location || 'CrossFit Alioth') + '</div>' +
-        '<div class="lfgw-feat-stats">' + stats + '</div>';
+        '<div class="lfgw-feat-stats">' + stats + '</div>' +
+        (promo.active ? '<div class="lfgw-feat-promo"><b>' + promo.percent + '% off</b> until ' + promo.ends + ' · Book now and get <s>AED ' + singlePrice + '</s> <b>AED ' + disc(singlePrice) + '</b></div>' : '');
+    }
+    // Homepage: a pill on the bootcamp CTA (hero on desktop, sticky bar on
+    // mobile) so a visitor who never scrolls still sees the offer. No-op on
+    // pages without those buttons.
+    function renderHeroPromo() {
+      document.querySelectorAll('.hero-actions-desktop a[href="/bootcamp"], .mobile-sticky-bar a[href="/bootcamp"]').forEach(function (a) {
+        var pill = a.querySelector('.hero-promo-pill');
+        if (!promo.active) { if (pill) pill.remove(); a.classList.remove('has-promo'); return; }
+        if (!pill) { pill = document.createElement('span'); pill.className = 'hero-promo-pill'; a.appendChild(pill); a.classList.add('has-promo'); }
+        pill.textContent = promo.percent + '% off until Wed';
+      });
     }
 
     function renderSecondary(list) {
@@ -231,8 +250,9 @@
       if (!offersEl) return;
       var cards = packages.map(function (p) {
         var anchor = singlePrice * p.sessions_count;
-        var per = Math.round(p.price_aed / p.sessions_count);
-        var saved = anchor - p.price_aed;
+        var now = disc(p.price_aed);
+        var per = Math.round(now / p.sessions_count);
+        var saved = anchor - now;
         var pop = p.sessions_count === 8;
         var best = p.sessions_count === 12;
         var badge = pop ? '<div class="pk-badge">Most popular</div>' : (best ? '<div class="pk-badge">Best value</div>' : '');
@@ -241,15 +261,15 @@
         var saveLine = best ? '<div class="pk-save">You save AED ' + saved.toLocaleString() + '</div>' : '';
         return '<div class="lfgw-pkgcard' + (pop ? ' pop' : '') + (best ? ' best' : '') + '" data-pkg="' + p.id + '">' + shine + badge +
           '<div class="pk-credits">' + p.sessions_count + '<span>credits</span></div>' +
-          '<div class="pk-anchor"><s>AED ' + anchor.toLocaleString() + '</s></div>' +
-          '<div class="pk-price">AED ' + p.price_aed + '</div>' +
+          '<div class="pk-anchor"><s>AED ' + (promo.active ? Number(p.price_aed) : anchor).toLocaleString() + '</s></div>' +
+          '<div class="pk-price">AED ' + now + '</div>' +
           saveLine +
           '<div class="pk-per">' + per + ' / session · ' + p.validity_months + ' mo</div>' +
           '<button class="pk-buy" type="button">Get this pack</button></div>';
       }).join('');
-      offersEl.innerHTML = '<div class="lfgw-offers-h">Buy a pack. Train more, pay less.</div>' +
+      offersEl.innerHTML = '<div class="lfgw-offers-h">Buy a pack. Train more, pay less.' + (promo.active ? ' ' + promo.percent + '% off until ' + promo.ends + '.' : '') + '</div>' +
         '<div class="lfgw-pkgs">' + cards + '</div>' +
-        '<div class="lfgw-single-note">Or pay as you go. <b>Single session ' + singlePrice + ' AED.</b></div>';
+        '<div class="lfgw-single-note">Or pay as you go. <b>Single session ' + priceTag(singlePrice) + ' AED' + (promo.active ? ' until ' + promo.ends : '') + '.</b></div>';
       offersEl.querySelectorAll('.lfgw-pkgcard').forEach(function (card) {
         card.addEventListener('click', function () { buyPackage(Number(card.getAttribute('data-pkg'))); });
       });
@@ -266,8 +286,9 @@
       ]);
       var sres = res[0], pres = res[1], session = res[2];
       sessions = (sres.data && sres.data.sessions) || [];
-      if (pres.ok) { packages = pres.data.packages || []; singlePrice = pres.data.single_price || 99; }
+      if (pres.ok) { packages = pres.data.packages || []; singlePrice = pres.data.single_price || 99; promo = pres.data.promo || promo; }
       ensureLayout();
+      renderHeroPromo();
       renderFeatured(sessions[0]);
       renderSecondary(sessions.slice(1, 4));
       renderOffers();
@@ -326,14 +347,14 @@
         : null;
       var streakHtml = streakPack
         ? '<div class="lfgw-streak" id="lfgwStreak"><b>' + streak + ' Sundays in a row.</b> The ' + streakPack.sessions_count +
-          '-credit pack makes each one <b>AED ' + Math.round(streakPack.price_aed / streakPack.sessions_count) + '</b> instead of ' + singlePrice + '. ' +
+          '-credit pack makes each one <b>AED ' + Math.round(disc(streakPack.price_aed) / streakPack.sessions_count) + '</b> instead of ' + disc(singlePrice) + '. ' +
           '<button type="button" class="lfgw-streak-go" data-pkg="' + streakPack.id + '">See the pack</button></div>'
         : '';
       var upsell = hasCredits ? '' :
         '<div class="lfgw-upsell"><div class="lfgw-upsell-h">Train more, pay less</div>' +
         packages.map(function (p) {
           var anchor = singlePrice * p.sessions_count;
-          return '<div class="lfgw-pack"><div class="pinfo"><b>' + p.sessions_count + ' credits</b> · <s>AED ' + anchor.toLocaleString() + '</s> <span class="now">AED ' + p.price_aed + '</span></div>' +
+          return '<div class="lfgw-pack"><div class="pinfo"><b>' + p.sessions_count + ' credits</b> · <s>AED ' + (promo.active ? Number(p.price_aed) : anchor).toLocaleString() + '</s> <span class="now">AED ' + disc(p.price_aed) + '</span></div>' +
             '<button class="lfgw-pack-buy" data-pkg="' + p.id + '">Get</button></div>';
         }).join('') + '</div>';
       // Promo input only matters for the paid path; hide it when the user is using credits.
@@ -343,7 +364,8 @@
         '<div class="lfgw-title">' + c.full + ' · ' + fmtTime(s) + '</div>' +
         '<div class="lfgw-text">' + (hasCredits
           ? 'You have <b>' + credits + ' credit' + (credits === 1 ? '' : 's') + '</b>. Pick a station, then book.'
-          : 'Pick a station, then book a single for <b>' + singlePrice + ' AED</b>.') + '</div>' +
+          : 'Pick a station, then book a single for <b>' + disc(singlePrice) + ' AED</b>' + (promo.active ? ' <s>' + singlePrice + '</s>' : '') + '.') + '</div>' +
+        (hasCredits ? '' : promoLine()) +
         streakHtml +
         '<div class="lfgw-seclabel">Pick your station</div>' +
         '<div class="lfgw-secgrid">' + s.sections.map(function (sec) {
@@ -381,12 +403,14 @@
       if (!pkg) return;
       activePackageId = packageId; appliedPromo = null;
       var anchor = singlePrice * pkg.sessions_count;
-      var perSession = Math.round(pkg.price_aed / pkg.sessions_count);
+      var packNow = disc(pkg.price_aed);
+      var perSession = Math.round(packNow / pkg.sessions_count);
       modalEl.innerHTML =
         '<div class="lfgw-eyebrow">Confirm your pack</div>' +
-        '<div class="lfgw-title">' + pkg.sessions_count + ' credits · AED ' + pkg.price_aed + '</div>' +
+        '<div class="lfgw-title">' + pkg.sessions_count + ' credits · AED ' + packNow + '</div>' +
         '<div class="lfgw-text">Valid <b>' + pkg.validity_months + ' month' + (pkg.validity_months === 1 ? '' : 's') + '</b> from purchase. ' +
-        '<s>AED ' + anchor.toLocaleString() + '</s> drops to <b>AED ' + pkg.price_aed + '</b> · just <b>AED ' + perSession + '/session</b>.</div>' +
+        '<s>AED ' + anchor.toLocaleString() + '</s> drops to <b>AED ' + packNow + '</b> · just <b>AED ' + perSession + '/session</b>.</div>' +
+        (promo.active ? '<div class="lfgw-promo-line"><b>' + promo.percent + '% off this week.</b> List price AED ' + pkg.price_aed + ', yours for AED ' + packNow + ' when you book by ' + promo.ends + '.</div>' : '') +
         promoBlockMarkup() +
         '<div class="lfgw-actions" id="lfgwActions"></div>' +
         '<div class="lfgw-terms">' + TERMS_LINE + '</div>';
@@ -398,7 +422,7 @@
     function renderPackageActions() {
       var pkg = packages.find(function (p) { return p.id === activePackageId; });
       if (!pkg) return;
-      var price = appliedPromo ? appliedPromo.final_amount : pkg.price_aed;
+      var price = appliedPromo ? appliedPromo.final_amount : disc(pkg.price_aed);
       document.getElementById('lfgwActions').innerHTML =
         '<button class="lfgw-btn lfgw-btn-ghost" id="lfgwCancel">Cancel</button>' +
         '<button class="lfgw-btn lfgw-btn-primary" id="lfgwPkgGo">Continue · AED ' + price + '</button>';
@@ -408,7 +432,7 @@
 
     function renderActions() {
       var dis = pickedSection ? '' : 'disabled';
-      var price = appliedPromo ? appliedPromo.final_amount : singlePrice;
+      var price = appliedPromo ? appliedPromo.final_amount : disc(singlePrice);
       document.getElementById('lfgwActions').innerHTML =
         '<button class="lfgw-btn lfgw-btn-ghost" id="lfgwCancel">Cancel</button>' +
         '<button class="lfgw-btn lfgw-btn-primary" id="lfgwGo" ' + dis + '>' + (credits > 0 ? 'Use 1 credit' : 'Book · AED ' + price) + '</button>';
@@ -503,7 +527,7 @@
         },
         onBack: function () { openBookingModal(sid); }
       });
-      if (!ok) { btn.disabled = false; btn.textContent = credits > 0 ? 'Use 1 credit' : 'Book · AED ' + (appliedPromo ? appliedPromo.final_amount : singlePrice); }
+      if (!ok) { btn.disabled = false; btn.textContent = credits > 0 ? 'Use 1 credit' : 'Book · AED ' + (appliedPromo ? appliedPromo.final_amount : disc(singlePrice)); }
     }
 
     async function doBuyPackage() {
@@ -514,7 +538,7 @@
       if (appliedPromo) payload.promo_code = appliedPromo.code;
       var pid = activePackageId;
       var ok = await startEmbedded(payload, {
-        title: (pkg ? pkg.sessions_count + ' credits · AED ' + (appliedPromo ? appliedPromo.final_amount : pkg.price_aed) : 'Package'),
+        title: (pkg ? pkg.sessions_count + ' credits · AED ' + (appliedPromo ? appliedPromo.final_amount : disc(pkg.price_aed)) : 'Package'),
         onSuccess: function () {
           showResult('Payment confirmed.', 'Your credits have been added - pick a Sunday to book.', { text: 'Book now', href: '#bootcamps' });
           refresh();

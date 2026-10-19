@@ -3,7 +3,7 @@
 // Auth: required for every kind except 'sponsor', which is public (see below).
 // Returns: { url } to redirect the member to Stripe.
 const Stripe = require('stripe');
-const { admin, getUser, ensureMember, validatePromoCode, safeError } = require('./_lib');
+const { admin, getUser, ensureMember, validatePromoCode, earlyWeekPromo, earlyWeekPrice, safeError } = require('./_lib');
 
 module.exports = async (req, res) => {
   const user = await getUser(req);
@@ -50,20 +50,33 @@ module.exports = async (req, res) => {
     let lineItem, promo = null;
     const metadata = { kind: kind };
     if (user) metadata.member_id = user.id;
+    // Monday to Wednesday (Dubai) singles and packs are discounted. A promo code is
+    // honoured only when it beats that discount; the two never stack.
+    const early = await earlyWeekPromo(db);
+    const earlyNote = early.active ? ' · ' + early.percent + '% off, booked ' + early.days : '';
+    async function priceWithPromo(base, code) {
+      const earlyAmount = earlyWeekPrice(base, early);
+      if (!code) return { amount: earlyAmount, early: early.active };
+      const p = await validatePromoCode(db, code, base, user.email);
+      if (!p.ok) return { error: p.error };
+      if (early.active && p.final_amount >= earlyAmount) {
+        return { error: "This week's " + early.percent + "% off is already on the price and beats this code. Remove the code to continue." };
+      }
+      return { amount: p.final_amount, early: false, promo: p };
+    }
 
     if (kind === 'package') {
       const { data: pkg } = await db.from('packages').select('*').eq('id', body.package_id).eq('active', true).single();
       if (!pkg) return res.status(400).json({ error: 'Package not available' });
-      let amount = Number(pkg.price_aed);
-      if (body.promo_code) {
-        const p = await validatePromoCode(db, body.promo_code, amount, user.email);
-        if (!p.ok) return res.status(400).json({ error: p.error });
+      const priced = await priceWithPromo(Number(pkg.price_aed), body.promo_code);
+      if (priced.error) return res.status(400).json({ error: priced.error });
+      if (priced.promo) {
         // Referral + reward (RWD-) codes are single-session only - never discount a package.
-        if (p.is_referral || /^RWD-/i.test(p.code || '')) return res.status(400).json({ error: 'Referral and reward codes only work on a single session, not packages.' });
-        amount = p.final_amount; promo = p.code; metadata.promo_code = promo;
+        if (priced.promo.is_referral || /^RWD-/i.test(priced.promo.code || '')) return res.status(400).json({ error: 'Referral and reward codes only work on a single session, not packages.' });
+        promo = priced.promo.code; metadata.promo_code = promo;
       }
       metadata.package_id = String(pkg.id);
-      lineItem = priceItem(amount, 'LFG - ' + pkg.name, pkg.sessions_count + ' bootcamp credits · valid ' + pkg.validity_months + ' months');
+      lineItem = priceItem(priced.amount, 'LFG - ' + pkg.name, pkg.sessions_count + ' bootcamp credits · valid ' + pkg.validity_months + ' months' + (priced.early ? earlyNote : ''));
 
     } else if (kind === 'single') {
       const { data: sess } = await db.from('sessions').select('*').eq('id', body.session_id).eq('status', 'open').single();
@@ -81,15 +94,12 @@ module.exports = async (req, res) => {
         .eq('session_id', sess.id).in('status', ['booked', 'attended']);
       if ((count || 0) >= sess.capacity) return res.status(409).json({ error: 'Session is full' });
 
-      let amount = Number(process.env.SINGLE_SESSION_PRICE_AED || 99);
-      if (body.promo_code) {
-        const p = await validatePromoCode(db, body.promo_code, amount, user.email);
-        if (!p.ok) return res.status(400).json({ error: p.error });
-        amount = p.final_amount; promo = p.code; metadata.promo_code = promo;
-      }
+      const priced = await priceWithPromo(Number(process.env.SINGLE_SESSION_PRICE_AED || 99), body.promo_code);
+      if (priced.error) return res.status(400).json({ error: priced.error });
+      if (priced.promo) { promo = priced.promo.code; metadata.promo_code = promo; }
       metadata.session_id = String(sess.id);
       if (/^[A-Z]$/.test(body.section)) metadata.section = body.section; // preferred station
-      lineItem = priceItem(amount, 'LFG Bootcamp - Single Session', new Date(sess.session_date).toDateString());
+      lineItem = priceItem(priced.amount, 'LFG Bootcamp - Single Session', new Date(sess.session_date).toDateString() + (priced.early ? earlyNote : ''));
 
     } else if (kind === 'sponsor') {
       // Sponsored bootcamp tickets: pay N single sessions forward to the

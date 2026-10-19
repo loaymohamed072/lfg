@@ -4,19 +4,26 @@
 // requires granting anon partial access + adding an RLS policy for active=true.
 // Tracked as a future hardening sprint; the endpoint itself only emits public
 // catalogue data so the practical risk of service-role here is minimal.
-const { admin, safeError } = require('./_lib');
+const { admin, safeError, earlyWeekPromo } = require('./_lib');
 
 module.exports = async (req, res) => {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
   try {
-    const { data, error } = await admin().from('packages')
-      .select('id,name,sessions_count,price_aed,validity_months')
-      .eq('active', true)
-      .order('sessions_count');
+    const db = admin();
+    const [{ data, error }, promo] = await Promise.all([
+      db.from('packages')
+        .select('id,name,sessions_count,price_aed,validity_months')
+        .eq('active', true)
+        .order('sessions_count'),
+      earlyWeekPromo(db)
+    ]);
     if (error) throw new Error(error.message);
+    // Prices stay the list prices; the widget applies `promo` on top so the
+    // strikethrough and the charge come from the same numbers.
     res.status(200).json({
       packages: data || [],
-      single_price: Number(process.env.SINGLE_SESSION_PRICE_AED || 99)
+      single_price: Number(process.env.SINGLE_SESSION_PRICE_AED || 99),
+      promo: promo
     });
   } catch (e) {
     return safeError(res, '/api/packages', e, 'Failed to load packages');
