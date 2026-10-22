@@ -32,6 +32,7 @@ research/kahunas-teardown/export/
 
 # Nested repos — they have their own remotes, never gitlinks here
 coaching-app/
+openreply/
 lfg-coach-mcp/
 
 # Security scan artifacts (site-security lane)
