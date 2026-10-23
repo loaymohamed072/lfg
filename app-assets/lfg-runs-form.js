@@ -192,7 +192,8 @@
         utm_campaign: captured.utm_campaign,
         utm_content: captured.utm_content,
         referrer: captured.referrer,
-        landing_page: captured.landing_page
+        landing_page: captured.landing_page,
+        mc_id: (window.lfg && window.lfg.mcId) ? window.lfg.mcId() : null
       };
 
       // Filling the form = coming to the next run. Attach the run date so the server

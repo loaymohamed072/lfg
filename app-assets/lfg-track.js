@@ -212,12 +212,12 @@
       var data = null, status = 0;
       try {
         if (opts.authed && window.lfg && window.lfg.api) {
-          var r = await window.lfg.api('/api/run-pay', { method: 'POST', body: JSON.stringify({ run_date: RUN.run_date }) });
+          var r = await window.lfg.api('/api/run-pay', { method: 'POST', body: JSON.stringify({ run_date: RUN.run_date, mc_id: window.lfg.mcId ? window.lfg.mcId() : null }) });
           status = r.status; data = r.data;
         } else {
           var res = await fetch('/api/run-pay', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: opts.email, run_date: RUN.run_date })
+            body: JSON.stringify({ email: opts.email, run_date: RUN.run_date, mc_id: (window.lfg && window.lfg.mcId) ? window.lfg.mcId() : null })
           });
           status = res.status; try { data = await res.json(); } catch (_) {}
         }

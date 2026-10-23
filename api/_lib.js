@@ -1264,6 +1264,16 @@ async function fulfillCheckoutSession(db, sessionObj) {
     } catch (e) { console.warn('[fulfill → ghl]', e && e.message); }
   }
 
+  // ManyChat: a paid booking that started from an Instagram DM link carries the subscriber
+  // id in metadata.mc_id (set by run-pay / checkout). Tag it so Ahmed's bot skips its
+  // "did you book?" follow-up. Helper never throws; no API key configured = logged no-op.
+  if (md.mc_id && (md.kind === 'run' || md.kind === 'single' || md.kind === 'package')) {
+    try {
+      const manychat = require('./_manychat');
+      await manychat.tagSubscriber(md.mc_id, md.kind === 'run' ? manychat.TAGS.run : manychat.TAGS.bootcamp);
+    } catch (e) { console.warn('[fulfill → manychat]', e && e.message); }
+  }
+
   return { ok: true, fulfilled: md.kind };
 }
 

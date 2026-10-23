@@ -10,6 +10,7 @@
 //   - Service-role DB writes only; the table has RLS enabled with zero policies.
 const { admin, authService, canonicalOrigin, buildAuthLink } = require('./_lib');
 const { sendRunnerWelcome } = require('./_email');
+const manychat = require('./_manychat');
 
 const LEVELS = new Set(['beginner', 'occasional', 'advanced']);
 // Which door the submission came through. One profile table, four entrances.
@@ -183,6 +184,8 @@ module.exports = async (req, res) => {
   const run_type = (typeof body.run_type === 'string' && body.run_type.length <= 20) ? body.run_type : null;
 
   const source = SOURCES.has(body.source) ? body.source : null;
+  // ManyChat subscriber id, present only when the visitor came from an Instagram DM link.
+  const mc_id = manychat.cleanMcId(body.mc_id);
 
   const row = {
     email,
@@ -261,6 +264,14 @@ module.exports = async (req, res) => {
         const origin = canonicalOrigin(req);
         await provisionRunnerAccount({ email, firstName: first_name, lastName: last_name, runRegId: saved.id, origin, runDate: run_date, runType: run_type });
       } catch (e) { console.warn('[run-register] account provision skipped:', e && e.message); }
+    }
+
+    // ManyChat: a free-run sign-up that started from a DM link tags the subscriber so the
+    // bot skips its "did you book?" follow-up. The homepage form IS the free-run booking;
+    // /track registrations are tagged by the Stripe webhook once the paid entry clears.
+    // Helper never throws; no API key configured = logged no-op.
+    if (mc_id && source === 'homepage' && run_date) {
+      try { await manychat.tagSubscriber(mc_id, manychat.TAGS.run); } catch (e) { console.warn('[run-register → manychat]', e && e.message); }
     }
 
     return res.status(200).json({

@@ -34,6 +34,18 @@
   window.lfg = {
     sb: sb,
 
+    // ManyChat subscriber id. Instagram DM booking links carry ?mc_id=<id>; it is kept for
+    // the session so the jump to #register-form or a move to /track keeps it. The server
+    // validates it and tags the subscriber once the booking completes (api/_manychat.js).
+    mcId() {
+      try {
+        var q = new URLSearchParams(window.location.search).get('mc_id');
+        if (q && /^\d{1,20}$/.test(q)) { sessionStorage.setItem('lfg_mc_id', q); return q; }
+        var s = sessionStorage.getItem('lfg_mc_id');
+        return s && /^\d{1,20}$/.test(s) ? s : null;
+      } catch (e) { return null; }
+    },
+
     // True when running inside an app's embedded webview (Instagram, Facebook,
     // TikTok, Snapchat, LinkedIn, Android WebView). Google blocks OAuth there
     // (403 disallowed_useragent), so login UIs should steer these users to the
@@ -232,4 +244,8 @@
       }
     }
   }, true);
+
+  // Remember a ManyChat subscriber id as soon as the page loads, so a visitor who lands on
+  // /?mc_id=... and then taps through to /track or /bootcamp still carries it to the booking.
+  try { window.lfg.mcId(); } catch (e) {}
 })();

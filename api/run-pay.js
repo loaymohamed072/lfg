@@ -14,6 +14,7 @@
 // nobody can set their own amount. Service-role writes only.
 const Stripe = require('stripe');
 const { admin, authService, getUser, ensureMember, safeError } = require('./_lib');
+const { cleanMcId } = require('./_manychat');
 
 function cleanEmail(v) {
   if (!v) return null;
@@ -123,6 +124,9 @@ module.exports = async (req, res) => {
 
     const run_type = weekdayType(run_date);
     const metadata = { member_id: memberId, kind: 'run', run_date: run_date, run_type: run_type || '', location: cfg.location || '' };
+    // ManyChat subscriber id from a DM booking link; the webhook tags booked-run on payment.
+    const mc_id = cleanMcId(body.mc_id);
+    if (mc_id) metadata.mc_id = mc_id;
 
     // Record a pending payment up front (reconciled by the webhook). run_date ties the
     // payment to this specific run so the roster + double-charge guard can read it precisely.

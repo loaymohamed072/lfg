@@ -4,6 +4,7 @@
 // Also fires a branded LFG confirmation email + .ics calendar invite.
 const { admin, getUser, ensureMember } = require('./_lib');
 const { sendBookingConfirmation } = require('./_email');
+const manychat = require('./_manychat');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -13,6 +14,8 @@ module.exports = async (req, res) => {
   const body = req.body || {};
   const sessionId = body.session_id;
   const section = body.section;
+  // ManyChat subscriber id, present only when the visitor came from an Instagram DM link.
+  const mc_id = manychat.cleanMcId(body.mc_id);
   if (!sessionId) return res.status(400).json({ error: 'Missing session_id' });
   if (!/^[A-Z]$/.test(section)) return res.status(400).json({ error: 'Pick a station' });
 
@@ -40,6 +43,9 @@ module.exports = async (req, res) => {
         if (!r.ok) console.warn('[book] confirmation email skipped:', r.error);
       }
     } catch (e) { console.warn('[book] confirmation email threw:', e.message); }
+
+    // ManyChat: a credit booking that started from a DM link tags the subscriber booked-bootcamp.
+    if (mc_id) { try { await manychat.tagSubscriber(mc_id, manychat.TAGS.bootcamp); } catch (e) { console.warn('[book → manychat]', e && e.message); } }
 
     res.status(200).json(data);
   } catch (e) {

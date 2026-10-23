@@ -688,3 +688,32 @@ member already gets from `/api/me`).
 - Nothing new is exposed to the browser: the modal uses data `/api/me` already
   returned to the signed-in member about themselves.
 - Dry run against prod data on 1 Oct: 5 candidates, 0 sends.
+
+## 2026-10-23 — ManyChat integration (scoped review, site-security lane)
+
+Change: public read-only `GET /api/next-run` (reads `event_config` id=1 through the service key, returns the run
+schedule only, no personal data, `Cache-Control: public, max-age=60`), `api/_manychat.js` (outbound helper: Bearer
+`MANYCHAT_API_KEY` from env, constant endpoint, 5 s timeout, never throws, adds one of two tags only), and `mc_id`
+(ManyChat subscriber id) passed from DM links through `run-register`, `run-pay`, `checkout`, `book` and Stripe
+metadata into the fulfilment hook in `_lib.js`.
+
+Scanners run 2026-10-23: `security-gate.sh --legacy`, `leak_scan.mjs`, `web_vuln_scan.mjs`, `scan_headers.mjs`
+on the live route, `npm audit`, osv-scanner, semgrep, gitleaks (history clean).
+
+- `mc_id` is validated server-side (`/^\d{1,20}$/`) before storage or network use; it travels as a JSON number to
+  ManyChat and as a string in Stripe metadata; it is never interpolated into a URL or SQL. Tagging is a side effect
+  that fails open for the BOOKING and closed for the TAG: a ManyChat outage never blocks a booking, and no key means
+  no outbound call (logged).
+- `Access-Control-Allow-Origin: *` on `/api/next-run`: ACCEPTED. Public schedule feed, no credentials, no cookies,
+  GET only; the consumer (ManyChat External Request) is server-side anyway.
+- Findings NOT in shipped surface (recorded so the next run does not re-investigate): `openreply/` is a separate
+  repo (gitignored, now `.vercelignore`d) whose generated Prisma client and worker script trip the raw-SQL and
+  secret-shaped heuristics; `research/kahunas-teardown/.../_sample-fatma.json` is an untracked local export
+  (`git ls-files` empty, `research/` vercelignored); `sharp@0.34.5` (3 OSV, 1 npm high) is a devDependency used
+  for icon generation, not shipped; semgrep `detected-jwt-token` x3 is the Supabase publishable key in client code,
+  public by design.
+- Pre-existing, unchanged: site-wide CSP has no `script-src`/`default-src` (FLAG, every route), legacy repo has
+  2/9 baseline items (no `.npmrc` install-script block, no Dependabot/CI audit, no security.txt, no gitleaks hook).
+
+Verdict for this change: FLAG (accepted CORS `*` on the public feed; the pre-existing CSP and baseline flags
+stand). No BLOCK on shipped surface. Runtime authz unchanged (no auth or RLS touched).

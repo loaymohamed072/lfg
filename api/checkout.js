@@ -4,6 +4,7 @@
 // Returns: { url } to redirect the member to Stripe.
 const Stripe = require('stripe');
 const { admin, getUser, ensureMember, validatePromoCode, earlyWeekPromo, earlyWeekPrice, safeError } = require('./_lib');
+const { cleanMcId } = require('./_manychat');
 
 module.exports = async (req, res) => {
   const user = await getUser(req);
@@ -50,6 +51,10 @@ module.exports = async (req, res) => {
     let lineItem, promo = null;
     const metadata = { kind: kind };
     if (user) metadata.member_id = user.id;
+    // ManyChat subscriber id from a DM booking link (bootcamp singles and packs); the
+    // webhook tags booked-bootcamp once the payment clears.
+    const mc_id = cleanMcId(body.mc_id);
+    if (mc_id && (kind === 'single' || kind === 'package')) metadata.mc_id = mc_id;
     // Monday to Wednesday (Dubai) singles and packs are discounted. A promo code is
     // honoured only when it beats that discount; the two never stack.
     const early = await earlyWeekPromo(db);

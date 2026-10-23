@@ -444,7 +444,7 @@
       if (!pickedSection) return;
       var btn = document.getElementById('lfgwGo'); btn.disabled = true; btn.textContent = 'Booking…';
       var s = byId(activeBookingId);
-      var res = await window.lfg.api('/api/book', { method: 'POST', body: JSON.stringify({ session_id: activeBookingId, section: pickedSection }) });
+      var res = await window.lfg.api('/api/book', { method: 'POST', body: JSON.stringify({ session_id: activeBookingId, section: pickedSection, mc_id: window.lfg.mcId ? window.lfg.mcId() : null }) });
       if (res.ok && res.data.ok) {
         credits = res.data.credits_left; injectHeader(); setBookBtnLabel();
         showResult('You’re in.', fmtCard(s).full + ' · ' + fmtTime(s) + ' · Station <b>' + res.data.section + '</b><br><br>Credits left: <b>' + credits + '</b>');
@@ -474,6 +474,8 @@
         if (opts.onBack) opts.onBack(); else closeModal();
       });
 
+      // ManyChat subscriber id when the visitor came from an Instagram DM link.
+      payload.mc_id = window.lfg.mcId ? window.lfg.mcId() : null;
       var res = await window.lfg.api('/api/checkout', { method: 'POST', body: JSON.stringify(payload) });
       if (backedOut) return true; // user left while the session was being created
       if (!res.ok || !res.data || !res.data.client_secret || !res.data.publishable_key) {
