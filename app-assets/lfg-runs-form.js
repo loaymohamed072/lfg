@@ -256,7 +256,7 @@
         var cfg = null;
         try {
           var c = await window.lfg.sb.from('event_config')
-            .select('event_datetime,location,saturday_datetime,saturday_location,saturday_enabled')
+            .select('event_datetime,location,run_map_url,saturday_datetime,saturday_location,saturday_enabled')
             .eq('id', 1).maybeSingle();
           cfg = c && c.data;
         } catch (e) { return; }
@@ -264,7 +264,7 @@
 
         var runs = [];
         var wed = advanceIfPast(cfg.event_datetime);
-        if (wed) runs.push({ when: wed, location: cfg.location || '', type: weekdayType(wed) });
+        if (wed) runs.push({ when: wed, location: cfg.location || '', mapUrl: /^https:\/\//i.test(cfg.run_map_url || '') ? cfg.run_map_url : '', type: weekdayType(wed) });
         if (cfg.saturday_enabled && cfg.saturday_datetime) {
           var sat = advanceIfPast(cfg.saturday_datetime);
           if (sat) runs.push({ when: sat, location: cfg.saturday_location || '', type: weekdayType(sat) });
@@ -294,7 +294,7 @@
         box.innerHTML =
           '<h3 class="lfgrf-h">Hey <em>' + escapeHtml(firstName) + '</em></h3>' +
           '<p class="lfgrf-sub">Are you joining the next run?</p>' +
-          '<div class="lfgrf-rsvp-run">' + escapeHtml(dayStr + ' · ' + timeStr + locStr) + '</div>' +
+          '<div class="lfgrf-rsvp-run">' + escapeHtml(dayStr + ' · ' + timeStr) + (next.location ? ' · ' + (next.mapUrl ? '<a href="' + escapeHtml(next.mapUrl) + '" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;text-underline-offset:3px">' + escapeHtml(next.location) + ' ↗</a>' : escapeHtml(next.location)) : '') + '</div>' +
           '<div class="lfgrf-rsvp-actions">' +
             '<button type="button" class="lfgrf-rsvp-btn yes" data-v="yes">Yes, I&#39;m in</button>' +
             '<button type="button" class="lfgrf-rsvp-btn no" data-v="no">Can&#39;t make it</button>' +
@@ -322,7 +322,7 @@
           btn.addEventListener('click', async function () {
             var v = btn.getAttribute('data-v');
             box.querySelectorAll('.lfgrf-rsvp-btn').forEach(function (b) { b.disabled = true; });
-            var r = await window.lfg.api('/api/run-rsvp', { method: 'POST', body: JSON.stringify({ run_date: runDate, run_type: next.type, attending: v === 'yes' }) });
+            var r = await window.lfg.api('/api/run-rsvp', { method: 'POST', body: JSON.stringify({ run_date: runDate, run_type: next.type, attending: v === 'yes', mc_id: (window.lfg && window.lfg.mcId) ? window.lfg.mcId() : null }) });
             box.querySelectorAll('.lfgrf-rsvp-btn').forEach(function (b) { b.disabled = false; });
             if (r.ok && r.data && r.data.ok) { setSel(v); paintCount(r.data.count, v); }
             else { countEl.textContent = (r.data && r.data.error) || 'Could not save - try again.'; }

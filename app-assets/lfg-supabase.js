@@ -40,6 +40,13 @@
     mcId() {
       try {
         var q = new URLSearchParams(window.location.search).get('mc_id');
+        // Also accept the id after the hash (/#register-form?mc_id=123): capture it, then put
+        // the clean anchor back so the page still jumps to the form.
+        if (!q && /^#[A-Za-z0-9_-]+\?/.test(window.location.hash)) {
+          var h = window.location.hash.split('?');
+          q = new URLSearchParams(h[1]).get('mc_id');
+          if (q) { try { history.replaceState(null, '', window.location.pathname + window.location.search + h[0]); var el = document.getElementById(h[0].slice(1)); if (el) el.scrollIntoView(); } catch (e2) {} }
+        }
         if (q && /^\d{1,20}$/.test(q)) { sessionStorage.setItem('lfg_mc_id', q); return q; }
         var s = sessionStorage.getItem('lfg_mc_id');
         return s && /^\d{1,20}$/.test(s) ? s : null;

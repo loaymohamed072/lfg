@@ -741,14 +741,15 @@
           <div class="card">
             <h3>Weekly Run</h3>
             <div class="cur-info" id="wed-info">Loading…</div>
-            <label>Location</label><input type="text" id="location" placeholder="e.g. Dubai Autodrome" required>
+            <label>Location</label><input type="text" id="location" placeholder="e.g. Kite Beach" required>
+            <label>Map link (Google Maps URL)</label><input type="text" id="run_map_url" placeholder="https://maps.app.goo.gl/…">
+            <p class="note">Shown on the homepage for every run, free or paid, so a new spot is one tap away.</p>
             <label>Date &amp; Time</label><input type="datetime-local" id="event_datetime" required>
             <p class="note">Enter Dubai time (UTC+4)</p>
             <div class="toggle-row" style="margin-top:14px;"><div class="tl">Paid run<small>Charge entry for this run via Stripe</small></div>
               <label class="switch"><input type="checkbox" id="run_paid"><span class="slider"></span></label></div>
             <div id="run-paid-fields" class="disabled-fields">
               <label>Entry price (AED)</label><input type="number" id="run_price_aed" min="1" step="1" value="30">
-              <label>Map link (Google Maps URL)</label><input type="text" id="run_map_url" placeholder="https://maps.app.goo.gl/…">
               <label>Track page description</label><input type="text" id="run_tagline" placeholder="e.g. Track intervals at GEMS." maxlength="120">
               <p class="note">The <b>/track</b> title auto-becomes “LFG × <b>Location</b>”, the map uses your Map link, and this line is the description under it. Change the Location / Map link above and the track page follows automatically.</p>
               <p class="note">When on, the homepage run section switches to a paid CTA, a top banner appears, and <b>/track</b> takes payment. Turn off after the run to go back to the free sign-up.</p>

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="google-site-verification" content="YP5c4XPr9T4Sb7aOcwQqxcYMJiZ5btzmWOZKHyPZwrQ" />
 <title>LFG Dubai | Running Club in Dubai &amp; Coaching with Ahmed Sam</title>
-<meta name="description" content="Join LFG Dubai, one of the fastest growing running clubs in Dubai with 1000+ members, weekly Wednesday & Saturday runs, and private coaching with Ahmed Sam.">
+<meta name="description" content="Join LFG Dubai, one of the fastest growing running clubs in Dubai with 1000+ members, weekly Tuesday runs at 7:45 PM, and private coaching with Ahmed Sam.">
 <meta name="robots" content="index, follow, max-image-preview:large">
 <link rel="canonical" href="https://www.lfgdubai.com/">
 
@@ -23,7 +23,7 @@
 <meta property="og:locale" content="en_AE">
 <meta property="og:url" content="https://www.lfgdubai.com/">
 <meta property="og:title" content="LFG Dubai | Running Club in Dubai & Coaching with Ahmed Sam">
-<meta property="og:description" content="Join LFG Dubai, one of the fastest growing running clubs in Dubai with 1000+ members, weekly Wednesday & Saturday runs, and private coaching with Ahmed Sam.">
+<meta property="og:description" content="Join LFG Dubai, one of the fastest growing running clubs in Dubai with 1000+ members, weekly Tuesday runs at 7:45 PM, and private coaching with Ahmed Sam.">
 <meta property="og:image" content="https://www.lfgdubai.com/og-image.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -2535,6 +2535,23 @@ footer {
   margin-bottom: 12px;
 }
 
+.activity-slot-loc .run-loc-link {
+  display: inline-block;
+  padding: 3px 0;
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: rgba(255,255,255,0.3);
+  text-underline-offset: 4px;
+  transition: color .2s, text-decoration-color .2s;
+}
+.activity-slot-loc .run-loc-link:hover,
+.activity-slot-loc .run-loc-link:focus-visible {
+  color: var(--green);
+  text-decoration-color: var(--green);
+}
+.activity-slot-loc .run-loc-link:active { opacity: .7; }
+.activity-slot-loc .run-loc-arrow { color: var(--green); }
+
 .activity-slot-desc {
   font-size: 14px;
   color: rgba(255,255,255,0.4);
@@ -2788,7 +2805,7 @@ footer {
 }
 </style>
 <a href="/track" class="paid-run-banner" id="paid-run-banner" hidden>
-  <span class="prb-tag" id="prb-tag">This Wednesday</span>
+  <span class="prb-tag" id="prb-tag">This Tuesday</span>
   <span class="prb-text">Paid intervals session<span class="prb-loc-wrap"> at <b id="prb-loc">Gems World Academy</b></span> · <b id="prb-price">AED 30</b></span>
   <span class="prb-cta">Reserve your spot →</span>
 </a>
@@ -2959,7 +2976,7 @@ footer {
     <a href="#runs" class="lfg-block reveal delay-1" style="text-decoration:none;color:inherit;cursor:pointer;">
       <span class="lfg-block-num">01</span>
       <h3 class="lfg-block-title">Runs</h3>
-      <p class="lfg-block-text">Weekly runs built for every level. <span id="runs-block-days">Wednesday evenings and Saturday mornings</span>. Show up and move.</p>
+      <p class="lfg-block-text">Weekly runs built for every level. <span id="runs-block-days">Tuesday evenings</span>. Show up and move.</p>
       <p class="lfg-block-cta">See Runs <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg></p>
     </a>
     <a href="#bootcamps" class="lfg-block reveal delay-2" style="text-decoration:none;color:inherit;cursor:pointer;">
@@ -2995,14 +3012,14 @@ footer {
     <div class="activity-content-inner">
       <div class="activity-schedule reveal">
         <div class="activity-slot">
-          <p class="activity-slot-day" id="run-slot-day">Wednesday</p>
-          <p class="activity-slot-time" id="run-slot-time">7:30 PM</p>
-          <p class="activity-slot-loc" id="run-slot-loc">Dubai Autodrome</p>
+          <p class="activity-slot-day" id="run-slot-day">Tuesday</p>
+          <p class="activity-slot-time" id="run-slot-time">7:45 PM</p>
+          <p class="activity-slot-loc" id="run-slot-loc">Dubai</p>
           <span class="run-paid-badge" id="run-paid-badge" hidden>Paid intervals · <b id="run-paid-badge-price">AED 30</b></span>
           <p class="activity-slot-desc">All fitness levels welcome. You can run, jog or walk. No pressure, just come and stay active.</p>
         </div>
-        <div class="activity-slot-divider" id="sat-divider"></div>
-        <div class="activity-slot" id="sat-slot">
+        <div class="activity-slot-divider" id="sat-divider" style="display:none"></div>
+        <div class="activity-slot" id="sat-slot" style="display:none">
           <p class="activity-slot-day" id="sat-slot-day">Saturday</p>
           <p class="activity-slot-time" id="sat-slot-time">6:30 AM</p>
           <p class="activity-slot-loc" id="sat-slot-loc">Kite Beach</p>
@@ -3045,7 +3062,7 @@ footer {
         .run-paid-cta .rpc-note { margin-top:14px; font-size:12.5px; color:rgba(255,255,255,0.5); }
         </style>
         <div id="run-paid-cta" class="run-paid-cta" hidden>
-          <p class="rpc-eyebrow" id="rpc-eyebrow">This Wednesday · Paid session</p>
+          <p class="rpc-eyebrow" id="rpc-eyebrow">This Tuesday · Paid session</p>
           <h3 class="rpc-title">Intervals at <span id="rpc-loc">Gems World Academy</span></h3>
           <p class="rpc-sub">This week's run is a paid intervals session. Reserve your spot and pay online — <b id="rpc-price">AED 30</b> per person.</p>
           <a href="/track" class="rpc-btn">Reserve your spot · <span id="rpc-price2">AED 30</span> →</a>
@@ -3600,7 +3617,7 @@ footer {
     </div>
     <div class="split-panel-overlay"></div>
     <div class="split-panel-content">
-      <p class="split-direction" id="split-direction">Every Wednesday</p>
+      <p class="split-direction" id="split-direction">Every Tuesday</p>
       <h2 class="split-headline">
         Join The<br>Run.
       </h2>
@@ -3638,13 +3655,13 @@ footer {
     <div class="seo-left reveal-left">
       <p class="seo-eyebrow">Dubai Running Community</p>
       <h2 class="seo-heading">Running Club<br><em>in Dubai</em></h2>
-      <p class="seo-body">LFG is one of the fastest growing running clubs in Dubai, bringing together a community of over 1000+ members for weekly group runs built around consistency, energy, and performance. <span id="seo-body-run">Every Wednesday at 7:30 PM</span>, runners across Dubai show up to train, connect, and push their limits in a community that feels bigger than a workout. Whether you are just getting started or already serious about performance, LFG gives you a high-energy running club experience in Dubai that is built on discipline, movement, and momentum.</p>
+      <p class="seo-body">LFG is one of the fastest growing running clubs in Dubai, bringing together a community of over 1000+ members for weekly group runs built around consistency, energy, and performance. <span id="seo-body-run">Every Tuesday at 7:45 PM</span>, runners across Dubai show up to train, connect, and push their limits in a community that feels bigger than a workout. Whether you are just getting started or already serious about performance, LFG gives you a high-energy running club experience in Dubai that is built on discipline, movement, and momentum.</p>
     </div>
     <div class="seo-right reveal-right">
       <ul class="seo-points" role="list">
         <li class="seo-point">
           <span class="seo-point-mark">01</span>
-          <span class="seo-point-text" id="seo-point-run">Weekly Wednesday runs at 7:30 PM</span>
+          <span class="seo-point-text" id="seo-point-run">Weekly Tuesday runs at 7:45 PM</span>
         </li>
         <li class="seo-point">
           <span class="seo-point-mark">02</span>
@@ -3723,7 +3740,7 @@ footer {
               <span class="faq-icon" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 1v8M1 5h8"/></svg></span>
             </button>
             <div class="faq-answer" role="region" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-              <p class="faq-answer-inner" itemprop="text"><span id="faq-schedule">LFG runs every Wednesday at 7:30 PM and every Saturday at 6:30 AM.</span> The weekly run is designed to bring the community together through movement, accountability, and energy.</p>
+              <p class="faq-answer-inner" itemprop="text"><span id="faq-schedule">LFG runs every Tuesday at 7:45 PM.</span> The weekly run is designed to bring the community together through movement, accountability, and energy.</p>
             </div>
           </li>
           <li class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
@@ -3862,7 +3879,7 @@ function _advanceIfPast(iso) {
 async function fetchEventConfig() {
   try {
     const r = await fetch(
-      `${_SB_URL}/rest/v1/event_config?id=eq.1&select=location,event_datetime,bootcamp_location,bootcamp_datetime,saturday_location,saturday_datetime,saturday_enabled,run_paid,run_price_aed`,
+      `${_SB_URL}/rest/v1/event_config?id=eq.1&select=location,event_datetime,bootcamp_location,bootcamp_datetime,saturday_location,saturday_datetime,saturday_enabled,run_paid,run_price_aed,run_map_url`,
       { headers: { apikey: _SB_ANON, Authorization: `Bearer ${_SB_ANON}`, 'Accept-Profile': 'public' } }
     );
     const rows = await r.json();
@@ -3965,6 +3982,20 @@ async function fetchEventConfig() {
         const el = document.getElementById(id);
         if (el && val != null) el.textContent = val;
       });
+      // Map link on the run's location, free runs included: the admin's Map link used to
+      // matter only on paid runs (/track), so a free run at a new spot had no way to find it.
+      // https only, built with DOM nodes so neither field can inject markup.
+      const runLocEl = document.getElementById('run-slot-loc');
+      if (runLocEl && row.location && /^https:\/\//i.test(row.run_map_url || '')) {
+        const a = document.createElement('a');
+        a.href = row.run_map_url; a.target = '_blank'; a.rel = 'noopener';
+        a.className = 'run-loc-link';
+        a.setAttribute('aria-label', row.location + ', open in Google Maps');
+        a.textContent = row.location;
+        const arrow = document.createElement('span'); arrow.className = 'run-loc-arrow'; arrow.setAttribute('aria-hidden', 'true'); arrow.textContent = ' ↗';
+        a.appendChild(arrow);
+        runLocEl.textContent = ''; runLocEl.appendChild(a);
+      }
       // Any remaining bootcamp-time labels (calendar rows + upsell header) follow config too.
       if (bcTime) document.querySelectorAll('.bdc-time').forEach(el => { el.textContent = bcTime; });
 
@@ -3975,16 +4006,16 @@ async function fetchEventConfig() {
       // They all read the configured date now, so whichever day is set, the page agrees
       // with itself. Every string below is REPLACED, never appended, so this is safe to
       // run again and a no-op when the configured day is the one already in the markup.
-      const MARKUP_DAY = 'Wednesday';   // what the static HTML ships with
-      const MARKUP_TIME = '7:30 PM';    // ditto, for the run's start time
+      const MARKUP_DAY = 'Tuesday';     // what the static HTML ships with
+      const MARKUP_TIME = '7:45 PM';    // ditto, for the run's start time
       const wedTime24 = wedTarget.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Dubai' });
 
       const scheduleCopy = {
         'split-direction': `Every ${wedDay}`,
-        'runs-block-days': `${wedDay} evenings and ${satDay} mornings`,
+        'runs-block-days': row.saturday_enabled ? `${wedDay} evenings and ${satDay} mornings` : `${wedDay} evenings`,
         'seo-point-run':   `Weekly ${wedDay} runs at ${wedTime}`,
         'seo-body-run':    `Every ${wedDay} at ${wedTime}`,
-        'faq-schedule':    `LFG runs every ${wedDay} at ${wedTime} and every ${satDay} at ${satTime}.`
+        'faq-schedule':    row.saturday_enabled ? `LFG runs every ${wedDay} at ${wedTime} and every ${satDay} at ${satTime}.` : `LFG runs every ${wedDay} at ${wedTime}.`
       };
       Object.entries(scheduleCopy).forEach(([id, val]) => {
         const el = document.getElementById(id);
@@ -3998,7 +4029,7 @@ async function fetchEventConfig() {
         const swap = (s) => s
           .split(MARKUP_DAY).join(wedDay)
           .split(MARKUP_TIME).join(wedTime)
-          .split('"19:30"').join(`"${wedTime24}"`);
+          .split('"19:45"').join(`"${wedTime24}"`);
         document.querySelectorAll('script[type="application/ld+json"]').forEach(s => {
           const next = swap(s.textContent);
           // Only write it back if it still parses; a broken block is worse than a stale one.
@@ -4030,10 +4061,9 @@ function getNextRunDubai() {
   const diffMs = (dubaiOffset - localOffset) * 60 * 1000;
   const dubaiNow = new Date(now.getTime() + diffMs);
 
-  // Fallback schedule: Wed=3 at 19:30, Sat=6 at 06:30
+  // Fallback schedule when the config cannot load: Tue=2 at 19:45 (the Saturday run is off)
   const sessions = [
-    { day: 3, hour: 19, min: 30, label: 'Wednesday - Dubai Autodrome, 7:30 PM' },
-    { day: 6, hour: 6,  min: 30, label: 'Saturday - Kite Beach, 6:30 AM' }
+    { day: 2, hour: 19, min: 45, label: 'Tuesday - Dubai, 7:45 PM' }
   ];
 
   let closest = null;
@@ -4248,7 +4278,7 @@ document.querySelectorAll('.faq-question').forEach(btn => {
       "@id": "https://www.lfgdubai.com/",
       "url": "https://www.lfgdubai.com/",
       "name": "LFG Dubai | Running Club in Dubai & Coaching with Ahmed Sam",
-      "description": "Join LFG Dubai, one of the fastest growing running clubs in Dubai with 1000+ members, weekly Wednesday runs, and private coaching with Ahmed Sam.",
+      "description": "Join LFG Dubai, one of the fastest growing running clubs in Dubai with 1000+ members, weekly Tuesday runs, and private coaching with Ahmed Sam.",
       "inLanguage": "en",
       "publisher": {
         "@id": "https://www.lfgdubai.com/#organization"
@@ -4259,7 +4289,7 @@ document.querySelectorAll('.faq-question').forEach(btn => {
       "@id": "https://www.lfgdubai.com/#organization",
       "name": "LFG Dubai",
       "alternateName": "Lift Focus Grind",
-      "description": "LFG is one of the fastest growing running clubs in Dubai with a community of over 1000 members, with weekly group runs every Wednesday at 7:30 PM and Saturday at 6:30 AM. Founded by coach Ahmed Sam.",
+      "description": "LFG is one of the fastest growing running clubs in Dubai with a community of over 1000 members, with weekly group runs every Tuesday at 7:45 PM. Founded by coach Ahmed Sam.",
       "url": "https://www.lfgdubai.com/",
       "sport": "Running",
       "logo": "https://www.lfgdubai.com/icon-512.png",
@@ -4292,32 +4322,12 @@ document.querySelectorAll('.faq-question').forEach(btn => {
       "event": [
         {
           "@type": "SportsEvent",
-          "name": "LFG Weekly Group Run (Wednesday)",
-          "description": "Weekly group run open to all levels, every Wednesday at 7:30 PM in Dubai.",
+          "name": "LFG Weekly Group Run (Tuesday)",
+          "description": "Weekly group run open to all levels, every Tuesday at 7:45 PM in Dubai.",
           "eventSchedule": {
             "@type": "Schedule",
-            "byDay": "https://schema.org/Wednesday",
-            "startTime": "19:30"
-          },
-          "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
-          "location": {
-            "@type": "Place",
-            "name": "Dubai",
-            "address": {
-              "@type": "PostalAddress",
-              "addressLocality": "Dubai",
-              "addressCountry": "AE"
-            }
-          }
-        },
-        {
-          "@type": "SportsEvent",
-          "name": "LFG Weekly Group Run (Saturday)",
-          "description": "Weekly morning group run open to all levels, every Saturday at 6:30 AM in Dubai.",
-          "eventSchedule": {
-            "@type": "Schedule",
-            "byDay": "https://schema.org/Saturday",
-            "startTime": "06:30"
+            "byDay": "https://schema.org/Tuesday",
+            "startTime": "19:45"
           },
           "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
           "location": {
@@ -4366,7 +4376,7 @@ document.querySelectorAll('.faq-question').forEach(btn => {
           "name": "When does LFG run each week?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "LFG runs every Wednesday at 7:30 PM and every Saturday at 6:30 AM in Dubai. The weekly runs bring the community together through movement, accountability, and energy."
+            "text": "LFG runs every Tuesday at 7:45 PM in Dubai. The weekly runs bring the community together through movement, accountability, and energy."
           }
         },
         {

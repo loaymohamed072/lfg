@@ -9,6 +9,7 @@
 // (run_attendance) which records who actually showed up. Service-role only - the
 // run_rsvps table has RLS on with no policies.
 const { admin, getUser, ensureMember } = require('./_lib');
+const manychat = require('./_manychat');
 
 function validRunDate(s) {
   if (typeof s !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
@@ -70,6 +71,9 @@ module.exports = async (req, res) => {
     const { count } = await db.from('run_rsvps')
       .select('id', { count: 'exact', head: true })
       .eq('run_date', runDate).eq('attending', true);
+    // ManyChat: a logged-in member who came from a DM link and taps "Yes, I'm in" is booked.
+    const mcId = manychat.cleanMcId(body.mc_id);
+    if (attending && mcId) { try { await manychat.tagSubscriber(mcId, manychat.TAGS.run); } catch (e) { console.warn('[run-rsvp → manychat]', e && e.message); } }
     return res.status(200).json({ ok: true, attending, count: count || 0 });
   } catch (e) {
     console.error('[/api/run-rsvp]', e);

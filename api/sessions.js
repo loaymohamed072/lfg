@@ -69,6 +69,8 @@ module.exports = async (req, res) => {
     // keep the two +135 values in sync. The session only rolls over to the next Sunday once
     // this window passes, so "next session" stays correct the rest of the week.
     const BOOK_GRACE_MS = 135 * 60 * 1000; // minutes after start that booking stays open
+    // A Sunday the owner called off is gone, not "sold out" (status 'cancelled').
+    sessions = sessions.filter(s => s.status !== 'cancelled');
     sessions = sessions.filter(s => {
       const t = Date.parse(s.session_date + 'T' + (s.start_time || '12:30:00') + '+04:00');
       return isNaN(t) ? true : (t + BOOK_GRACE_MS) >= nowMs;
