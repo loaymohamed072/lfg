@@ -27,6 +27,9 @@ function advanceIfPast(dtStr) {
   return t;
 }
 
+// Without an admin link, search Maps for the location itself, never an older venue's link.
+function mapsSearch(loc) { const l = String(loc || '').trim(); return l ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(/dubai/i.test(l) ? l : l + ', Dubai') : null; }
+
 function fmt(d, opts) { return new Intl.DateTimeFormat('en-US', Object.assign({ timeZone: DUBAI }, opts)).format(d); }
 function ymd(d) { return new Intl.DateTimeFormat('en-CA', { timeZone: DUBAI, year: 'numeric', month: '2-digit', day: '2-digit' }).format(d); }
 function hm24(d) { return new Intl.DateTimeFormat('en-GB', { timeZone: DUBAI, hour: '2-digit', minute: '2-digit', hour12: false }).format(d); }
@@ -46,7 +49,7 @@ function buildRun({ when, location, mapUrl, paid, priceAed, tagline, origin }) {
     starts_at: when.toISOString(),
     type: paid ? 'paid_track' : 'free_run',
     location: loc,
-    map_url: mapUrl || null,
+    map_url: /^https:\/\//i.test(mapUrl || '') ? mapUrl : mapsSearch(location),
     price_aed: price,
     price_label: paid ? 'AED ' + price : 'Free',
     booking_url: origin + (paid ? '/track' : '/#register-form'),

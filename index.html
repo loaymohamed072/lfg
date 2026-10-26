@@ -2550,7 +2550,7 @@ footer {
   text-decoration-color: var(--green);
 }
 .activity-slot-loc .run-loc-link:active { opacity: .7; }
-.activity-slot-loc .run-loc-arrow { color: var(--green); }
+.activity-slot-loc .run-loc-arrow { color: var(--green); width: 0.9em; height: 0.9em; vertical-align: -0.1em; }
 
 .activity-slot-desc {
   font-size: 14px;
@@ -3986,14 +3986,23 @@ async function fetchEventConfig() {
       // matter only on paid runs (/track), so a free run at a new spot had no way to find it.
       // https only, built with DOM nodes so neither field can inject markup.
       const runLocEl = document.getElementById('run-slot-loc');
-      if (runLocEl && row.location && /^https:\/\//i.test(row.run_map_url || '')) {
+      if (runLocEl && row.location) {
+        // An admin link wins; without one, search Maps for the location the page shows, so the
+        // tap-through can never name a different place than the text beside it.
+        const mapHref = /^https:\/\//i.test(row.run_map_url || '') ? row.run_map_url
+          : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(/dubai/i.test(row.location) ? row.location : row.location + ', Dubai');
         const a = document.createElement('a');
-        a.href = row.run_map_url; a.target = '_blank'; a.rel = 'noopener';
+        a.href = mapHref; a.target = '_blank'; a.rel = 'noopener';
         a.className = 'run-loc-link';
         a.setAttribute('aria-label', row.location + ', open in Google Maps');
         a.textContent = row.location;
-        const arrow = document.createElement('span'); arrow.className = 'run-loc-arrow'; arrow.setAttribute('aria-hidden', 'true'); arrow.textContent = ' ↗';
-        a.appendChild(arrow);
+        // Icon, not the ↗ character: iPhones draw that character as a blue emoji tile.
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('class', 'run-loc-arrow'); svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('aria-hidden', 'true');
+        svg.setAttribute('fill', 'none'); svg.setAttribute('stroke', 'currentColor'); svg.setAttribute('stroke-width', '2.6');
+        svg.setAttribute('stroke-linecap', 'round'); svg.setAttribute('stroke-linejoin', 'round');
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path'); path.setAttribute('d', 'M7 17L17 7M9 7h8v8'); svg.appendChild(path);
+        a.appendChild(document.createTextNode('\u00a0')); a.appendChild(svg);
         runLocEl.textContent = ''; runLocEl.appendChild(a);
       }
       // Any remaining bootcamp-time labels (calendar rows + upsell header) follow config too.

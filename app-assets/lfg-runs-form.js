@@ -264,7 +264,7 @@
 
         var runs = [];
         var wed = advanceIfPast(cfg.event_datetime);
-        if (wed) runs.push({ when: wed, location: cfg.location || '', mapUrl: /^https:\/\//i.test(cfg.run_map_url || '') ? cfg.run_map_url : '', type: weekdayType(wed) });
+        if (wed) runs.push({ when: wed, location: cfg.location || '', mapUrl: /^https:\/\//i.test(cfg.run_map_url || '') ? cfg.run_map_url : (cfg.location ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(/dubai/i.test(cfg.location) ? cfg.location : cfg.location + ', Dubai') : ''), type: weekdayType(wed) });
         if (cfg.saturday_enabled && cfg.saturday_datetime) {
           var sat = advanceIfPast(cfg.saturday_datetime);
           if (sat) runs.push({ when: sat, location: cfg.saturday_location || '', type: weekdayType(sat) });
@@ -294,7 +294,7 @@
         box.innerHTML =
           '<h3 class="lfgrf-h">Hey <em>' + escapeHtml(firstName) + '</em></h3>' +
           '<p class="lfgrf-sub">Are you joining the next run?</p>' +
-          '<div class="lfgrf-rsvp-run">' + escapeHtml(dayStr + ' · ' + timeStr) + (next.location ? ' · ' + (next.mapUrl ? '<a href="' + escapeHtml(next.mapUrl) + '" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;text-underline-offset:3px">' + escapeHtml(next.location) + ' ↗</a>' : escapeHtml(next.location)) : '') + '</div>' +
+          '<div class="lfgrf-rsvp-run">' + escapeHtml(dayStr + ' · ' + timeStr) + (next.location ? ' · ' + (next.mapUrl ? '<a href="' + escapeHtml(next.mapUrl) + '" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;text-underline-offset:3px">' + escapeHtml(next.location) + '&nbsp;<svg viewBox="0 0 24 24" width="0.9em" height="0.9em" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.1em"><path d="M7 17L17 7M9 7h8v8"/></svg></a>' : escapeHtml(next.location)) : '') + '</div>' +
           '<div class="lfgrf-rsvp-actions">' +
             '<button type="button" class="lfgrf-rsvp-btn yes" data-v="yes">Yes, I&#39;m in</button>' +
             '<button type="button" class="lfgrf-rsvp-btn no" data-v="no">Can&#39;t make it</button>' +

@@ -743,7 +743,8 @@
             <div class="cur-info" id="wed-info">Loading…</div>
             <label>Location</label><input type="text" id="location" placeholder="e.g. Kite Beach" required>
             <label>Map link (Google Maps URL)</label><input type="text" id="run_map_url" placeholder="https://maps.app.goo.gl/…">
-            <p class="note">Shown on the homepage for every run, free or paid, so a new spot is one tap away.</p>
+            <p class="note">Shown on the homepage for every run, free or paid. Changing the location clears it, so it never points at the old spot; left empty, the site searches Google Maps for the location. <a id="run-map-check" href="https://www.google.com/maps" target="_blank" rel="noopener" style="color:var(--gold);">Test the link</a></p>
+            <p class="note" id="run-map-cleared" style="display:none;color:var(--gold);">Location changed, so the old map link was cleared. Paste the new one, or leave it empty to use a Maps search.</p>
             <label>Date &amp; Time</label><input type="datetime-local" id="event_datetime" required>
             <p class="note">Enter Dubai time (UTC+4)</p>
             <div class="toggle-row" style="margin-top:14px;"><div class="tl">Paid run<small>Charge entry for this run via Stripe</small></div>
@@ -2433,6 +2434,18 @@
   function syncSat() { satFields.classList.toggle('off', !satToggle.checked); }
   satToggle.addEventListener('change', syncSat);
   var runPaidToggle = el('run_paid'), runPaidFields = el('run-paid-fields');
+  // The map link belongs to the location it was pasted for. A new location with the old
+  // link kept sent runners to GEMS World Academy twice (2026-08-08, 2026-10-26), so typing
+  // a new location clears a link that was not edited in the same sitting.
+  var runLocIn = el('location'), runMapIn = el('run_map_url'), runMapCheck = el('run-map-check');
+  var runLocAtLoad = '', runMapTouched = false;
+  function runMapsSearch(loc) { loc = String(loc || '').trim(); return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(/dubai/i.test(loc) ? loc : loc + ', Dubai'); }
+  function syncRunMapCheck() { var u = runMapIn.value.trim(); runMapCheck.href = /^https:\/\//i.test(u) ? u : runMapsSearch(runLocIn.value); }
+  runMapIn.addEventListener('input', function () { runMapTouched = true; syncRunMapCheck(); });
+  runLocIn.addEventListener('input', function () {
+    if (!runMapTouched && runMapIn.value && runLocIn.value.trim() !== runLocAtLoad) { runMapIn.value = ''; el('run-map-cleared').style.display = ''; }
+    syncRunMapCheck();
+  });
   function syncRunPaid() { runPaidFields.classList.toggle('off', !runPaidToggle.checked); }
   runPaidToggle.addEventListener('change', syncRunPaid);
   var promoToggle = el('bootcamp_promo_enabled'), promoFields = el('bc-promo-fields');
@@ -2453,6 +2466,7 @@
     el('bootcamp_stations').value = data.bootcamp_stations || 4;
     var wed = advanceIfPast(data.event_datetime), bc = advanceIfPast(data.bootcamp_datetime), sat = advanceIfPast(data.saturday_datetime);
     el('wed-info').innerHTML = 'Current: ' + label(wed, data.location); el('location').value = data.location; el('event_datetime').value = toLocal(wed);
+    runLocAtLoad = String(data.location || '').trim(); runMapTouched = false; el('run-map-cleared').style.display = 'none'; syncRunMapCheck();
     el('bc-info').innerHTML = 'Current: ' + label(bc, data.bootcamp_location); el('bootcamp_location').value = data.bootcamp_location; el('bootcamp_datetime').value = toLocal(bc);
     satToggle.checked = !!data.saturday_enabled;
     el('sat-info').innerHTML = data.saturday_enabled ? 'Current: ' + label(sat, data.saturday_location) : 'Currently <b>hidden</b> from the website.';
