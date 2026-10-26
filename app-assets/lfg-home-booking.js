@@ -125,6 +125,7 @@
       }
     }
 
+    function escT(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
     function fmtCard(s) {
       var d = new Date(s.session_date + 'T12:30:00');
       return { date: d.getDate() + ' ' + d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase(), full: 'Sun ' + d.getDate() + ' ' + d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase() };
@@ -214,7 +215,7 @@
         : s.booked === 0 ? 'Be the first in · <span class="urge">Booking open</span>'
         : '<span class="urge">Pick your station before it fills</span>';
       featuredEl.innerHTML =
-        '<div class="lfgw-feat-tag">Next session · Sunday</div>' +
+        '<div class="lfgw-feat-tag">Next session · Sunday' + (s.theme ? ' · <span class="lfgw-feat-theme">' + escT(s.theme) + '</span>' : '') + '</div>' +
         '<div class="lfgw-feat-date">' + c.full + ' · ' + fmtTime(s) + '</div>' +
         '<div class="lfgw-feat-sub">' + (s.location || 'CrossFit Alioth') + '</div>' +
         '<div class="lfgw-feat-stats">' + stats + '</div>' +

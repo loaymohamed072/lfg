@@ -454,6 +454,9 @@
   .note { font-size:12px; color:var(--muted); margin:-10px 0 16px; }
   .msg-ok { color:var(--ok); font-size:13px; min-height:18px; text-align:center; margin-top:10px; }
   .disabled-fields.off { opacity:.4; pointer-events:none; }
+  .theme-row { display:grid; grid-template-columns:92px 1fr; gap:10px; align-items:center; margin-bottom:8px; }
+  .theme-row .theme-day { font-size:13px; color:var(--muted); }
+  .theme-row input { margin:0; }
 
   /* roster modal */
   .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(3px); display:none; align-items:center; justify-content:center; z-index:200; padding:20px; }
@@ -511,6 +514,7 @@
 </div>
 
 <!-- APP -->
+<button id="update-bar" type="button" hidden onclick="location.reload()" style="position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:9999;max-width:calc(100% - 32px);padding:12px 18px;background:#999966;color:#0a0a0a;border:0;font:600 14px/1.35 inherit;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.4);">The admin was updated. Save what you are typing, then tap here to reload.</button>
 <div id="app" class="app hidden">
   <aside class="sidebar">
     <div class="sb-brand"><img src="/lfg-logo.png" alt=""><span>LFG <em>Admin</em></span></div>
@@ -764,6 +768,9 @@
             <p class="note">Enter Dubai time (UTC+4)</p>
             <label>Stations (groups)</label><input type="number" id="bootcamp_stations" min="2" max="12" value="4">
             <p class="note">How many stations the group splits into when booking. Default 4. Applies to upcoming Sundays.</p>
+            <label>Weekly theme</label>
+            <div id="bc-themes"><p class="note">Loading Sundays…</p></div>
+            <p class="note">e.g. HYROX, DEKA. Shown on the bootcamp page and in the feed the Instagram bot reads. Leave empty for no theme.</p>
             <div class="toggle-row" style="margin-top:14px;"><div class="tl">Early-week discount<small>Monday to Wednesday (Dubai) the single and the packs cost less</small></div>
               <label class="switch"><input type="checkbox" id="bootcamp_promo_enabled"><span class="slider"></span></label></div>
             <div id="bc-promo-fields" class="disabled-fields">
@@ -1625,6 +1632,26 @@
     pager.querySelector('[data-go="next"]').addEventListener('click', function () { if (cur < pages) { pageState[key] = cur + 1; onGo(); } });
   }
 
+  // ---------- stay on the current version ----------
+  // The admin tab lives for days, and supabase signs it back in when it regains focus, which
+  // reloads the data but not the page: a deploy stayed invisible for two days (26 Oct, the map
+  // link still looked paid-only after it had moved). On focus and every 10 minutes, compare this
+  // page's ETag with the one it loaded with; a new version reloads, or asks first while typing.
+  var adminEtag = null, adminDirty = false;
+  document.addEventListener('input', function () { adminDirty = true; });
+  document.addEventListener('submit', function () { adminDirty = false; }, true);
+  function pageEtag() { return fetch(location.pathname, { method: 'HEAD', cache: 'no-store' }).then(function (r) { return r.ok ? r.headers.get('etag') : null; }).catch(function () { return null; }); }
+  pageEtag().then(function (t) { adminEtag = t; });
+  async function checkForUpdate() {
+    if (document.visibilityState !== 'visible' || !adminEtag) return;
+    var now = await pageEtag();
+    if (!now || now === adminEtag) return;
+    if (!adminDirty) { location.reload(); return; }
+    var bar = el('update-bar'); if (bar) bar.hidden = false;
+  }
+  document.addEventListener('visibilitychange', checkForUpdate);
+  setInterval(checkForUpdate, 10 * 60 * 1000);
+
   // ---------- auth ----------
   sb.auth.getSession().then(function (r) { if (r.data.session) showApp(r.data.session); });
   sb.auth.onAuthStateChange(function (e, s) {
@@ -2452,6 +2479,19 @@
   function syncPromo() { promoFields.classList.toggle('off', !promoToggle.checked); }
   promoToggle.addEventListener('change', syncPromo);
 
+  // Weekly bootcamp theme per upcoming Sunday (sessions are service-role only, so the save goes
+  // through /api/admin/set-session-theme; the list comes from the public sessions feed).
+  async function loadThemes() {
+    var box = el('bc-themes'); if (!box) return;
+    var r = await api('/api/sessions');
+    var list = (r.ok && r.data && r.data.sessions) || [];
+    if (!list.length) { box.innerHTML = '<p class="note">No upcoming Sundays.</p>'; return; }
+    box.innerHTML = list.slice(0, 4).map(function (s) {
+      var day = String(s.date_label || s.session_date).split(' · ')[0];
+      return '<div class="theme-row"><span class="theme-day">' + esc(day) + '</span><input type="text" maxlength="40" placeholder="e.g. HYROX" data-sid="' + esc(s.id) + '" data-was="' + esc(s.theme || '') + '" value="' + esc(s.theme || '') + '"></div>';
+    }).join('');
+  }
+
   async function loadConfig() {
     var { data } = await sb.from('event_config').select('location,event_datetime,bootcamp_location,bootcamp_datetime,bootcamp_stations,saturday_location,saturday_datetime,saturday_enabled,run_paid,run_price_aed,run_map_url,run_tagline,bootcamp_promo_enabled,bootcamp_promo_pct').eq('id', 1).single();
     if (!data) return;
@@ -2467,6 +2507,7 @@
     var wed = advanceIfPast(data.event_datetime), bc = advanceIfPast(data.bootcamp_datetime), sat = advanceIfPast(data.saturday_datetime);
     el('wed-info').innerHTML = 'Current: ' + label(wed, data.location); el('location').value = data.location; el('event_datetime').value = toLocal(wed);
     runLocAtLoad = String(data.location || '').trim(); runMapTouched = false; el('run-map-cleared').style.display = 'none'; syncRunMapCheck();
+    loadThemes();
     el('bc-info').innerHTML = 'Current: ' + label(bc, data.bootcamp_location); el('bootcamp_location').value = data.bootcamp_location; el('bootcamp_datetime').value = toLocal(bc);
     satToggle.checked = !!data.saturday_enabled;
     el('sat-info').innerHTML = data.saturday_enabled ? 'Current: ' + label(sat, data.saturday_location) : 'Currently <b>hidden</b> from the website.';
@@ -2496,6 +2537,15 @@
       if (stn >= 2 && stn <= 12) {
         var sr = await api('/api/admin/set-stations', 'POST', { stations: stn, location: el('bootcamp_location').value.trim() });
         if (!sr.ok) error = { message: (sr.data && sr.data.error) || 'Stations update failed' };
+      }
+    }
+    if (!error) {
+      var themes = Array.prototype.slice.call(document.querySelectorAll('#bc-themes input[data-sid]'))
+        .filter(function (i) { return i.value.trim() !== (i.getAttribute('data-was') || ''); })
+        .map(function (i) { return { session_id: i.getAttribute('data-sid'), theme: i.value.trim() }; });
+      if (themes.length) {
+        var tr = await api('/api/admin/set-session-theme', 'POST', { themes: themes });
+        if (!tr.ok) error = { message: (tr.data && tr.data.error) || 'Theme update failed' };
       }
     }
     el('save-msg').style.color = error ? 'var(--red)' : 'var(--ok)';

@@ -32,6 +32,8 @@ function stationRoom(total, n, counts) {
 }
 
 module.exports = async (req, res) => {
+  // Readable by the Instagram bot and assistants (robots.txt allows it), kept out of search results.
+  res.setHeader('X-Robots-Tag', 'noindex');
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
   const db = admin();
   const user = await getUser(req); // optional
@@ -43,7 +45,7 @@ module.exports = async (req, res) => {
     const nowMs = Date.now();
     const todayStr = new Date(new Date().toDateString()).toISOString().slice(0, 10);
     const fromStr = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-    const SEL = 'id,session_date,start_time,location,capacity,status,stations,photo_url';
+    const SEL = 'id,session_date,start_time,location,capacity,max_capacity,status,stations,photo_url,theme';
 
     // Calendar + recent group photos (past/today, newest first) in parallel.
     const [sessRes, photoRes] = await Promise.all([
@@ -114,6 +116,8 @@ module.exports = async (req, res) => {
         capacity: s.capacity,
         stations: n,
         photo_url: s.photo_url || null,
+        theme: s.theme || null,
+        max_capacity: s.max_capacity || s.capacity,
         booked: e.total,
         spots_left: spotsLeft,
         sold_out: spotsLeft === 0 || s.status !== 'open',

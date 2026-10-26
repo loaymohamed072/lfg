@@ -8,6 +8,7 @@ const { admin, safeError, earlyWeekPromo } = require('./_lib');
 
 module.exports = async (req, res) => {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+  res.setHeader('X-Robots-Tag', 'noindex');
   try {
     const db = admin();
     const [{ data, error }, promo] = await Promise.all([

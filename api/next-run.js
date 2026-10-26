@@ -62,6 +62,7 @@ module.exports = async (req, res) => {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=60');
+  res.setHeader('X-Robots-Tag', 'noindex');
   try {
     const db = admin();
     const { data: cfg, error } = await db.from('event_config')

@@ -12,6 +12,10 @@
 - Saturday morning runs happen on some weeks; lfgdubai.com shows them when they are on.
 - Sunday Bootcamp: 12:45 PM at CrossFit Alioth, Dubai. 60 minutes, four stations, scaled to your level. First session 99 AED, with cheaper credit packs.
 
+## Live schedule data (JSON, public)
+- Next run (day, time, location, map link, free or paid): https://www.lfgdubai.com/api/next-run
+- Next Sunday bootcamp (theme, spots, current price): https://www.lfgdubai.com/api/next-bootcamp
+
 ## How to join
 - Joining the weekly runs is free. Members join through the WhatsApp flow on the website and get the meeting point and route for the next run.
 - A free account on the website is used to book bootcamp spots, check in at sessions with a QR code, track attendance and leaderboard points, and manage bookings.

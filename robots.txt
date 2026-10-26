@@ -8,6 +8,11 @@ Disallow: /login
 Disallow: /register
 Disallow: /gate
 Disallow: /api/
+# Public read-only feeds (Instagram bot, assistants): the longer rule wins over /api/
+Allow: /api/next-run
+Allow: /api/next-bootcamp
+Allow: /api/sessions
+Allow: /api/packages
 
 # AI / answer-engine crawlers — explicitly welcomed (GEO)
 User-agent: GPTBot
