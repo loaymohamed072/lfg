@@ -480,11 +480,13 @@
     .app { flex-direction:column; } .main { margin-left:0; padding:20px 16px 50px; }
   }
 </style>
+<link rel="stylesheet" href="/app-assets/lfg-admin-skin.css">
+<script>/* signed in already: show the night ground, not a login card, while the session is checked (lfg-admin-fx.js clears this) */try{if(Object.keys(localStorage).some(function(k){return /^sb-.+-auth-token$/.test(k)})){document.documentElement.classList.add("bo-resuming");setTimeout(function(){document.documentElement.classList.remove("bo-resuming")},4000)}}catch(e){}</script>
 </head>
 <body>
 
 <!-- LOGIN -->
-<div id="login" class="login-wrap">
+<div id="login" class="login-wrap" role="main">
   <div class="login-card">
     <img src="/lfg-logo.png" alt="LFG" class="login-logo">
     <div class="login-eyebrow">Club Owner Portal</div>
@@ -496,7 +498,7 @@
       <input type="password" id="password" autocomplete="current-password" placeholder="••••••••" required>
       <div class="cf-turnstile" data-sitekey="0x4AAAAAAEQNP0jYIG7CYUL7" data-theme="dark"></div>
       <p id="login-error" class="msg-error"></p>
-      <button type="submit" id="login-btn" class="btn-gold">Sign In</button>
+      <button type="submit" id="login-btn" class="btn-gold bo-btn">Sign In</button>
     </form>
   </div>
 </div>
@@ -508,34 +510,34 @@
     <div class="login-eyebrow" style="color:var(--red);">Access denied</div>
     <div class="login-title" style="font-size:24px;">Owners only</div>
     <p style="color:var(--muted);font-size:14px;line-height:1.6;margin-bottom:22px;">This area is for LFG admins.<br><span id="denied-email" style="color:#fff;"></span> doesn't have access.</p>
-    <button class="btn-gold" id="denied-logout">Log out</button>
+    <button class="btn-gold bo-btn" id="denied-logout">Log out</button>
     <div style="margin-top:16px;"><a href="/" style="color:var(--muted);font-family:var(--fh);font-size:12px;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;">&larr; Back to site</a></div>
   </div>
 </div>
 
 <!-- APP -->
-<button id="update-bar" type="button" hidden onclick="location.reload()" style="position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:9999;max-width:calc(100% - 32px);padding:12px 18px;background:#999966;color:#0a0a0a;border:0;font:600 14px/1.35 inherit;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.4);">The admin was updated. Save what you are typing, then tap here to reload.</button>
+<button class="bo-btn" id="update-bar" type="button" hidden onclick="location.reload()" style="position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:9999;max-width:calc(100% - 32px);padding:12px 18px;background:#999966;color:#0a0a0a;border:0;font:600 14px/1.35 inherit;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.4);">The admin was updated. Save what you are typing, then tap here to reload.</button>
 <div id="app" class="app hidden">
   <aside class="sidebar">
-    <div class="sb-brand"><img src="/lfg-logo.png" alt=""><span>LFG <em>Admin</em></span></div>
-    <button class="nav-btn active" data-view="today"><span class="ico"></span> Today</button>
-    <button class="nav-btn" data-view="overview"><span class="ico"></span> Overview</button>
-    <button class="nav-btn" data-view="bootcamp"><span class="ico"></span> Bootcamp</button>
-    <button class="nav-btn" data-view="members"><span class="ico"></span> Members</button>
-    <button class="nav-btn" data-view="schedule"><span class="ico"></span> Schedule</button>
-    <button class="nav-btn" data-view="runs"><span class="ico"></span> Runs</button>
-    <button class="nav-btn" data-view="padel"><span class="ico"></span> Padel</button>
-    <button class="nav-btn" data-view="trips"><span class="ico"></span> Trips</button>
-    <button class="nav-btn" data-view="events"><span class="ico"></span> Events</button>
-    <button class="nav-btn" data-view="leads"><span class="ico"></span> Leads <span class="nav-badge" id="leads-nav-badge"></span></button>
-    <button class="nav-btn" data-view="sponsored"><span class="ico"></span> Sponsored <span class="nav-badge" id="sponsored-nav-badge"></span></button>
-    <button class="nav-btn" data-view="orders"><span class="ico"></span> Merch <span class="nav-badge" id="orders-nav-badge"></span></button>
-    <button class="nav-btn" data-view="reviews"><span class="ico"></span> Reviews <span class="nav-badge" id="reviews-nav-badge"></span></button>
-    <button class="nav-btn" data-view="promos"><span class="ico"></span> Promo codes</button>
-    <button class="nav-btn" data-view="notify"><span class="ico"></span> Notify</button>
+    <div class="sb-brand"><img src="/lfg-logo.png" alt="" width="30" height="30"><span>LFG <em>Admin</em></span></div>
+    <button class="nav-btn active bo-btn" data-view="today"><span class="ico"></span> Today</button>
+    <button class="nav-btn bo-btn" data-view="overview"><span class="ico"></span> Overview</button>
+    <button class="nav-btn bo-btn" data-view="bootcamp"><span class="ico"></span> Bootcamp</button>
+    <button class="nav-btn bo-btn" data-view="members"><span class="ico"></span> Members</button>
+    <button class="nav-btn bo-btn" data-view="schedule"><span class="ico"></span> Schedule</button>
+    <button class="nav-btn bo-btn" data-view="runs"><span class="ico"></span> Runs</button>
+    <button class="nav-btn bo-btn" data-view="padel"><span class="ico"></span> Padel</button>
+    <button class="nav-btn bo-btn" data-view="trips"><span class="ico"></span> Trips</button>
+    <button class="nav-btn bo-btn" data-view="events"><span class="ico"></span> Events</button>
+    <button class="nav-btn bo-btn" data-view="leads"><span class="ico"></span> Leads <span class="nav-badge" id="leads-nav-badge"></span></button>
+    <button class="nav-btn bo-btn" data-view="sponsored"><span class="ico"></span> Sponsored <span class="nav-badge" id="sponsored-nav-badge"></span></button>
+    <button class="nav-btn bo-btn" data-view="orders"><span class="ico"></span> Merch <span class="nav-badge" id="orders-nav-badge"></span></button>
+    <button class="nav-btn bo-btn" data-view="reviews"><span class="ico"></span> Reviews <span class="nav-badge" id="reviews-nav-badge"></span></button>
+    <button class="nav-btn bo-btn" data-view="promos"><span class="ico"></span> Promo codes</button>
+    <button class="nav-btn bo-btn" data-view="notify"><span class="ico"></span> Notify</button>
     <div class="sb-foot">
       <div class="sb-who" id="sb-who"></div>
-      <button class="sb-logout" id="logout-btn">Log out</button>
+      <button class="sb-logout bo-btn" id="logout-btn">Log out</button>
     </div>
   </aside>
 
@@ -550,7 +552,7 @@
           </svg>
           Coaching admin
         </a>
-        <button class="refresh-btn" id="refresh-btn">Refresh</button>
+        <button class="refresh-btn bo-btn" id="refresh-btn">Refresh</button>
       </div>
     </div>
 
@@ -561,6 +563,7 @@
         <div class="today-card today-card-primary" id="td-rev-card">
           <div class="today-card-label">This week · revenue</div>
           <div class="today-card-value" id="td-rev">—</div>
+          <div class="bo-rev-cmp" id="td-rev-cmp"></div>
           <div class="today-card-delta" id="td-rev-delta"></div>
         </div>
         <div class="today-card">
@@ -621,7 +624,7 @@
       <div class="card today-block">
         <div class="today-block-head">
           <h3 style="margin:0;">Sunday roster</h3>
-          <button class="btn-ghost" id="td-send-roster" type="button">Send roster now</button>
+          <button class="btn-ghost bo-btn" id="td-send-roster" type="button">Send roster now</button>
         </div>
         <div style="font-size:13px;color:var(--muted);line-height:1.6;">
           Emails the next Sunday's roster (split by station A · B · C · D, with member names) to <b id="td-owner-email" style="color:var(--white);">your owner email</b>.
@@ -639,7 +642,7 @@
             <h3 style="margin:0;color:#e58a8a;">Abandoned &amp; unfinished checkouts</h3>
             <div class="recon-sub" id="recon-sub">—</div>
           </div>
-          <button class="btn-gold" id="recon-go" style="max-width:240px;">Reconcile now</button>
+          <button class="btn-gold bo-btn" id="recon-go" style="max-width:240px;">Reconcile now</button>
         </div>
         <div id="recon-list"></div>
       </div>
@@ -675,8 +678,8 @@
             <div class="checkin-qr-url" id="checkin-qr-url">—</div>
             <div class="checkin-qr-actions">
               <a class="btn-ghost" id="checkin-qr-download" download="lfg-checkin-qr.png">Download PNG</a>
-              <button class="btn-ghost" id="checkin-qr-print" type="button">Print</button>
-              <button class="btn-ghost" id="checkin-qr-copy" type="button">Copy URL</button>
+              <button class="btn-ghost bo-btn" id="checkin-qr-print" type="button">Print</button>
+              <button class="btn-ghost bo-btn" id="checkin-qr-copy" type="button">Copy URL</button>
             </div>
           </div>
         </div>
@@ -699,7 +702,7 @@
         <div class="tbl-tools">
           <input type="text" id="member-search" placeholder="Search name or email…">
           <select id="member-sort" class="runs-filtersel"><option value="">Sort: default</option><option value="spend">Sort: biggest spenders</option></select>
-          <button class="mini" id="export-btn">Export CSV</button>
+          <button class="mini bo-btn" id="export-btn">Export CSV</button>
         </div>
         <div class="tbl-wrap"><table class="tbl" id="members-tbl"></table></div>
         <div id="members-pager" class="lfg-pager"></div>
@@ -723,7 +726,7 @@
             <input type="email" id="sp-email" placeholder="who gets the ticket" autocomplete="off" style="min-width:240px;"></label>
           <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;">Tickets
             <input type="number" id="sp-qty" min="1" max="20" value="1" style="width:80px;"></label>
-          <button class="mini" id="sp-go">Hand out</button>
+          <button class="mini bo-btn" id="sp-go">Hand out</button>
           <span class="muted" id="sp-msg" style="font-size:12px;"></span>
         </div>
         <p class="muted" style="font-size:12px;margin-top:6px;">Credits them a comp pack that expires in 60 days, with the sponsor named on their ledger. Oldest sponsorship is drawn first.</p>
@@ -790,7 +793,7 @@
             <p class="note">Enter Dubai time (UTC+4)</p>
           </div>
         </div>
-        <button type="submit" id="save-btn" class="btn-gold" style="max-width:280px">Save schedule</button>
+        <button type="submit" id="save-btn" class="btn-gold bo-btn" style="max-width:280px">Save schedule</button>
         <p id="save-msg" class="msg-ok"></p>
       </form>
     </section>
@@ -811,8 +814,8 @@
             <div class="checkin-qr-url" id="run-qr-url">—</div>
             <div class="checkin-qr-actions">
               <a class="btn-ghost" id="run-qr-download" download="lfg-run-checkin-qr.png">Download PNG</a>
-              <button class="btn-ghost" id="run-qr-print" type="button">Print</button>
-              <button class="btn-ghost" id="run-qr-copy" type="button">Copy URL</button>
+              <button class="btn-ghost bo-btn" id="run-qr-print" type="button">Print</button>
+              <button class="btn-ghost bo-btn" id="run-qr-copy" type="button">Copy URL</button>
             </div>
           </div>
         </div>
@@ -845,7 +848,7 @@
         </div>
         <div class="runs-toolbar">
           <input type="text" id="rsvp-search" class="runs-search" placeholder="Search runners by name…" autocomplete="off">
-          <button class="mini" id="rsvp-export-btn" type="button">Export CSV</button>
+          <button class="mini bo-btn" id="rsvp-export-btn" type="button">Export CSV</button>
         </div>
         <div id="run-rsvp-list" style="margin-top:12px;">Loading…</div>
       </div>
@@ -858,14 +861,14 @@
       <div class="card">
         <div class="runs-header">
           <div class="runs-seg" id="runs-seg">
-            <button class="seg-btn active" data-view="runners" type="button">All runners</button>
-            <button class="seg-btn" data-view="paid" type="button">Paid runs</button>
+            <button class="seg-btn active bo-btn" data-view="runners" type="button">All runners</button>
+            <button class="seg-btn bo-btn" data-view="paid" type="button">Paid runs</button>
           </div>
           <div class="runs-filter" id="runs-filter-btns">
-            <button class="rf-btn active" data-filter="all" type="button">All</button>
-            <button class="rf-btn" data-filter="convertible" type="button">Not yet at bootcamp</button>
-            <button class="rf-btn" data-filter="member" type="button">Already members</button>
-            <button class="rf-btn" data-filter="beginner" type="button">Beginners</button>
+            <button class="rf-btn active bo-btn" data-filter="all" type="button">All</button>
+            <button class="rf-btn bo-btn" data-filter="convertible" type="button">Not yet at bootcamp</button>
+            <button class="rf-btn bo-btn" data-filter="member" type="button">Already members</button>
+            <button class="rf-btn bo-btn" data-filter="beginner" type="button">Beginners</button>
           </div>
         </div>
 
@@ -874,7 +877,7 @@
           <div class="runs-toolbar">
             <input type="text" id="runs-search" class="runs-search" placeholder="Search name, email, Instagram, nationality…" autocomplete="off">
             <span id="runs-count" class="runs-count">—</span>
-            <button class="mini" id="runs-export-btn" type="button">Export CSV</button>
+            <button class="mini bo-btn" id="runs-export-btn" type="button">Export CSV</button>
           </div>
           <div class="runs-toolbar">
             <select id="rf-nat" class="runs-filtersel"><option value="">All nationalities</option></select>
@@ -882,7 +885,7 @@
             <select id="rf-level" class="runs-filtersel"><option value="">All levels</option><option value="beginner">Beginner</option><option value="occasional">Occasional</option><option value="advanced">Advanced</option></select>
             <select id="rf-acct" class="runs-filtersel"><option value="">Any status</option><option value="none">No account</option><option value="member">Has account</option><option value="bootcamp">Booked bootcamp</option><option value="convertible">Convertible</option></select>
             <select id="rf-runs" class="runs-filtersel"><option value="">Any runs</option><option value="1">1+ runs</option><option value="3">3+ runs</option><option value="5">5+ runs</option><option value="10">10+ runs</option></select>
-            <button class="mini" id="rf-clear" type="button">Clear filters</button>
+            <button class="mini bo-btn" id="rf-clear" type="button">Clear filters</button>
           </div>
           <div id="runs-list">Loading…</div>
           <div id="runs-pager" class="lfg-pager"></div>
@@ -893,7 +896,7 @@
           <div class="runs-toolbar">
             <select id="paid-runs-date" class="runs-filtersel"></select>
             <input type="text" id="paid-runs-search" class="runs-search" placeholder="Search payers by name…" autocomplete="off">
-            <button class="mini" id="paid-runs-export-btn" type="button">Export CSV</button>
+            <button class="mini bo-btn" id="paid-runs-export-btn" type="button">Export CSV</button>
           </div>
           <div id="paid-runs-summary" class="paid-summary">—</div>
           <div id="paid-runs-list">Loading…</div>
@@ -923,7 +926,7 @@
             <label>Tagline</label><input type="text" id="padel_tagline" placeholder="e.g. Tuesday night padel socials." maxlength="120">
           </div>
         </div>
-        <button type="submit" id="padel-save-btn" class="btn-gold" style="max-width:280px">Save padel</button>
+        <button type="submit" id="padel-save-btn" class="btn-gold bo-btn" style="max-width:280px">Save padel</button>
         <p id="padel-save-msg" class="msg-ok"></p>
       </form>
 
@@ -935,7 +938,7 @@
         <div class="runs-toolbar">
           <select id="padel-date" class="runs-filtersel"></select>
           <input type="text" id="padel-search" class="runs-search" placeholder="Search players by name or email…" autocomplete="off">
-          <button class="mini" id="padel-export-btn" type="button">Export CSV</button>
+          <button class="mini bo-btn" id="padel-export-btn" type="button">Export CSV</button>
         </div>
         <div id="padel-summary" class="paid-summary">—</div>
         <div id="padel-roster-list">Loading…</div>
@@ -946,7 +949,7 @@
         <div class="runs-toolbar" style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px;">
           <input type="text" id="padel-add-name" class="runs-search" placeholder="Walk-in player name…" autocomplete="off" style="flex:1 1 200px;">
           <input type="number" id="padel-add-level" class="runs-search" placeholder="Level" min="1" max="7" step="0.5" style="max-width:90px;">
-          <button class="mini" id="padel-add-btn" type="button">Add to night</button>
+          <button class="mini bo-btn" id="padel-add-btn" type="button">Add to night</button>
         </div>
         <p id="padel-add-msg" class="note" style="margin-top:6px;"></p>
       </div>
@@ -965,7 +968,7 @@
       <div class="card">
         <div class="runs-header">
           <h3 style="margin:0;">Courts — matched by level</h3>
-          <button class="mini" id="padel-regroup-btn" type="button">Regroup</button>
+          <button class="mini bo-btn" id="padel-regroup-btn" type="button">Regroup</button>
         </div>
         <div id="padel-courts" class="sched-grid" style="margin-top:14px;">Loading…</div>
       </div>
@@ -993,7 +996,7 @@
           <label>Capacity (seats)</label><input type="number" id="trip_capacity" min="1" step="1">
           <p class="note">Sold out at this number of paid seats. Reservations that never paid do not count.</p>
         </div>
-        <button type="submit" id="trip-save-btn" class="btn-gold" style="max-width:280px">Save trip</button>
+        <button type="submit" id="trip-save-btn" class="btn-gold bo-btn" style="max-width:280px">Save trip</button>
         <p id="trip-save-msg" class="msg-ok"></p>
       </form>
 
@@ -1004,7 +1007,7 @@
         </div>
         <div class="runs-toolbar">
           <input type="text" id="trip-search" class="runs-search" placeholder="Search by name, email or phone…" autocomplete="off">
-          <button class="mini" id="trip-export-btn" type="button">Export CSV</button>
+          <button class="mini bo-btn" id="trip-export-btn" type="button">Export CSV</button>
         </div>
         <div id="trip-summary" class="paid-summary">—</div>
         <div class="tbl-wrap"><table class="tbl" id="trip-tbl"></table></div>
@@ -1022,7 +1025,7 @@
           <label style="display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;"><input type="checkbox" id="trip-add-paid" checked> Paid</label>
           <input type="number" id="trip-add-amount" class="runs-search" placeholder="AED" min="0" step="1" style="max-width:110px;">
           <input type="text" id="trip-add-note" class="runs-search" placeholder="Note (optional)" autocomplete="off" style="flex:1 1 200px;">
-          <button class="mini" id="trip-add-btn" type="button">Add seat</button>
+          <button class="mini bo-btn" id="trip-add-btn" type="button">Add seat</button>
         </div>
         <p id="trip-add-msg" class="note" style="margin-top:6px;"></p>
       </div>
@@ -1033,7 +1036,7 @@
       <div class="card">
         <div class="runs-header">
           <h3 style="margin:0;">Your events</h3>
-          <button class="mini" id="ev-new-btn" type="button">+ New event</button>
+          <button class="mini bo-btn" id="ev-new-btn" type="button">+ New event</button>
         </div>
         <div class="tbl-wrap"><table class="tbl" id="ev-list-tbl"></table></div>
       </div>
@@ -1065,15 +1068,15 @@
           <label>Cover photo</label>
           <div class="runs-toolbar">
             <input type="file" id="ev_cover_file" accept="image/jpeg,image/png,image/webp" class="runs-search" style="flex:1 1 220px;">
-            <button class="mini" id="ev-cover-btn" type="button" disabled>Upload</button>
+            <button class="mini bo-btn" id="ev-cover-btn" type="button" disabled>Upload</button>
           </div>
           <p class="note" id="ev-cover-note">Landscape works best. Up to 8MB. Save the event first, then upload.</p>
           <img id="ev-cover-preview" alt="" style="display:none;max-width:320px;border-radius:4px;margin-top:8px;">
         </div>
         <div class="runs-toolbar">
-          <button type="submit" id="ev-save-btn" class="btn-gold" style="max-width:240px">Save event</button>
-          <button type="button" id="ev-cancel-btn" class="mini">Close</button>
-          <button type="button" id="ev-delete-btn" class="mini" style="margin-left:auto;display:none;">Delete</button>
+          <button type="submit" id="ev-save-btn" class="btn-gold bo-btn" style="max-width:240px">Save event</button>
+          <button type="button" id="ev-cancel-btn" class="mini bo-btn">Close</button>
+          <button type="button" id="ev-delete-btn" class="mini bo-btn" style="margin-left:auto;display:none;">Delete</button>
         </div>
         <p id="ev-save-msg" class="msg-ok"></p>
       </form>
@@ -1085,8 +1088,8 @@
         </div>
         <div class="runs-toolbar">
           <input type="text" id="ev-search" class="runs-search" placeholder="Search by name, email or phone…" autocomplete="off">
-          <button class="mini" id="ev-export-btn" type="button">Export CSV</button>
-          <button class="mini" id="ev-copy-link" type="button">Copy page link</button>
+          <button class="mini bo-btn" id="ev-export-btn" type="button">Export CSV</button>
+          <button class="mini bo-btn" id="ev-copy-link" type="button">Copy page link</button>
         </div>
         <div id="ev-summary" class="paid-summary">—</div>
         <div class="tbl-wrap"><table class="tbl" id="ev-tbl"></table></div>
@@ -1096,7 +1099,7 @@
           <input type="tel" id="ev-add-phone" class="runs-search" placeholder="Phone (optional)" autocomplete="off" style="flex:1 1 130px;">
           <input type="number" id="ev-add-guests" class="runs-search" placeholder="+ friends" min="0" max="10" style="max-width:100px;">
           <label id="ev-add-paid-wrap" style="display:none;align-items:center;gap:8px;color:var(--muted);font-size:13px;"><input type="checkbox" id="ev-add-paid" checked> Paid</label>
-          <button class="mini" id="ev-add-btn" type="button">Add</button>
+          <button class="mini bo-btn" id="ev-add-btn" type="button">Add</button>
         </div>
         <p id="ev-add-msg" class="note" style="margin-top:6px;"></p>
       </div>
@@ -1118,17 +1121,17 @@
         <p class="note" id="leads-sub" style="margin:6px 0 10px;color:var(--muted);font-size:12px;"></p>
 
         <div class="runs-filter" id="lead-stage-filter">
-          <button class="rf-btn active" data-stage="all" type="button">All</button>
-          <button class="rf-btn" data-stage="A" type="button">Paid, not in</button>
-          <button class="rf-btn" data-stage="B" type="button">Came before</button>
-          <button class="rf-btn" data-stage="C" type="button">Ran, not bought</button>
-          <button class="rf-btn" data-stage="D" type="button">No-show run</button>
-          <button class="rf-btn" data-stage="E" type="button">No contact</button>
+          <button class="rf-btn active bo-btn" data-stage="all" type="button">All</button>
+          <button class="rf-btn bo-btn" data-stage="A" type="button">Paid, not in</button>
+          <button class="rf-btn bo-btn" data-stage="B" type="button">Came before</button>
+          <button class="rf-btn bo-btn" data-stage="C" type="button">Ran, not bought</button>
+          <button class="rf-btn bo-btn" data-stage="D" type="button">No-show run</button>
+          <button class="rf-btn bo-btn" data-stage="E" type="button">No contact</button>
         </div>
         <div class="runs-toolbar">
           <input type="text" id="leads-search" class="runs-search" placeholder="Search name, email, WhatsApp, Instagram, notes…" autocomplete="off">
           <span id="leads-count" class="runs-count">—</span>
-          <button class="mini" id="leads-export-btn" type="button">Export CSV</button>
+          <button class="mini bo-btn" id="leads-export-btn" type="button">Export CSV</button>
         </div>
         <div class="runs-toolbar">
           <select id="lf-temp" class="runs-filtersel"><option value="">Any temperature</option><option value="hot">Hot</option><option value="warm">Warm</option><option value="cold">Cold</option></select>
@@ -1159,10 +1162,10 @@
           Approved reviews show on the bootcamp page. Rejected ones stay hidden and are never deleted.
         </p>
         <div class="runs-filter" id="rv-filter">
-          <button class="rf-btn active" data-rv="pending" type="button">Waiting</button>
-          <button class="rf-btn" data-rv="approved" type="button">Published</button>
-          <button class="rf-btn" data-rv="rejected" type="button">Rejected</button>
-          <button class="rf-btn" data-rv="all" type="button">All</button>
+          <button class="rf-btn active bo-btn" data-rv="pending" type="button">Waiting</button>
+          <button class="rf-btn bo-btn" data-rv="approved" type="button">Published</button>
+          <button class="rf-btn bo-btn" data-rv="rejected" type="button">Rejected</button>
+          <button class="rf-btn bo-btn" data-rv="all" type="button">All</button>
         </div>
         <div id="reviews-list">Loading…</div>
       </div>
@@ -1181,7 +1184,7 @@
         <h3>Stock — units per size</h3>
         <p class="recon-sub" style="margin-bottom:14px;">Set how many of each size you have. The shop counts down as people buy; when a size reaches zero it shows sold out and can't be bought. No holds — only completed purchases count.</p>
         <div class="soldout-row" id="stock-rows"></div>
-        <button class="btn-gold" id="stock-save" style="max-width:200px;margin-top:16px;">Save stock</button>
+        <button class="btn-gold bo-btn" id="stock-save" style="max-width:200px;margin-top:16px;">Save stock</button>
         <p id="stock-msg" class="msg-ok" style="margin-top:10px;min-height:16px;"></p>
       </div>
 
@@ -1206,7 +1209,7 @@
               <label>Code <span class="lbl-hint">(leave blank to generate)</span></label>
               <div class="pf-code-row">
                 <input type="text" id="pc-code" maxlength="32" placeholder="e.g. WELCOME20" autocomplete="off" spellcheck="false">
-                <button type="button" id="pc-generate" class="btn-ghost">Generate</button>
+                <button type="button" id="pc-generate" class="btn-ghost bo-btn">Generate</button>
               </div>
             </div>
             <div class="pf-row">
@@ -1229,7 +1232,7 @@
               <input type="datetime-local" id="pc-expires">
             </div>
           </div>
-          <button type="submit" class="btn-gold" style="max-width:280px;margin-top:14px;">Create code</button>
+          <button type="submit" class="btn-gold bo-btn" style="max-width:280px;margin-top:14px;">Create code</button>
           <p id="pc-msg" class="msg-ok"></p>
         </form>
       </div>
@@ -1313,7 +1316,7 @@
             </div>
           </div>
 
-          <button type="submit" class="btn-gold" id="pn-submit" style="max-width:280px;margin-top:14px;">Send now</button>
+          <button type="submit" class="btn-gold bo-btn" id="pn-submit" style="max-width:280px;margin-top:14px;">Send now</button>
           <p id="pn-msg" class="msg-ok"></p>
         </form>
       </div>
@@ -1364,8 +1367,8 @@
     <p id="inv-err" class="msg-err" style="display:none;"></p>
 
     <div class="modal-actions" style="margin-top:18px;">
-      <button class="sb-logout" id="inv-cancel" style="flex:1;">Cancel</button>
-      <button class="btn-gold" id="inv-go" style="flex:2;">Generate & open WhatsApp</button>
+      <button class="sb-logout bo-btn" id="inv-cancel" style="flex:1;">Cancel</button>
+      <button class="btn-gold bo-btn" id="inv-go" style="flex:2;">Generate & open WhatsApp</button>
     </div>
   </div>
 </div>
@@ -1384,9 +1387,9 @@
     <div class="adj-row" style="margin-top:18px;">
       <label class="inv-label">Adjust by</label>
       <div class="adj-stepper">
-        <button type="button" class="adj-step-btn" id="adj-step-minus" aria-label="Subtract">−</button>
+        <button type="button" class="adj-step-btn bo-btn" id="adj-step-minus" aria-label="Subtract">−</button>
         <input type="number" id="adj-delta" value="1" step="1" min="-100" max="100">
-        <button type="button" class="adj-step-btn" id="adj-step-plus" aria-label="Add">+</button>
+        <button type="button" class="adj-step-btn bo-btn" id="adj-step-plus" aria-label="Add">+</button>
       </div>
       <div class="adj-preview" id="adj-preview">New balance: —</div>
     </div>
@@ -1407,8 +1410,8 @@
     <p id="adj-err" class="msg-err" style="display:none;"></p>
 
     <div class="modal-actions" style="margin-top:14px;">
-      <button class="sb-logout" id="adj-cancel" style="flex:1;">Cancel</button>
-      <button class="btn-gold" id="adj-go" style="flex:2;">Apply adjustment</button>
+      <button class="sb-logout bo-btn" id="adj-cancel" style="flex:1;">Cancel</button>
+      <button class="btn-gold bo-btn" id="adj-go" style="flex:2;">Apply adjustment</button>
     </div>
   </div>
 </div>
@@ -1428,9 +1431,9 @@
     <div class="adj-row" style="margin-top:18px;">
       <label class="inv-label">Points to add</label>
       <div class="adj-stepper">
-        <button type="button" class="adj-step-btn" id="awd-step-minus" aria-label="Subtract">−</button>
+        <button type="button" class="adj-step-btn bo-btn" id="awd-step-minus" aria-label="Subtract">−</button>
         <input type="number" id="awd-delta" value="10" step="1" min="-1000" max="1000">
-        <button type="button" class="adj-step-btn" id="awd-step-plus" aria-label="Add">+</button>
+        <button type="button" class="adj-step-btn bo-btn" id="awd-step-plus" aria-label="Add">+</button>
       </div>
       <div class="adj-preview" id="awd-preview">New total: —</div>
     </div>
@@ -1443,8 +1446,8 @@
     <p id="awd-err" class="msg-err" style="display:none;"></p>
 
     <div class="modal-actions" style="margin-top:14px;">
-      <button class="sb-logout" id="awd-cancel" style="flex:1;">Cancel</button>
-      <button class="btn-gold" id="awd-go" style="flex:2;">Award points</button>
+      <button class="sb-logout bo-btn" id="awd-cancel" style="flex:1;">Cancel</button>
+      <button class="btn-gold bo-btn" id="awd-go" style="flex:2;">Award points</button>
     </div>
   </div>
 </div>
@@ -1463,9 +1466,9 @@
     <div class="rdet-grid" id="rdet-grid"></div>
 
     <div class="modal-actions" style="margin-top:20px;flex-wrap:wrap;">
-      <button class="sb-logout" id="rdet-close" style="flex:1;min-width:100px;">Close</button>
+      <button class="sb-logout bo-btn" id="rdet-close" style="flex:1;min-width:100px;">Close</button>
       <a class="btn-ghost" id="rdet-whatsapp" target="_blank" rel="noopener" style="flex:1;min-width:120px;text-align:center;line-height:40px;text-decoration:none;">WhatsApp</a>
-      <button class="btn-gold" id="rdet-invite" style="flex:1;min-width:140px;">Send invite</button>
+      <button class="btn-gold bo-btn" id="rdet-invite" style="flex:1;min-width:140px;">Send invite</button>
     </div>
   </div>
 </div>
@@ -1477,7 +1480,7 @@
     <p class="msum" id="roster-sum"></p>
     <input type="text" id="roster-search" placeholder="Search booked members by name…" autocomplete="off" style="width:100%;background:#0c0c0c;border:1px solid var(--line);color:var(--white);padding:11px 12px;font-family:var(--fb);font-size:14px;outline:none;margin:4px 0 14px;">
     <div id="roster-body"></div>
-    <button class="sb-logout" id="roster-close" style="margin-top:18px;width:100%">Close</button>
+    <button class="sb-logout bo-btn" id="roster-close" style="margin-top:18px;width:100%">Close</button>
   </div>
 </div>
 
@@ -1491,7 +1494,7 @@
     <p style="font-size:13px;line-height:1.6;color:var(--muted);margin:0 0 10px;">
       Names + a hidden Member ID are pre-filled. Coaches type a number in the <b style="color:#cfcfcf;">Points</b> column for whoever earned points, leave the rest blank, and save.
     </p>
-    <button class="btn-ghost" id="pts-download" style="width:100%;padding:12px;" disabled>Download points sheet (Excel)</button>
+    <button class="btn-ghost bo-btn" id="pts-download" style="width:100%;padding:12px;" disabled>Download points sheet (Excel)</button>
 
     <div class="sec-h" style="margin-top:20px;">2 · Upload the filled sheet</div>
     <p style="font-size:13px;line-height:1.6;color:var(--muted);margin:0 0 10px;">
@@ -1502,8 +1505,8 @@
     <p id="pts-result" style="font-size:13px;margin-top:10px;min-height:18px;line-height:1.55;"></p>
 
     <div style="display:flex;gap:10px;margin-top:18px;">
-      <button class="sb-logout" id="pts-close" style="flex:1;">Close</button>
-      <button class="btn-gold" id="pts-apply" style="flex:1;" disabled>Apply points</button>
+      <button class="sb-logout bo-btn" id="pts-close" style="flex:1;">Close</button>
+      <button class="btn-gold bo-btn" id="pts-apply" style="flex:1;" disabled>Apply points</button>
     </div>
   </div>
 </div>
@@ -1514,7 +1517,7 @@
     <h3>Gone quiet</h3>
     <p class="msum" id="lapsed-sum">Members with no booking in the last 30 days.</p>
     <div id="lapsed-body"></div>
-    <button class="sb-logout" id="lapsed-close" style="margin-top:18px;width:100%">Close</button>
+    <button class="sb-logout bo-btn" id="lapsed-close" style="margin-top:18px;width:100%">Close</button>
   </div>
 </div>
 
@@ -1524,10 +1527,10 @@
     <h3>Chase again on</h3>
     <p class="msum" id="snooze-who" style="margin:2px 0 14px;"></p>
     <div class="snooze-quick">
-      <button class="btn-ghost" data-snooze-days="3">3 days</button>
-      <button class="btn-ghost" data-snooze-days="7">1 week</button>
-      <button class="btn-ghost" data-snooze-days="14">2 weeks</button>
-      <button class="btn-ghost" data-snooze-days="30">1 month</button>
+      <button class="btn-ghost bo-btn" data-snooze-days="3">3 days</button>
+      <button class="btn-ghost bo-btn" data-snooze-days="7">1 week</button>
+      <button class="btn-ghost bo-btn" data-snooze-days="14">2 weeks</button>
+      <button class="btn-ghost bo-btn" data-snooze-days="30">1 month</button>
     </div>
     <div class="adj-row" style="margin-top:14px;">
       <label class="inv-label" for="snooze-date">Or pick a date</label>
@@ -1535,8 +1538,8 @@
     </div>
     <p class="adj-row-note" id="snooze-note" style="margin-top:10px;"></p>
     <div style="display:flex;gap:10px;margin-top:18px;">
-      <button class="sb-logout" id="snooze-cancel" style="flex:1;">Cancel</button>
-      <button class="btn-gold" id="snooze-save" style="flex:1;">Snooze</button>
+      <button class="sb-logout bo-btn" id="snooze-cancel" style="flex:1;">Cancel</button>
+      <button class="btn-gold bo-btn" id="snooze-save" style="flex:1;">Snooze</button>
     </div>
   </div>
 </div>
@@ -1570,7 +1573,7 @@
     <div class="modal-actions" style="margin-top:18px;flex-wrap:wrap;gap:8px;">
       <a class="btn-gold" id="leadp-wa" target="_blank" rel="noopener" style="flex:1;min-width:130px;text-align:center;line-height:40px;text-decoration:none;">WhatsApp</a>
       <a class="btn-ghost" id="leadp-email-btn" style="flex:1;min-width:120px;text-align:center;line-height:40px;text-decoration:none;">Email</a>
-      <button class="btn-ghost" id="leadp-copy" style="flex:1;min-width:120px;">Copy number</button>
+      <button class="btn-ghost bo-btn" id="leadp-copy" style="flex:1;min-width:120px;">Copy number</button>
     </div>
     <div class="adj-row" style="margin-top:12px;">
       <label class="inv-label">Set status</label>
@@ -1585,19 +1588,22 @@
     <div class="adj-row" style="margin-top:12px;">
       <label class="inv-label">Note</label>
       <textarea id="leadp-note" class="lead-note-ta" maxlength="500" placeholder="Latest context on this lead, so you pick up where you left off."></textarea>
-      <button class="btn-ghost" id="leadp-note-save" style="margin-top:8px;width:100%;">Save note</button>
+      <button class="btn-ghost bo-btn" id="leadp-note-save" style="margin-top:8px;width:100%;">Save note</button>
       <span class="msum" id="leadp-note-msg" style="display:block;margin-top:6px;"></span>
     </div>
-    <button class="sb-logout" id="leadp-close" style="margin-top:14px;width:100%">Close</button>
+    <button class="sb-logout bo-btn" id="leadp-close" style="margin-top:14px;width:100%">Close</button>
   </div>
 </div>
 
+<script src="/app-assets/lfg-admin-fx.js"></script>
 <script>
 (function () {
   var SB_URL = 'https://mqhrjliqjxcxtzorapiy.supabase.co';
   var ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xaHJqbGlxanhjeHR6b3JhcGl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3ODc3NzAsImV4cCI6MjA5NTM2Mzc3MH0.bj4EqOUQDGo-f-Qpmz4l1_ADXxhnSEaTuaQ6jsJe-Kw';
   var sb = supabase.createClient(SB_URL, ANON, { db: { schema: 'public' }, auth: { persistSession: true, autoRefreshToken: true } });
   var el = function (id) { return document.getElementById(id); };
+  // Messages go to the back-office toast (lfg-admin-fx.js); plain alert() if that layer is missing.
+  var toast = window.lfgToast || { ok: function (m) { alert(m); }, err: function (m) { alert(m); }, info: function (m) { alert(m); } };
   // HTML-escape any user-supplied string before it lands inside innerHTML. Used
   // across every renderer that interpolates DB-stored content (member names,
   // emails, referrer URLs, location text, etc.). Without this, a member who
@@ -1625,9 +1631,9 @@
     var cur = pageState[key];
     var first = (cur - 1) * PAGE_SIZE + 1, last = Math.min(cur * PAGE_SIZE, total);
     pager.innerHTML =
-      '<button type="button" data-go="prev"' + (cur <= 1 ? ' disabled' : '') + '>‹ Prev</button>' +
+      '<button class="bo-btn" type="button" data-go="prev"' + (cur <= 1 ? ' disabled' : '') + '>‹ Prev</button>' +
       '<span class="lfg-pager-info">' + first + '–' + last + ' of ' + total + ' · Page ' + cur + '/' + pages + '</span>' +
-      '<button type="button" data-go="next"' + (cur >= pages ? ' disabled' : '') + '>Next ›</button>';
+      '<button class="bo-btn" type="button" data-go="next"' + (cur >= pages ? ' disabled' : '') + '>Next ›</button>';
     pager.querySelector('[data-go="prev"]').addEventListener('click', function () { if (cur > 1) { pageState[key] = cur - 1; onGo(); } });
     pager.querySelector('[data-go="next"]').addEventListener('click', function () { if (cur < pages) { pageState[key] = cur + 1; onGo(); } });
   }
@@ -1708,9 +1714,9 @@
   // ---------- view switching ----------
   var titles = {
     today:    ['Today', 'What needs your attention right now'],
-    overview: ['Overview', 'Your bootcamp at a glance'],
+    overview: ['Overview', 'Every dirham, member and Sunday so far'],
     bootcamp: ['Bootcamp', 'Sessions, fill & attendance'],
-    members:  ['Members', 'Everyone who has booked'],
+    members:  ['Members', 'Everyone who has booked, and when they last showed up'],
     schedule: ['Schedule', 'Run & bootcamp times on the site'],
     runs:     ['Runs', 'Everyone who signed up to run with LFG'],
     padel:    ['Padel', 'Tuesday nights — config, roster, courts'],
@@ -1778,12 +1784,14 @@
   // ---------- stuck payments reconciliation ----------
   // ---------- Today (one-screen owner view) ----------
   async function loadToday() {
+    // fire-and-forget - also schedules auto-refresh. Started with the Today numbers,
+    // not after them, so the live board lands with the rest of the view.
+    loadCheckInStatus();
     var r = await api('/api/admin/today');
     if (!r.ok) {
       el('td-rev').textContent = '—';
       return;
     }
-    loadCheckInStatus();  // fire-and-forget - also schedules auto-refresh
     var d = r.data || {};
     var tw = d.this_week || {};
 
@@ -1794,7 +1802,7 @@
       canViewRevenue = false;
     } else if (revCard) {
       revCard.style.display = '';
-    el('td-rev').textContent = 'AED ' + money(tw.revenue || 0);
+    el('td-rev').textContent = 'AED ' + money(Math.round(tw.revenue || 0));
     var revDelta = el('td-rev-delta');
     if (tw.revenue_delta_pct == null) {
       revDelta.textContent = (tw.revenue_prev ? 'AED ' + money(tw.revenue_prev) + ' previous week' : 'No prior comparison');
@@ -1804,6 +1812,12 @@
       revDelta.textContent = sign + tw.revenue_delta_pct + '% vs last week';
       revDelta.className = 'today-card-delta ' + (tw.revenue_delta_pct >= 0 ? 'up' : 'down');
     }
+    // The hero tile shows the comparison, not only its delta: this week and last week as two bars.
+    var revNow = tw.revenue || 0, revPrev = tw.revenue_prev || 0, revMax = Math.max(revNow, revPrev);
+    el('td-rev-cmp').innerHTML = revPrev > 0
+      ? '<div class="bo-cmp-row"><span class="bo-cmp-bar"><i style="width:' + Math.round(revNow / revMax * 100) + '%"></i></span><span class="bo-cmp-k">This week</span></div>' +
+        '<div class="bo-cmp-row prev"><span class="bo-cmp-bar"><i style="width:' + Math.round(revPrev / revMax * 100) + '%"></i></span><span class="bo-cmp-k">Last week · AED ' + money(Math.round(revPrev)) + '</span></div>'
+      : '';
     }
 
     el('td-newmem').textContent = tw.new_members || 0;
@@ -1872,7 +1886,7 @@
       // Open a minimal print-ready page with just the QR + label
       var w = window.open('', '_blank', 'width=600,height=800');
       if (!w) return;
-      w.document.write('<!DOCTYPE html><html><head><title>LFG Check-in QR</title><style>body{margin:0;padding:40px;font-family:Arial,sans-serif;text-align:center;background:#fff;color:#000;}img{display:block;margin:0 auto 20px;width:100%;max-width:520px;height:auto;}h1{font-size:42px;letter-spacing:0.04em;margin:0 0 8px;font-weight:900;text-transform:uppercase;}p{font-size:18px;color:#444;margin:0 0 30px;}small{font-size:12px;color:#888;display:block;margin-top:24px;}</style></head><body><h1>Check in</h1><p>Scan to mark yourself attended</p><img src="' + qrSrc + '" alt="Check-in QR"><p style="font-size:14px;color:#222;">LFG Sunday Bootcamp · CrossFit Alioth</p><small>Window: 90 min before to 60 min after start time</small></body></html>');
+      w.document.write('<!DOCTYPE html><html><head><title>LFG Check-in QR</title><style>body{margin:0;padding:40px;font-family:Arial,sans-serif;text-align:center;background:#fff;color:#000;}img{display:block;margin:0 auto 20px;width:100%;max-width:520px;height:auto;}h1{font-size:42px;letter-spacing:0.04em;margin:0 0 8px;font-weight:900;text-transform:uppercase;}p{font-size:18px;color:#444;margin:0 0 30px;}small{font-size:12px;color:#888;display:block;margin-top:24px;}</style></head><body><h1>Check in</h1><p>Scan to mark yourself attended</p><img src="' + qrSrc + '" width="240" height="240" alt="Check-in QR"><p style="font-size:14px;color:#222;">LFG Sunday Bootcamp · CrossFit Alioth</p><small>Window: 90 min before to 60 min after start time</small></body></html>');
       w.document.close();
       setTimeout(function () { try { w.focus(); w.print(); } catch (e) {} }, 600);
     });
@@ -1898,7 +1912,7 @@
     if (printBtn) printBtn.addEventListener('click', function () {
       var w = window.open('', '_blank', 'width=600,height=800');
       if (!w) return;
-      w.document.write('<!DOCTYPE html><html><head><title>LFG Run Check-in QR</title><style>body{margin:0;padding:40px;font-family:Arial,sans-serif;text-align:center;background:#fff;color:#000;}img{display:block;margin:0 auto 20px;width:100%;max-width:520px;height:auto;}h1{font-size:42px;letter-spacing:0.04em;margin:0 0 8px;font-weight:900;text-transform:uppercase;}p{font-size:18px;color:#444;margin:0 0 30px;}small{font-size:12px;color:#888;display:block;margin-top:24px;}</style></head><body><h1>Run check-in</h1><p>Scan to check in for today’s run</p><img src="' + qrSrc + '" alt="Run check-in QR"><p style="font-size:14px;color:#222;">LFG Dubai</p><small>Window: 90 min before to 150 min after start time</small></body></html>');
+      w.document.write('<!DOCTYPE html><html><head><title>LFG Run Check-in QR</title><style>body{margin:0;padding:40px;font-family:Arial,sans-serif;text-align:center;background:#fff;color:#000;}img{display:block;margin:0 auto 20px;width:100%;max-width:520px;height:auto;}h1{font-size:42px;letter-spacing:0.04em;margin:0 0 8px;font-weight:900;text-transform:uppercase;}p{font-size:18px;color:#444;margin:0 0 30px;}small{font-size:12px;color:#888;display:block;margin-top:24px;}</style></head><body><h1>Run check-in</h1><p>Scan to check in for today’s run</p><img src="' + qrSrc + '" width="240" height="240" alt="Run check-in QR"><p style="font-size:14px;color:#222;">LFG Dubai</p><small>Window: 90 min before to 150 min after start time</small></body></html>');
       w.document.close();
       setTimeout(function () { try { w.focus(); w.print(); } catch (e) {} }, 600);
     });
@@ -2010,12 +2024,12 @@
     var btn = this; btn.disabled = true; var prev = btn.textContent; btn.textContent = 'Reconciling…';
     var r = await api('/api/admin/reconcile-payments', 'POST');
     btn.disabled = false; btn.textContent = prev;
-    if (!r.ok) { alert((r.data && r.data.error) || 'Failed'); return; }
+    if (!r.ok) { toast.err((r.data && r.data.error) || 'Failed'); return; }
     var d = r.data || {};
     var fulfilled = (d.results || []).filter(function (x) { return x.status === 'fulfilled'; }).length;
     var failed = (d.results || []).filter(function (x) { return x.status === 'marked_failed'; }).length;
     var already = (d.results || []).filter(function (x) { return x.status === 'already_processed'; }).length;
-    alert('Processed ' + d.processed + ':\n' + fulfilled + ' newly fulfilled\n' + already + ' already processed (no-op)\n' + failed + ' marked failed (never paid)\n\nReloading…');
+    toast.ok('Processed ' + d.processed + ':\n' + fulfilled + ' newly fulfilled\n' + already + ' already processed (no-op)\n' + failed + ' marked failed (never paid)\n\nReloading…');
     loadAll();
   });
 
@@ -2027,10 +2041,11 @@
     canViewRevenue = d.can_view_revenue !== false;
     var cards = [];
     if (canViewRevenue) {
-      cards.push(kpi(money(t.revenue), 'Revenue all-time (AED)', true));
-      cards.push(kpi(money(t.revenue_30d), 'Revenue 30d (AED)', true));
+      // whole dirhams: "19,459.9" beside "106,032.75" read as two different formats
+      cards.push(kpi(money(Math.round(t.revenue || 0)), 'Revenue all-time (AED)', true));
+      cards.push(kpi(money(Math.round(t.revenue_30d || 0)), 'Revenue 30d (AED)', true));
     }
-    cards.push(kpi(t.members, 'Members'));
+    cards.push(kpi(money(t.members), 'Members'));
     cards.push(kpi('+' + t.new_members_30d, 'New members 30d'));
     cards.push(kpi(t.package_holders, 'Package holders'));
     cards.push(kpi(t.credits_outstanding, 'Credits outstanding'));
@@ -2089,7 +2104,7 @@
         '<div style="text-align:right;white-space:nowrap;">' +
         '<div class="badge-lapsed">' + days + ' days quiet</div>' +
         (creditTag ? '<div style="margin-top:6px;">' + creditTag + '</div>' : '') +
-        '<div style="margin-top:6px;color:var(--muted);font-size:11px;">last: ' + esc(m.last_activity) + '</div></div></div>';
+        '<div style="margin-top:6px;color:var(--muted);font-size:11px;">last: ' + esc(dayLabel(m.last_activity)) + '</div></div></div>';
     }).join('') : '<p class="empty">No one has gone quiet. Nice.</p>';
     el('lapsed-bg').classList.add('show');
   }
@@ -2107,37 +2122,49 @@
   }
 
   // ---------- charts ----------
-  Chart.defaults.color = 'rgba(255,255,255,0.5)'; Chart.defaults.font.family = 'Barlow, sans-serif'; Chart.defaults.font.size = 11;
+  Chart.defaults.color = '#B9B6AD'; Chart.defaults.font.family = 'Barlow, sans-serif'; Chart.defaults.font.size = 11;
   var GRID = { color: 'rgba(255,255,255,0.06)' }, NOGRID = { display: false };
   function fresh(id) { if (charts[id]) charts[id].destroy(); return el(id).getContext('2d'); }
+  // Refresh updates a chart in place, so values move from the old numbers instead of
+  // redrawing from zero; a changed shape (type or series count) still rebuilds it.
+  function upsert(id, cfg) {
+    var c = charts[id];
+    if (c && c.config.type === cfg.type && c.data.datasets.length === cfg.data.datasets.length) {
+      c.data.labels = cfg.data.labels;
+      cfg.data.datasets.forEach(function (ds, i) { Object.assign(c.data.datasets[i], ds); });
+      c.update();
+      return c;
+    }
+    return new Chart(fresh(id), cfg);
+  }
   function noLegend() { return { legend: { display: false } }; }
 
   function renderRevenue(s) {
-    charts.chartRevenue = new Chart(fresh('chartRevenue'), { type: 'line',
-      data: { labels: s.map(x => x.label), datasets: [{ data: s.map(x => x.value), borderColor: '#999966', backgroundColor: 'rgba(153,153,102,0.15)', fill: true, tension: .35, pointRadius: 3, pointBackgroundColor: '#999966' }] },
+    charts.chartRevenue = upsert('chartRevenue', { type: 'line',
+      data: { labels: s.map(x => x.label), datasets: [{ data: s.map(x => x.value), borderColor: '#999966', backgroundColor: 'rgba(153,153,102,0.15)', fill: true, tension: .35, pointRadius: 0, pointHoverRadius: 5, pointBackgroundColor: '#C2C28A' }] },
       options: { responsive: true, maintainAspectRatio: false, plugins: noLegend(), scales: { x: { grid: NOGRID, ticks: { autoSkip: true, maxTicksLimit: 8 } }, y: { grid: GRID, beginAtZero: true } } } });
   }
   function renderSignups(s) {
-    charts.chartSignups = new Chart(fresh('chartSignups'), { type: 'bar',
-      data: { labels: s.map(x => x.label), datasets: [{ data: s.map(x => x.value), backgroundColor: '#999966', borderRadius: 3 }] },
+    charts.chartSignups = upsert('chartSignups', { type: 'bar',
+      data: { labels: s.map(x => x.label), datasets: [{ data: s.map(x => x.value), backgroundColor: '#999966', borderRadius: 6 }] },
       options: { responsive: true, maintainAspectRatio: false, plugins: noLegend(), scales: { x: { grid: NOGRID, ticks: { autoSkip: true, maxTicksLimit: 8 } }, y: { grid: GRID, beginAtZero: true, ticks: { precision: 0 } } } } });
   }
   function renderFill(sessions) {
     var s = sessions.slice(0, 6);
-    charts.chartFill = new Chart(fresh('chartFill'), { type: 'bar',
+    charts.chartFill = upsert('chartFill', { type: 'bar',
       data: { labels: s.map(x => x.date_label.split(' · ')[0]), datasets: [
-        { label: 'Booked', data: s.map(x => x.booked), backgroundColor: '#999966', borderRadius: 3 },
-        { label: 'Capacity', data: s.map(x => x.capacity), backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: 3 } ] },
+        { label: 'Booked', data: s.map(x => x.booked), backgroundColor: '#999966', borderRadius: 6 },
+        { label: 'Capacity', data: s.map(x => x.capacity), backgroundColor: window.lfgFx ? window.lfgFx.hatch() : 'rgba(255,255,255,0.07)', borderRadius: 6 } ] },
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, labels: { boxWidth: 10 } } }, scales: { x: { grid: NOGRID }, y: { grid: GRID, beginAtZero: true, ticks: { precision: 0 } } } } });
   }
   function renderVisits(days) {
-    charts.chartVisits = new Chart(fresh('chartVisits'), { type: 'bar',
-      data: { labels: days.map(d => d.label), datasets: [{ data: days.map(d => d.count), backgroundColor: '#999966', borderRadius: 3 }] },
+    charts.chartVisits = upsert('chartVisits', { type: 'bar',
+      data: { labels: days.map(d => d.label), datasets: [{ data: days.map(d => d.count), backgroundColor: '#999966', borderRadius: 6 }] },
       options: { responsive: true, maintainAspectRatio: false, plugins: noLegend(), scales: { x: { grid: NOGRID }, y: { grid: GRID, beginAtZero: true, ticks: { precision: 0 } } } } });
   }
   function renderSections(s) {
     if (!s) return;
-    charts.chartSections = new Chart(fresh('chartSections'), { type: 'doughnut',
+    charts.chartSections = upsert('chartSections', { type: 'doughnut',
       data: { labels: s.sections.map(x => 'Station ' + x.label), datasets: [{ data: s.sections.map(x => x.booked), backgroundColor: s.sections.map((_, i) => ['#999966', '#b9b984', '#6f6f4a', '#cfcf9e', '#7d7d52', '#e0e0b0', '#5c5c3d', '#bcbc8f'][i % 8]), borderColor: '#121212', borderWidth: 2 }] },
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 10 } } }, cutout: '58%' } });
   }
@@ -2154,9 +2181,9 @@
       '<select class="cap-in" style="min-width:70px;" title="Groups / stations" data-stations="' + s.id + '">' +
         [2, 3, 4, 5, 6].map(function (k) { return '<option value="' + k + '"' + (k === (s.stations || 4) ? ' selected' : '') + '>' + k + ' grp</option>'; }).join('') + '</select>' +
       '<input class="cap-in" type="number" min="4" max="200" value="' + s.capacity + '" data-cap="' + s.id + '">' +
-      '<button class="mini" data-setcap="' + s.id + '">Set</button><button class="mini solid" data-roster="' + s.id + '">Roster</button>' +
-      '<button class="mini" data-photo="' + s.id + '">' + (s.photo_url ? 'Photo ✓' : 'Photo') + '</button>' +
-      '<button class="mini" data-points="' + s.id + '">Points</button></div>';
+      '<button class="mini bo-btn" data-setcap="' + s.id + '">Set</button><button class="mini solid bo-btn" data-roster="' + s.id + '">Roster</button>' +
+      '<button class="mini bo-btn" data-photo="' + s.id + '">' + (s.photo_url ? 'Photo ✓' : 'Photo') + '</button>' +
+      '<button class="mini bo-btn" data-points="' + s.id + '">Points</button></div>';
   }
   function bindSessionButtons(root) {
     if (!root) return;
@@ -2194,8 +2221,8 @@
   function renderPastPager(page, pages) {
     var pg = el('past-sessions-pager'); if (!pg) return;
     if (pages <= 1) { pg.innerHTML = ''; return; }
-    var prev = page > 1 ? '<button class="mini" data-pp="' + (page - 1) + '">‹ Prev</button>' : '';
-    var next = page < pages ? '<button class="mini" data-pp="' + (page + 1) + '">Next ›</button>' : '';
+    var prev = page > 1 ? '<button class="mini bo-btn" data-pp="' + (page - 1) + '">‹ Prev</button>' : '';
+    var next = page < pages ? '<button class="mini bo-btn" data-pp="' + (page + 1) + '">Next ›</button>' : '';
     pg.innerHTML = prev + '<span style="margin:0 10px;color:var(--muted);font-size:13px;">Page ' + page + ' of ' + pages + '</span>' + next;
     pg.querySelectorAll('[data-pp]').forEach(function (b) { b.addEventListener('click', function () { loadPastBootcamps(parseInt(b.getAttribute('data-pp'), 10)); }); });
   }
@@ -2219,10 +2246,10 @@
           var ct = dataUrl.substring(5, dataUrl.indexOf(';')) || 'image/jpeg';
           var res = await api('/api/admin/upload-bootcamp-photo', 'POST', { session_id: sessionId, image_base64: dataUrl, content_type: ct });
           if (btn) { btn.disabled = false; btn.textContent = prev; }
-          if (res.ok && res.data && res.data.ok) { alert('Photo uploaded - it now shows on the bootcamp page.'); loadStats(); }
-          else { alert((res.data && res.data.error) || 'Upload failed'); }
+          if (res.ok && res.data && res.data.ok) { toast.ok('Photo uploaded - it now shows on the bootcamp page.'); loadStats(); }
+          else { toast.err((res.data && res.data.error) || 'Upload failed'); }
         };
-        img.onerror = function () { if (btn) { btn.disabled = false; btn.textContent = prev; } alert('Could not read that image. Try a JPG or PNG.'); };
+        img.onerror = function () { if (btn) { btn.disabled = false; btn.textContent = prev; } toast.err('Could not read that image. Try a JPG or PNG.'); };
         img.src = reader.result;
       };
       reader.readAsDataURL(file);
@@ -2232,7 +2259,7 @@
   async function setCap(id) {
     var cap = parseInt(document.querySelector('[data-cap="' + id + '"]').value, 10);
     var res = await api('/api/admin/set-capacity', 'POST', { session_id: id, capacity: cap });
-    if (res.ok && res.data.ok) loadStats(); else alert((res.data && res.data.error) || 'Failed');
+    if (res.ok && res.data.ok) loadStats(); else toast.err((res.data && res.data.error) || 'Failed');
   }
 
   // Change the group/station count for ONE session. Reducing moves anyone in a removed
@@ -2240,23 +2267,31 @@
   async function setSessionStations(id, n) {
     if (!confirm('Set this session to ' + n + ' groups?\n\nAnyone in a removed station gets moved into the remaining groups, evenly. This updates the roster and each person’s station. Points are not affected.')) { loadStats(); return; }
     var res = await api('/api/admin/set-session-stations', 'POST', { session_id: id, stations: parseInt(n, 10) });
-    if (res.ok && res.data && res.data.ok) loadStats(); else alert((res.data && res.data.error) || 'Failed');
+    if (res.ok && res.data && res.data.ok) loadStats(); else toast.err((res.data && res.data.error) || 'Failed');
   }
 
   // ---------- members ----------
   var membersView = [];
+  // "2026-10-12" reads as "12 Oct" on screen ("12 Oct 2025" for another year); sorting and the CSV keep the raw value
+  function dayLabel(s) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || '');
+    if (!m) return s || '';
+    var opts = { day: 'numeric', month: 'short', timeZone: 'UTC' };
+    if (+m[1] !== new Date().getFullYear()) opts.year = 'numeric';
+    return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])).toLocaleDateString('en-GB', opts);
+  }
   function renderMembers(list, keepPage) {
     if (list !== membersView) { membersView = list; if (!keepPage) pageState.members = 1; }
     var spendTh = canViewRevenue ? '<th>Spend</th>' : '';
-    var head = '<thead><tr><th>Email</th><th>Joined</th>' + spendTh + '<th>Credits</th><th>Booked</th><th>Runs</th><th>Bootcamps</th><th>Padel</th><th>Points</th><th>Last active</th><th>Status</th><th></th></tr></thead>';
+    var head = '<thead><tr><th>Member</th><th>Joined</th>' + spendTh + '<th>Credits</th><th>Booked</th><th>Runs</th><th>Bootcamps</th><th>Padel</th><th>Points</th><th>Last active</th><th>Status</th><th></th></tr></thead>';
     var page = pageSlice('members', list);
     var body = page.length ? page.map(function (m) {
-      var adjustBtn = '<button class="lfg-adjust-btn" data-email="' + esc(m.email) + '" data-name="' + esc(m.name || '') + '" data-credits="' + Number(m.credits || 0) + '">Adjust</button>';
-      var awardBtn = '<button class="lfg-award-btn" data-email="' + esc(m.email) + '" data-name="' + esc(m.name || '') + '" data-points="' + Number(m.points || 0) + '" data-runs="' + Number(m.points_runs || 0) + '" data-bootcamps="' + Number(m.points_bootcamps || 0) + '" data-bonus="' + Number(m.points_bonus || 0) + '">+ Points</button>';
+      var adjustBtn = '<button class="lfg-adjust-btn bo-btn" data-email="' + esc(m.email) + '" data-name="' + esc(m.name || '') + '" data-credits="' + Number(m.credits || 0) + '">Adjust</button>';
+      var awardBtn = '<button class="lfg-award-btn bo-btn" data-email="' + esc(m.email) + '" data-name="' + esc(m.name || '') + '" data-points="' + Number(m.points || 0) + '" data-runs="' + Number(m.points_runs || 0) + '" data-bootcamps="' + Number(m.points_bootcamps || 0) + '" data-bonus="' + Number(m.points_bonus || 0) + '">+ Points</button>';
       var ptsCell = '<b>' + Number(m.points || 0) + '</b><br><span class="ae" style="color:var(--muted);font-size:11px">' + Number(m.points_runs || 0) + ' run·' + Number(m.points_bootcamps || 0) + ' bc·' + Number(m.points_bonus || 0) + ' bonus</span>';
       var spendTd = canViewRevenue ? '<td>' + money(m.spend) + '</td>' : '';
       var staffTag = m.is_admin ? ' <span class="badge-staff">Staff</span>' : '';
-      return '<tr><td>' + (m.name ? esc(m.name) + staffTag + '<br><span class="ae" style="color:var(--muted);font-size:12px">' + esc(m.email) + '</span>' : esc(m.email) + staffTag) + '</td><td>' + esc(m.joined) + '</td>' + spendTd + '<td>' + Number(m.credits || 0) + '</td><td>' + Number(m.booked || 0) + '</td><td>' + Number(m.points_runs || 0) + '</td><td>' + Number(m.attended || 0) + '</td><td>' + Number(m.padel || 0) + '</td><td>' + ptsCell + '</td><td>' + esc(m.last_activity) + '</td><td>' + (m.lapsed ? '<span class="badge-lapsed">Lapsed</span>' : '<span class="badge-ok">Active</span>') + '</td><td><div class="member-acts">' + adjustBtn + awardBtn + '</div></td></tr>';
+      return '<tr><td>' + (m.name ? esc(m.name) + staffTag + '<br><span class="ae" style="color:var(--muted);font-size:12px">' + esc(m.email) + '</span>' : esc(m.email) + staffTag) + '</td><td>' + esc(dayLabel(m.joined)) + '</td>' + spendTd + '<td>' + Number(m.credits || 0) + '</td><td>' + Number(m.booked || 0) + '</td><td>' + Number(m.points_runs || 0) + '</td><td>' + Number(m.attended || 0) + '</td><td>' + Number(m.padel || 0) + '</td><td>' + ptsCell + '</td><td>' + esc(dayLabel(m.last_activity)) + '</td><td>' + (m.lapsed ? '<span class="badge-lapsed">Lapsed</span>' : '<span class="badge-ok">Active</span>') + '</td><td><div class="member-acts">' + adjustBtn + awardBtn + '</div></td></tr>';
     }).join('') : '<tr><td colspan="' + (canViewRevenue ? 12 : 11) + '" class="empty">No members yet.</td></tr>';
     el('members-tbl').innerHTML = head + '<tbody>' + body + '</tbody>';
     el('members-tbl').querySelectorAll('.lfg-adjust-btn').forEach(function (b) {
@@ -2397,7 +2432,7 @@
   el('export-btn').addEventListener('click', async function () {
     var t = await token(); if (!t) return;
     var r = await fetch('/api/admin/export', { headers: { Authorization: 'Bearer ' + t } });
-    if (!r.ok) return alert('Export failed');
+    if (!r.ok) return toast.err('Export failed');
     var blob = await r.blob(), u = window.URL.createObjectURL(blob);
     var a = document.createElement('a'); a.href = u; a.download = 'lfg-members-' + new Date().toISOString().slice(0, 10) + '.csv';
     document.body.appendChild(a); a.click(); a.remove(); window.URL.revokeObjectURL(u);
@@ -2406,7 +2441,7 @@
   // ---------- roster ----------
   async function openRoster(id) {
     var res = await api('/api/admin/roster?session_id=' + encodeURIComponent(id));
-    if (!res.ok) return alert('Could not load roster');
+    if (!res.ok) return toast.err('Could not load roster');
     rosterData = res.data;
     var rs = el('roster-search'); if (rs) rs.value = '';
     renderRoster(); el('roster-bg').classList.add('show');
@@ -2435,8 +2470,8 @@
           ? ' <span style="display:inline-block;font-family:var(--fh);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#9ec1ff;border:1px solid rgba(158,193,255,0.4);padding:1px 7px;border-radius:3px;">First-timer</span>'
           : '';
         html += '<div class="att"><div>' + displayName + firstTag + (a.payment_type === 'single' ? ' · single' : '') + '<div class="ae">' + esc(a.email) + '</div></div>' +
-          '<div class="att-actions"><button class="att-btn ' + (a.status === 'attended' ? 'on' : '') + '" data-mark="attended" data-bk="' + esc(a.booking_id) + '">Attended</button>' +
-          '<button class="att-btn ' + (a.status === 'no_show' ? 'no' : '') + '" data-mark="no_show" data-bk="' + esc(a.booking_id) + '">No-show</button></div></div>';
+          '<div class="att-actions"><button class="att-btn ' + (a.status === 'attended' ? 'on' : '') + ' bo-btn" data-mark="attended" data-bk="' + esc(a.booking_id) + '">Attended</button>' +
+          '<button class="att-btn ' + (a.status === 'no_show' ? 'no' : '') + ' bo-btn" data-mark="no_show" data-bk="' + esc(a.booking_id) + '">No-show</button></div></div>';
       });
     });
     el('roster-body').innerHTML = html || '<p class="empty">' + (q ? 'No matches for "' + esc(q) + '".' : 'No bookings yet.') + '</p>';
@@ -2447,7 +2482,7 @@
     var cur = rosterData.attendees.find(function (a) { return a.booking_id === bk; });
     var next = (cur && cur.status === status) ? 'booked' : status;
     var res = await api('/api/admin/mark-attendance', 'POST', { booking_id: bk, status: next });
-    if (res.ok && res.data.ok) { cur.status = next; renderRoster(); loadStats(); } else alert('Failed');
+    if (res.ok && res.data.ok) { cur.status = next; renderRoster(); loadStats(); } else toast.err('Failed');
   }
   el('roster-close').addEventListener('click', function () { el('roster-bg').classList.remove('show'); });
   el('roster-bg').addEventListener('click', function (e) { if (e.target === this) this.classList.remove('show'); });
@@ -2615,14 +2650,14 @@
           : '<span style="color:var(--muted);">Reserved, unpaid</span><br><span class="ae" style="color:var(--muted);font-size:11px;">' + esc(tripWhen(s.created_at)) + '</span>';
       var amount = cvr ? '<td>' + (s.amount_aed != null ? Number(s.amount_aed).toLocaleString() : '—') + (s.refund_aed ? '<br><span class="ae" style="color:var(--muted);font-size:11px;">−' + Number(s.refund_aed).toLocaleString() + '</span>' : '') + '</td>' : '';
       var acts = '<div class="member-acts">';
-      if (s.status !== 'paid') acts += '<button class="mini" type="button" data-trip-act="mark_paid" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Mark paid</button>';
+      if (s.status !== 'paid') acts += '<button class="mini bo-btn" type="button" data-trip-act="mark_paid" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Mark paid</button>';
       if (s.status === 'paid') {
-        acts += '<button class="mini" type="button" data-trip-act="cancel" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Cancel seat</button>';
-        if (s.has_stripe_payment && !s.refunded) acts += '<button class="mini" type="button" data-trip-act="refund" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Refund &amp; cancel</button>';
+        acts += '<button class="mini bo-btn" type="button" data-trip-act="cancel" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Cancel seat</button>';
+        if (s.has_stripe_payment && !s.refunded) acts += '<button class="mini bo-btn" type="button" data-trip-act="refund" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Refund &amp; cancel</button>';
       }
-      if (s.status === 'reserved') acts += '<button class="mini" type="button" data-trip-act="drop" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Remove</button>';
-      if (s.status === 'cancelled' && !s.refunded) acts += '<button class="mini" type="button" data-trip-act="restore" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Restore</button>';
-      acts += '<button class="mini" type="button" data-trip-act="note" data-id="' + esc(s.id) + '" data-note="' + esc(s.note || '') + '">Note</button></div>';
+      if (s.status === 'reserved') acts += '<button class="mini bo-btn" type="button" data-trip-act="drop" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Remove</button>';
+      if (s.status === 'cancelled' && !s.refunded) acts += '<button class="mini bo-btn" type="button" data-trip-act="restore" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Restore</button>';
+      acts += '<button class="mini bo-btn" type="button" data-trip-act="note" data-id="' + esc(s.id) + '" data-note="' + esc(s.note || '') + '">Note</button></div>';
       return '<tr' + (s.status === 'cancelled' ? ' style="opacity:.55;"' : '') + '><td>' + who + '</td><td>' + contact + '</td><td>' + status + '</td>' + amount + '<td><span class="ae" style="font-size:12px;">' + esc(s.note || '') + '</span></td><td>' + acts + '</td></tr>';
     }).join('');
     el('trip-tbl').innerHTML = head + '<tbody>' + body + '</tbody>';
@@ -2634,7 +2669,7 @@
     if (btn) { btn.disabled = true; var was = btn.textContent; btn.textContent = 'Saving…'; }
     var r = await api('/api/admin/trips', 'POST', Object.assign({ slug: tripDesk && tripDesk.trip ? tripDesk.trip.slug : 'musandam' }, body));
     if (btn) { btn.disabled = false; btn.textContent = was; }
-    if (!r.ok) { alert((r.data && r.data.error) || 'That did not save. Try again.'); return false; }
+    if (!r.ok) { toast.err((r.data && r.data.error) || 'That did not save. Try again.'); return false; }
     tripDesk = r.data; renderTripDesk(); return true;
   }
   async function tripAct(act, id, name, note, btn) {
@@ -2698,7 +2733,7 @@
       return '<tr><td><b style="color:var(--white);">' + esc(e.title) + '</b><br><span class="ae" style="color:var(--muted);font-size:12px;">' + price + (e.capacity != null ? ' · ' + e.capacity + ' places' : '') + ' · <a href="/events/' + esc(e.slug) + '" target="_blank" rel="noopener" style="color:var(--gold);">lfgdubai.com/events/' + esc(e.slug) + '</a></span></td>'
         + '<td>' + esc(evWhen(e.starts_at)) + '</td><td>' + Number(e.going || 0) + (e.pending ? '<br><span class="ae" style="color:var(--muted);font-size:11px;">+' + e.pending + ' unpaid</span>' : '') + '</td>'
         + '<td>' + (e.enabled ? '<span class="badge-ok">Live</span>' : '<span class="badge-lapsed">Off</span>') + '</td>'
-        + '<td><div class="member-acts"><button class="mini" type="button" data-ev-open="' + esc(e.slug) + '">Open</button></div></td></tr>';
+        + '<td><div class="member-acts"><button class="mini bo-btn" type="button" data-ev-open="' + esc(e.slug) + '">Open</button></div></td></tr>';
     }).join('') + '</tbody>';
     el('ev-list-tbl').querySelectorAll('[data-ev-open]').forEach(function (b) { b.addEventListener('click', function () { openEvent(b.getAttribute('data-ev-open')); }); });
   }
@@ -2740,10 +2775,10 @@
       status += '<br><span class="ae" style="color:var(--muted);font-size:11px;">' + esc(tripWhen(s.status === 'paid' ? (s.paid_at || s.created_at) : s.status === 'cancelled' ? s.cancelled_at : s.created_at)) + (s.refunded ? ' · refunded' : '') + (s.cancel_reason ? ' · ' + esc(s.cancel_reason) : '') + '</span>';
       var amount = cvr && sm.paid_event ? '<td>' + (s.amount_aed != null ? Number(s.amount_aed).toLocaleString() : '—') + '</td>' : '';
       var acts = '<div class="member-acts">';
-      if (sm.paid_event && s.status === 'reserved') acts += '<button class="mini" type="button" data-ev-act="mark_paid" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Mark paid</button><button class="mini" type="button" data-ev-act="drop" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Remove</button>';
-      if (s.status === 'going' || s.status === 'paid') { acts += '<button class="mini" type="button" data-ev-act="cancel" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Cancel</button>'; if (s.status === 'paid' && s.has_stripe_payment) acts += '<button class="mini" type="button" data-ev-act="refund" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Refund &amp; cancel</button>'; }
-      if (s.status === 'cancelled' && !s.refunded) acts += '<button class="mini" type="button" data-ev-act="restore" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Restore</button>';
-      acts += '<button class="mini" type="button" data-ev-act="note" data-id="' + esc(s.id) + '" data-note="' + esc(s.note || '') + '">Note</button></div>';
+      if (sm.paid_event && s.status === 'reserved') acts += '<button class="mini bo-btn" type="button" data-ev-act="mark_paid" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Mark paid</button><button class="mini bo-btn" type="button" data-ev-act="drop" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Remove</button>';
+      if (s.status === 'going' || s.status === 'paid') { acts += '<button class="mini bo-btn" type="button" data-ev-act="cancel" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Cancel</button>'; if (s.status === 'paid' && s.has_stripe_payment) acts += '<button class="mini bo-btn" type="button" data-ev-act="refund" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Refund &amp; cancel</button>'; }
+      if (s.status === 'cancelled' && !s.refunded) acts += '<button class="mini bo-btn" type="button" data-ev-act="restore" data-id="' + esc(s.id) + '" data-name="' + esc(s.name) + '">Restore</button>';
+      acts += '<button class="mini bo-btn" type="button" data-ev-act="note" data-id="' + esc(s.id) + '" data-note="' + esc(s.note || '') + '">Note</button></div>';
       return '<tr' + (s.status === 'cancelled' ? ' style="opacity:.55;"' : '') + '><td>' + who + '</td><td>' + contact + '</td><td>' + status + '</td>' + amount + '<td><span class="ae" style="font-size:12px;">' + esc(s.note || '') + '</span></td><td>' + acts + '</td></tr>';
     }).join('') + '</tbody>';
     el('ev-tbl').querySelectorAll('[data-ev-act]').forEach(function (b) { b.addEventListener('click', function () { evAct(b.getAttribute('data-ev-act'), b.getAttribute('data-id'), b.getAttribute('data-name') || '', b.getAttribute('data-note') || '', b); }); });
@@ -2752,7 +2787,7 @@
     if (btn) { btn.disabled = true; var was = btn.textContent; btn.textContent = 'Saving…'; }
     var r = await api('/api/admin/events', 'POST', Object.assign({ slug: evEditing || '' }, body));
     if (btn) { btn.disabled = false; btn.textContent = was; }
-    if (!r.ok) { alert((r.data && r.data.error) || 'That did not save. Try again.'); return null; }
+    if (!r.ok) { toast.err((r.data && r.data.error) || 'That did not save. Try again.'); return null; }
     evDesk = r.data; return r.data;
   }
   async function evAct(act, id, name, note, btn) {
@@ -2780,7 +2815,7 @@
       capacity: el('ev_cap_on').checked ? el('ev_capacity').value : '', price_aed: el('ev_paid_on').checked ? el('ev_price_aed').value : '', enabled: el('ev_enabled').checked
     });
     btn.disabled = false; btn.textContent = 'Save event';
-    if (!r.ok) { el('ev-save-msg').textContent = ''; alert((r.data && r.data.error) || 'That did not save.'); return; }
+    if (!r.ok) { el('ev-save-msg').textContent = ''; toast.err((r.data && r.data.error) || 'That did not save.'); return; }
     evDesk = r.data; var saved = r.data.event; evEditing = saved ? saved.slug : evEditing;
     renderEventList(); if (saved) fillEventForm(saved); renderEventSignups();
     el('ev-save-msg').textContent = 'Saved. Page: lfgdubai.com/events/' + (saved ? saved.slug : ''); setTimeout(function () { el('ev-save-msg').textContent = ''; }, 5000);
@@ -2805,7 +2840,7 @@
         if (out && out.event) { fillEventForm(out.event); el('ev-save-msg').textContent = 'Cover uploaded.'; setTimeout(function () { el('ev-save-msg').textContent = ''; }, 4000); }
       });
     };
-    img.onerror = function () { btn.disabled = false; btn.textContent = 'Upload'; alert('That image could not be read. Try a JPG or PNG.'); };
+    img.onerror = function () { btn.disabled = false; btn.textContent = 'Upload'; toast.err('That image could not be read. Try a JPG or PNG.'); };
     img.src = URL.createObjectURL(f);
   });
   el('ev-search').addEventListener('input', function () { evSearch = this.value; renderEventSignups(); });
@@ -2951,12 +2986,12 @@
         + '<span style="color:var(--green);font-size:13px;min-width:44px;font-weight:600;">' + (p.points || 0) + ' pts</span>'
         + paidTag
         + '<span style="margin-left:auto;display:flex;gap:6px;">'
-        + '<button class="mini" type="button" data-nudge="-0.5" data-mid="' + esc(p.member_id) + '" title="Lower their level">lvl −</button>'
-        + '<button class="mini" type="button" data-nudge="0.5" data-mid="' + esc(p.member_id) + '" title="Raise their level">lvl +</button>'
+        + '<button class="mini bo-btn" type="button" data-nudge="-0.5" data-mid="' + esc(p.member_id) + '" title="Lower their level">lvl −</button>'
+        + '<button class="mini bo-btn" type="button" data-nudge="0.5" data-mid="' + esc(p.member_id) + '" title="Raise their level">lvl +</button>'
         + (p.paid
-          ? '<button class="mini" type="button" data-pts="1" data-mid="' + esc(p.member_id) + '" title="Bank a round win">+1 pt</button>'
-            + '<button class="mini" type="button" data-pts="-1" data-mid="' + esc(p.member_id) + '" title="Undo a point">−1 pt</button>'
-            + '<button class="mini" type="button" data-roll="1" data-mid="' + esc(p.member_id) + '" data-name="' + esc(padelName(p)) + '" title="Cancelled before 2pm: move their paid spot to next week">Next week →</button>'
+          ? '<button class="mini bo-btn" type="button" data-pts="1" data-mid="' + esc(p.member_id) + '" title="Bank a round win">+1 pt</button>'
+            + '<button class="mini bo-btn" type="button" data-pts="-1" data-mid="' + esc(p.member_id) + '" title="Undo a point">−1 pt</button>'
+            + '<button class="mini bo-btn" type="button" data-roll="1" data-mid="' + esc(p.member_id) + '" data-name="' + esc(padelName(p)) + '" title="Cancelled before 2pm: move their paid spot to next week">Next week →</button>'
           : '')
         + '</span></div>';
     }).join('');
@@ -2976,19 +3011,19 @@
   // nights and frees a spot the waiting list may take within minutes.
   async function rollPadelForward(mid, name) {
     var date = el('padel-date').value || padelCurDate;
-    if (!date) { alert('Pick a night first.'); return; }
+    if (!date) { toast.info('Pick a night first.'); return; }
     var next = new Date(new Date(date + 'T12:00:00Z').getTime() + 7 * 86400000).toISOString().slice(0, 10);
     var nextLabel = new Date(next + 'T12:00:00Z').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
     if (!confirm('Move ' + (name || 'this player') + ' to ' + nextLabel + '?\n\nTheir payment moves with them, no refund. Tonight\'s spot opens up for the waiting list.')) return;
     var r = await api('/api/admin/padel-roster', 'POST', { member_id: mid, event_date: date, action: 'roll_forward' });
-    if (!r.ok || !r.data) { alert((r.data && r.data.error) || 'Could not move them.'); return; }
+    if (!r.ok || !r.data) { toast.err((r.data && r.data.error) || 'Could not move them.'); return; }
     loadPadelRoster(date);
   }
 
   async function bankPadelPoints(mid, delta) {
     var date = el('padel-date').value || padelCurDate;
     var r = await api('/api/admin/padel-roster', 'POST', { member_id: mid, event_date: date, points_delta: delta });
-    if (!r.ok || !r.data) { alert((r.data && r.data.error) || 'Could not update points.'); return; }
+    if (!r.ok || !r.data) { toast.err((r.data && r.data.error) || 'Could not update points.'); return; }
     var p = ((padelRoster && padelRoster.players) || []).find(function (x) { return String(x.member_id) === String(mid); });
     if (p) p.points = r.data.points;
     renderPadelRoster();
@@ -2996,7 +3031,7 @@
 
   async function nudgePadelLevel(mid, delta) {
     var r = await api('/api/admin/padel-roster', 'POST', { member_id: mid, delta: delta });
-    if (!r.ok || !r.data) { alert((r.data && r.data.error) || 'Could not update the level.'); return; }
+    if (!r.ok || !r.data) { toast.err((r.data && r.data.error) || 'Could not update the level.'); return; }
     var p = ((padelRoster && padelRoster.players) || []).find(function (x) { return String(x.member_id) === String(mid); });
     if (p) p.level = r.data.level;
     renderPadelRoster();
@@ -3045,7 +3080,7 @@
 
   el('padel-export-btn').addEventListener('click', function () {
     var players = padelPlayers();
-    if (!players.length) { alert('Nothing to export.'); return; }
+    if (!players.length) { toast.info('Nothing to export.'); return; }
     var headers = ['Name', 'Email', 'Level', 'Points', 'Paid', 'Amount (AED)'];
     var lines = [headers.map(csvCell).join(',')];
     players.forEach(function (p) {
@@ -3112,7 +3147,7 @@
     var c = el('rs-birthdays-card');
     if (!c) return;
     c.addEventListener('click', function () {
-      if (!birthdayList.length) { alert('No birthdays in the next 14 days.'); return; }
+      if (!birthdayList.length) { toast.info('No birthdays in the next 14 days.'); return; }
       var card = el('runs-birthdays-card');
       if (card) { card.style.display = ''; card.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
     });
@@ -3271,7 +3306,7 @@
         ['new:Set status…', 'contacted:Contacted', 'won:Won (joined)', 'lost:Lost', 'snoozed:Snooze…'].map(function (o) {
           var v = o.split(':')[0]; return '<option value="' + v + '"' + (v === st ? ' selected' : '') + '>' + o.split(':')[1] + '</option>';
         }).join('') + '</select>';
-      var noteBtn = '<button class="lead-note-btn" data-note-key="' + esc(p.lead_key) + '">' + (leadNote(p) ? 'Edit note' : '+ Note') + '</button>';
+      var noteBtn = '<button class="lead-note-btn bo-btn" data-note-key="' + esc(p.lead_key) + '">' + (leadNote(p) ? 'Edit note' : '+ Note') + '</button>';
       return '<tr class="' + (done ? 'done' : '') + '">' +
         '<td><span class="lead-score">' + p.score + '</span><br>' + temp + '</td>' +
         '<td>' + who + '</td>' +
@@ -3334,8 +3369,8 @@
     if (!p || !wrap) return;
     wrap.innerHTML = '<div class="lead-note-edit">' +
       '<textarea class="lead-note-ta" maxlength="500" placeholder="Latest context on this lead."></textarea>' +
-      '<div class="lead-act"><button class="lead-note-btn" data-note-save="1">Save</button>' +
-      '<button class="lead-note-btn" data-note-cancel="1">Cancel</button></div>' +
+      '<div class="lead-act"><button class="lead-note-btn bo-btn" data-note-save="1">Save</button>' +
+      '<button class="lead-note-btn bo-btn" data-note-cancel="1">Cancel</button></div>' +
       '</div>';
     var ta = wrap.querySelector('textarea');
     ta.value = leadNote(p);
@@ -3366,7 +3401,7 @@
       body.snooze_until = isoDay(new Date(lead.touch.snooze_until));
     }
     var r = await api('/api/admin/lead-touch', 'POST', body);
-    if (!r.ok) { alert((r.data && r.data.error) || 'Could not save the note.'); return false; }
+    if (!r.ok) { toast.err((r.data && r.data.error) || 'Could not save the note.'); return false; }
     lead.touch = lead.touch || { status: st };
     lead.touch.note = body.note;
     return true;
@@ -3546,7 +3581,7 @@
     var r = await api('/api/admin/lead-touch', 'POST', body);
     if (!r.ok) {
       if (lead && prev) { lead.touch.status = prev.status; lead.touch.snooze_until = prev.snooze_until; }
-      alert((r.data && r.data.error) || 'Could not save status.');
+      toast.err((r.data && r.data.error) || 'Could not save status.');
       return false;
     }
     // Any status change can move a lead between the active list and the archive
@@ -3603,7 +3638,7 @@
 
   function exportLeadsCsv() {
     var list = currentLeads();
-    if (!list.length) { alert('Nothing to export in this view.'); return; }
+    if (!list.length) { toast.info('Nothing to export in this view.'); return; }
     var head = ['Name', 'Email', 'WhatsApp', 'Instagram', 'Nationality', 'Stage', 'Score', 'Temperature', 'Runs', 'Bootcamps', 'Credits', 'Days quiet', 'Status', 'Note'];
     var rows = list.map(function (p) {
       return [p.name, p.email || '', p.whatsapp || '', p.instagram ? '@' + p.instagram : '', p.nationality || '', p.stage_label, p.score, p.temperature, p.runs, p.bootcamps, p.credits, p.days_quiet, (p.touch && p.touch.status) || 'new', leadNote(p)];
@@ -3838,7 +3873,7 @@
       var waLink = phoneDigits ? ('https://wa.me/' + phoneDigits) : null;
       var actions = '';
       if (waLink) actions += '<a href="' + waLink + '" target="_blank" rel="noopener" title="Open WhatsApp">WhatsApp</a>';
-      actions += '<button class="gold" data-act="invite" data-id="' + esc(r.id) + '">Send invite</button>';
+      actions += '<button class="gold bo-btn" data-act="invite" data-id="' + esc(r.id) + '">Send invite</button>';
       var natCell = r.nationality ? esc(r.nationality) : '<span style="color:var(--muted)">—</span>';
       var runsCell = Number(r.runs_attended || 0) > 0 ? String(r.runs_attended) : '<span style="color:var(--muted)">0</span>';
       return '<tr>' +
@@ -4008,7 +4043,7 @@
 
   el('runs-export-btn').addEventListener('click', function () {
     var rows = currentRunnerList();
-    if (!rows.length) { alert('Nothing to export - current filter/search returned no rows.'); return; }
+    if (!rows.length) { toast.info('Nothing to export - current filter/search returned no rows.'); return; }
     // BOM so Excel reads UTF-8 (Arabic names etc.) correctly.
     var csv = '﻿' + buildRunnersCsv(rows);
     var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -4038,7 +4073,7 @@
   if (rsvpExportBtn) rsvpExportBtn.addEventListener('click', function () {
     var q = runRsvpSearch;
     var rows = q ? runRsvpRows.filter(function (x) { return String(x.name || '').toLowerCase().indexOf(q) !== -1; }) : runRsvpRows;
-    if (!rows.length) { alert('Nothing to export - current search returned no runners.'); return; }
+    if (!rows.length) { toast.info('Nothing to export - current search returned no runners.'); return; }
     var csv = '﻿' + buildRunRsvpCsv(rows);
     var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     var u = window.URL.createObjectURL(blob);
@@ -4141,9 +4176,9 @@
 
   var paidRunsExportBtn = el('paid-runs-export-btn');
   if (paidRunsExportBtn) paidRunsExportBtn.addEventListener('click', function () {
-    var g = currentPaidGroup(); if (!g) { alert('No paid runs to export.'); return; }
+    var g = currentPaidGroup(); if (!g) { toast.info('No paid runs to export.'); return; }
     var payers = currentPaidPayers();
-    if (!payers.length) { alert('Nothing to export - current search returned no payers.'); return; }
+    if (!payers.length) { toast.info('Nothing to export - current search returned no payers.'); return; }
     var csv = '﻿' + buildPaidRunsCsv(g.run_date, payers);
     var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     var u = window.URL.createObjectURL(blob);
@@ -4227,7 +4262,7 @@
     var d = r.data || {};
     closeInviteModal();
     if (d.whatsapp_link) window.open(d.whatsapp_link, '_blank', 'noopener');
-    else alert('Code created: ' + d.code + '\n\nNo WhatsApp number on file - copy the code manually.');
+    else toast.info('Code created: ' + d.code + '\n\nNo WhatsApp number on file - copy the code manually.', { sticky: true, action: { label: 'Copy code', run: function (b) { try { navigator.clipboard.writeText(d.code).then(function () { b.textContent = 'Copied'; }); } catch (e) { /* manual copy */ } } } });
     if (promosLoaded) loadPromos();
   });
 
@@ -4279,11 +4314,11 @@
       for (var i = 0; i < 5; i++) stars += (i < Number(r.rating) ? '★' : '☆');
       var when = new Date(r.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
       var actions = r.status === 'approved'
-        ? '<button class="mini" data-rv-act="reject" data-rv-id="' + r.id + '" type="button">Take down</button>'
+        ? '<button class="mini bo-btn" data-rv-act="reject" data-rv-id="' + r.id + '" type="button">Take down</button>'
         : (r.status === 'rejected'
-            ? '<button class="mini" data-rv-act="approve" data-rv-id="' + r.id + '" type="button">Publish</button>'
-            : '<button class="mini" data-rv-act="approve" data-rv-id="' + r.id + '" type="button">Publish</button>'
-              + ' <button class="mini" data-rv-act="reject" data-rv-id="' + r.id + '" type="button">Reject</button>');
+            ? '<button class="mini bo-btn" data-rv-act="approve" data-rv-id="' + r.id + '" type="button">Publish</button>'
+            : '<button class="mini bo-btn" data-rv-act="approve" data-rv-id="' + r.id + '" type="button">Publish</button>'
+              + ' <button class="mini bo-btn" data-rv-act="reject" data-rv-id="' + r.id + '" type="button">Reject</button>');
       return '<div class="card" style="margin-top:10px;padding:14px 16px;">'
         + '<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;">'
         + '<div><b>' + esc(r.name) + '</b> <span style="color:var(--green);letter-spacing:2px;">' + stars + '</span>'
@@ -4388,8 +4423,8 @@
       var status = o.fulfilled ? '<span class="badge-fulfilled">Handed over</span>' : '<span class="badge-paid">Paid</span>';
       var when = o.created_at ? new Date(o.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
       var action = o.fulfilled
-        ? '<button class="ful-btn undo" data-undo="' + esc(o.id) + '">Undo</button>'
-        : '<button class="ful-btn" data-ful="' + esc(o.id) + '">Mark handed over</button>';
+        ? '<button class="ful-btn undo bo-btn" data-undo="' + esc(o.id) + '">Undo</button>'
+        : '<button class="ful-btn bo-btn" data-ful="' + esc(o.id) + '">Mark handed over</button>';
       return '<tr><td>' + who + '</td><td><b>' + esc(o.size || '—') + '</b></td><td>AED ' + money(o.amount_aed) + '</td><td>' + status + '</td><td>' + esc(when) + '</td><td>' + action + '</td></tr>';
     }).join('') : '<tr><td colspan="6" class="empty">' + (allOrders.length ? 'No orders match this search.' : 'No t-shirt orders yet.') + '</td></tr>';
     el('orders-tbl').innerHTML = head + '<tbody>' + body + '</tbody>';
@@ -4408,7 +4443,7 @@
       el('mo-fulfilled').textContent = allOrders.filter(function (x) { return x.status === 'fulfilled'; }).length;
       var badge = el('orders-nav-badge'); if (badge) { var p = allOrders.filter(function (x) { return x.status === 'paid'; }).length; badge.textContent = p ? String(p) : ''; }
       renderMerchOrders();
-    } else alert((r.data && r.data.error) || 'Could not update order.');
+    } else toast.err((r.data && r.data.error) || 'Could not update order.');
   }
 
   el('orders-search').addEventListener('input', function () { ordersSearch = this.value.trim(); pageState.orders = 1; renderMerchOrders(); });
@@ -4493,8 +4528,8 @@
       var expires = c.expires_at ? new Date(c.expires_at).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) : '—';
       var status = c.active ? '<span class="badge on">Active</span>' : '<span class="badge off">Inactive</span>';
       var actions = c.active
-        ? '<button data-act="deactivate" data-code="' + c.code + '" class="danger">Deactivate</button>'
-        : '<button data-act="reactivate" data-code="' + c.code + '">Reactivate</button>';
+        ? '<button data-act="deactivate" data-code="' + c.code + '" class="danger bo-btn">Deactivate</button>'
+        : '<button class="bo-btn" data-act="reactivate" data-code="' + c.code + '">Reactivate</button>';
       return '<tr class="' + (c.active ? '' : 'inactive') + '"><td><b>' + esc(c.code) + '</b></td>' +
              '<td>' + valDisp + '</td><td>' + redemp + '</td><td>' + expires + '</td>' +
              '<td>' + status + '</td><td class="row-act">' + actions + '</td></tr>';
@@ -4524,12 +4559,12 @@
   async function deactivatePromo(code) {
     if (!confirm('Deactivate ' + code + '?\n\nMembers will no longer be able to redeem it. Existing redemptions stay in the record.')) return;
     var r = await api('/api/admin/promo-codes', 'DELETE', { code: code });
-    if (r.ok) loadPromos(); else alert((r.data && r.data.error) || 'Failed to deactivate.');
+    if (r.ok) loadPromos(); else toast.err((r.data && r.data.error) || 'Failed to deactivate.');
   }
 
   async function reactivatePromo(code) {
     var r = await api('/api/admin/promo-codes', 'PATCH', { code: code, active: true });
-    if (r.ok) loadPromos(); else alert((r.data && r.data.error) || 'Failed to reactivate.');
+    if (r.ok) loadPromos(); else toast.err((r.data && r.data.error) || 'Failed to reactivate.');
   }
 
   el('pc-generate').addEventListener('click', function () {
@@ -4589,7 +4624,7 @@
 
   el('pts-download').addEventListener('click', function () {
     if (!pointsSession || !pointsSession.members) return;
-    if (typeof XLSX === 'undefined') { alert('Spreadsheet library still loading - try again in a second.'); return; }
+    if (typeof XLSX === 'undefined') { toast.info('Spreadsheet library still loading - try again in a second.'); return; }
     var aoa = [['Section', 'Name', 'Points', 'Member ID']];
     pointsSession.members.forEach(function (m) { aoa.push([m.section || '', m.name, '', m.member_id]); });
     var ws = XLSX.utils.aoa_to_sheet(aoa);
@@ -4793,7 +4828,7 @@
         ? (c.sent_count + ' delivered' + (c.failed_count ? ', ' + c.failed_count + ' failed' : ''))
         : '—';
       var act = c.status === 'scheduled'
-        ? '<button data-push-cancel="' + c.id + '" class="danger">Cancel</button>'
+        ? '<button data-push-cancel="' + c.id + '" class="danger bo-btn">Cancel</button>'
         : '';
       return '<tr><td><b>' + esc(c.title) + '</b><div style="color:var(--muted);font-size:12px;margin-top:3px;">' + esc(c.body) + '</div></td>' +
              '<td style="white-space:nowrap;">' + when + '</td>' +
@@ -4808,7 +4843,7 @@
       b.addEventListener('click', async function () {
         b.disabled = true;
         var r = await api('/api/admin/push-send', 'POST', { action: 'cancel', id: b.getAttribute('data-push-cancel') });
-        if (!r.ok) { b.disabled = false; alert((r.data && r.data.error) || 'Could not cancel it.'); return; }
+        if (!r.ok) { b.disabled = false; toast.err((r.data && r.data.error) || 'Could not cancel it.'); return; }
         loadPush();
       });
     });

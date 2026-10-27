@@ -717,3 +717,13 @@ on the live route, `npm audit`, osv-scanner, semgrep, gitleaks (history clean).
 
 Verdict for this change: FLAG (accepted CORS `*` on the public feed; the pre-existing CSP and baseline flags
 stand). No BLOCK on shipped surface. Runtime authz unchanged (no auth or RLS touched).
+
+## 2026-10-26 — Back-office skin preview, branch `admin-upgrade` (scoped review, site-security lane)
+
+- Scope: presentation layer only. `app-assets/lfg-admin-skin.css`, `app-assets/lfg-admin-fx.js` (toast announcer replacing `alert()`, count-ups, nav pill, view entrances, keyboard reach for sort headers and the lapsed tile, modal Escape and focus return), `admin.html` (the two includes, 34 `alert()` calls routed to the toast, charts updated in place, and a head script that checks only whether a stored Supabase session key NAME exists, to hide the sign-in card while the session is checked; it reads no token value), one background image. No API route, auth logic, RLS, CORS or header change.
+- Ran: `leak_scan` PASS; `web_vuln_scan` FLAG (80 leads, 6 in changed files: `innerHTML` in `lfg-admin-fx.js` writing fixed markup and SVG from a hardcoded icon map; every data string goes through `textContent`; confirmed not exploitable); `gitleaks` clean including history; OSV / npm audit: `sharp` devDependency only (carried); `semgrep detected-jwt-token` on `admin.html` is the publishable key (role claim `anon`, decoded), and this diff touches no line containing it; `scan_headers` on production `/admin`: CSP without `script-src` (carried FLAG).
+- Note for a future strict CSP: the admin page now carries two inline scripts (the head session-presence check and the main app script); a `script-src` will need a hash for each.
+
+Verdict for this change: FLAG (carried CSP and baseline flags stand). No BLOCK on shipped surface. Runtime authz unchanged (no auth or RLS touched).
+
+Round 3 (same day, same branch): presentation edits only. `admin.html` starts the check-in feed with the Today numbers instead of after them (same GET route, same auth), rounds the revenue tiles to whole dirhams, formats Members dates through `dayLabel()` (output still escaped with `esc()`), changes two subtitles, and writes the revenue comparison bars with one new `innerHTML` at the Today renderer that carries only two rounded percentages, one `toLocaleString` amount and fixed labels. `lfg-admin-fx.js` holds late cards and the board height; the skin adds CSS. `web_vuln_scan` FLAG 83 leads (was 80: the new bars sink plus two existing sinks whose line numbers moved); none takes a server string. No route, auth, RLS, CORS or header change. Verdict unchanged: FLAG.
