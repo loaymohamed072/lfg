@@ -288,12 +288,17 @@
       if (ico && ICON[name]) ico.innerHTML = svg(name, 1.5);
       if (b.classList.contains('active')) b.setAttribute('aria-current', 'page');
     });
-    placePill(false);
-    new MutationObserver(function (muts) {
-      var changed = muts.some(function (m) { return m.attributeName === 'class'; });
-      if (!changed) return;
+    placePill(false, true);
+    // Only a change of the active tab moves the pill and scrolls the strip. Other class writes inside the
+    // nav (the hover layer on every pointerleave, badges) left a phone's strip unscrollable: each swipe
+    // ended with the strip sliding back to the active tab.
+    var lastActive = $('.nav-btn.active', nav);
+    new MutationObserver(function () {
+      var now = $('.nav-btn.active', nav);
+      if (now === lastActive) return;
+      lastActive = now;
       $$('.nav-btn', nav).forEach(function (b) { if (b.classList.contains('active')) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
-      placePill(true);
+      placePill(true, true);
     }).observe(nav, { attributes: true, subtree: true, attributeFilter: ['class'] });
     nav.addEventListener('pointerover', function (e) {
       if (!mqHover.matches || mqMobile.matches) return;
@@ -303,11 +308,13 @@
       hover.classList.add('on');
     });
     nav.addEventListener('pointerleave', function () { hover.classList.remove('on'); });
-    var re = function () { placePill(false); };
+    // A layout switch to the phone strip brings the active tab into view; a plain resize (iOS fires one
+    // whenever its toolbar hides) only re-places the pill.
+    var re = function () { placePill(false, true); };
     if (mqMobile.addEventListener) mqMobile.addEventListener('change', re); else mqMobile.addListener(re);
-    window.addEventListener('resize', re);
+    window.addEventListener('resize', function () { placePill(false, false); });
   }
-  function placePill(animate) {
+  function placePill(animate, reveal) {
     if (!nav || !pill) return;
     var b = $('.nav-btn.active', nav);
     if (!b) { pill.style.opacity = '0'; return; }
@@ -317,7 +324,7 @@
       pill.style.width = b.offsetWidth + 'px';
       pill.style.transform = 'translateX(' + b.offsetLeft + 'px)';
       var target = b.offsetLeft - (nav.clientWidth - b.offsetWidth) / 2;
-      if (nav.scrollTo) nav.scrollTo({ left: Math.max(0, target), behavior: animate && !RM() ? 'smooth' : 'auto' });
+      if (reveal && nav.scrollTo) nav.scrollTo({ left: Math.max(0, target), behavior: animate && !RM() ? 'smooth' : 'auto' });
     } else {
       pill.style.width = '';
       pill.style.height = b.offsetHeight + 'px';
@@ -813,7 +820,7 @@
         if (pill) play(pill, [{ opacity: 0 }, { opacity: 1 }], { duration: 180, delay: 300, easing: 'linear', fill: 'backwards' });
         $$('.topbar-actions > *').forEach(function (b, i) { resolve(b, 200 + i * 50, 240, 4); });
       }
-      placePill(false);
+      placePill(false, true);
       return first ? 220 : 0;
     }
     function current() { return $$('.view').filter(function (s) { return !s.classList.contains('hidden'); })[0]; }
