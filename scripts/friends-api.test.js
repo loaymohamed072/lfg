@@ -545,3 +545,54 @@ test('F: when everyone was already booked, the refund email says so', async () =
   assert.match(mail[0].html, /Everyone in your group was already booked for/);
   assert.doesNotMatch(mail[0].html, /filled up/);
 });
+
+// ------------------------------------------------------------------ early-week discount: singles only
+// Loay, 2 Nov 2026: Monday to Wednesday (Dubai) a single is 10% off; a pack is list price
+// every day, and a promo code on a pack is weighed against that list price.
+const validatePromo = require('../api/validate-promo');
+const MONDAY_NOON_DUBAI = Date.parse('2026-11-02T08:00:00Z');
+const PACK4 = { id: 4, name: '4 Credits', sessions_count: 4, price_aed: 368, validity_months: 2, active: true };
+function earlyWeekDb(extra) {
+  return newDb({
+    tables: tables(Object.assign({
+      event_config: [{ id: 1, bootcamp_promo_enabled: true, bootcamp_promo_pct: 10 }],
+      packages: [PACK4]
+    }, extra || {})),
+    rpc: { ensure_referral_code: () => ({}) },
+    tokens: { tok: BUYER }, authUsers: [BUYER]
+  });
+}
+const lastCharge = () => {
+  const p = stripeCalls.filter((c) => c[0] === 'create').pop()[1];
+  return { aed: p.line_items[0].price_data.unit_amount / 100, note: p.line_items[0].price_data.product_data.description };
+};
+
+test('early week: on a Monday a single is 10% off and a pack is its list price', async (t) => {
+  t.mock.timers.enable({ apis: ['Date'], now: MONDAY_NOON_DUBAI });
+  stripeCalls.length = 0;
+  DB = earlyWeekDb();
+  const pack = await call(checkout, { token: 'tok', body: { kind: 'package', package_id: 4 } });
+  assert.equal(pack.status, 200, JSON.stringify(pack.body));
+  assert.equal(lastCharge().aed, 368);
+  assert.doesNotMatch(lastCharge().note, /% off/);
+  const single = await call(checkout, { token: 'tok', body: { kind: 'single', session_id: SID, section: 'A' } });
+  assert.equal(single.status, 200, JSON.stringify(single.body));
+  assert.equal(lastCharge().aed, 89);
+  assert.match(lastCharge().note, /10% off, booked Monday to Wednesday/);
+});
+
+test('early week: a code on a pack is weighed against the list price, on a single against the 10% off', async (t) => {
+  t.mock.timers.enable({ apis: ['Date'], now: MONDAY_NOON_DUBAI });
+  stripeCalls.length = 0;
+  DB = earlyWeekDb({ promo_codes: [{ code: 'FIVE', kind: 'percent', value: 5, active: true, expires_at: null,
+    max_redemptions: null, times_redeemed: 0, email_lock: null, referral_owner_id: null }] });
+  const onPack = await call(validatePromo, { token: 'tok', body: { kind: 'package', package_id: 4, code: 'FIVE' } });
+  assert.equal(onPack.body.ok, true, JSON.stringify(onPack.body));
+  assert.equal(onPack.body.final_amount, 349.6);
+  const onSingle = await call(validatePromo, { token: 'tok', body: { kind: 'single', code: 'FIVE' } });
+  assert.equal(onSingle.body.ok, false);
+  assert.match(onSingle.body.error, /10% off is already on the price/);
+  const packWithCode = await call(checkout, { token: 'tok', body: { kind: 'package', package_id: 4, promo_code: 'FIVE' } });
+  assert.equal(packWithCode.status, 200, JSON.stringify(packWithCode.body));
+  assert.equal(lastCharge().aed, 349.6);
+});

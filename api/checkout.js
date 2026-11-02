@@ -61,17 +61,19 @@ module.exports = async (req, res) => {
     // webhook tags booked-bootcamp once the payment clears.
     const mc_id = cleanMcId(body.mc_id);
     if (mc_id && (kind === 'single' || kind === 'package')) metadata.mc_id = mc_id;
-    // Monday to Wednesday (Dubai) singles and packs are discounted. A promo code is
-    // honoured only when it beats that discount; the two never stack.
+    // Monday to Wednesday (Dubai) a single is discounted; packs stay at list price
+    // every day (Loay, 2 Nov 2026). A promo code is honoured only when it beats
+    // that discount; the two never stack.
     const early = await earlyWeekPromo(db);
     const earlyNote = early.active ? ' · ' + early.percent + '% off, booked ' + early.days : '';
-    async function priceWithPromo(base, code) {
-      const earlyAmount = earlyWeekPrice(base, early);
-      if (!code) return { amount: earlyAmount, early: early.active };
+    const NO_EARLY = { active: false, percent: 0 };
+    async function priceWithPromo(base, code, week = early) {
+      const earlyAmount = earlyWeekPrice(base, week);
+      if (!code) return { amount: earlyAmount, early: week.active };
       const p = await validatePromoCode(db, code, base, user.email);
       if (!p.ok) return { error: p.error };
-      if (early.active && p.final_amount >= earlyAmount) {
-        return { error: "This week's " + early.percent + "% off is already on the price and beats this code. Remove the code to continue." };
+      if (week.active && p.final_amount >= earlyAmount) {
+        return { error: "This week's " + week.percent + "% off is already on the price and beats this code. Remove the code to continue." };
       }
       return { amount: p.final_amount, early: false, promo: p };
     }
@@ -167,7 +169,7 @@ module.exports = async (req, res) => {
     if (kind === 'package') {
       const { data: pkg } = await db.from('packages').select('*').eq('id', body.package_id).eq('active', true).single();
       if (!pkg) return res.status(400).json({ error: 'Package not available' });
-      const priced = await priceWithPromo(Number(pkg.price_aed), body.promo_code);
+      const priced = await priceWithPromo(Number(pkg.price_aed), body.promo_code, NO_EARLY);
       if (priced.error) return res.status(400).json({ error: priced.error });
       if (priced.promo) {
         // Referral + reward (RWD-) codes are single-session only - never discount a package.

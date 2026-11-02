@@ -64,9 +64,10 @@ module.exports = async (req, res) => {
     if (result.ok && kind === 'package' && (result.is_referral || /^RWD-/i.test(result.code || ''))) {
       return res.status(200).json({ ok: false, error: 'Referral and reward codes only work on a single session, not packages.' });
     }
-    // Monday to Wednesday the early-week discount is already on the price. A code
-    // only applies when it is worth more; it never stacks (same rule in checkout).
-    if (result.ok && promo.active && result.final_amount >= earlyWeekPrice(baseAmount, promo)) {
+    // Monday to Wednesday the early-week discount is already on a single's price. A
+    // code only applies when it is worth more; it never stacks (same rule in
+    // checkout). Packs are list price every day, so any valid code is worth having.
+    if (result.ok && kind === 'single' && promo.active && result.final_amount >= earlyWeekPrice(baseAmount, promo)) {
       return res.status(200).json({ ok: false, error: "This week's " + promo.percent + "% off is already on the price and beats this code." });
     }
     return res.status(200).json(result);

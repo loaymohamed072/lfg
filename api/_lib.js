@@ -534,8 +534,9 @@ async function validatePromoCode(db, rawCode, originalAmountAed, userEmail) {
 }
 
 // Bootcamp early-week discount (Omar, 18 Oct 2026): book Monday to Wednesday,
-// Dubai time, and the single and the packs cost less; Thursday to Sunday is the
-// list price. The switch and the percent live on the admin Schedule tab
+// Dubai time, and a single costs less; Thursday to Sunday is the list price.
+// Packs were discounted too until 2 Nov 2026, when Loay limited it to singles:
+// the pack branches in checkout and validate-promo never apply it. The switch and the percent live on the admin Schedule tab
 // (event_config.bootcamp_promo_enabled / bootcamp_promo_pct). Never stacks with a
 // promo code: the buyer gets whichever of the two is worth more (see checkout).
 const EARLY_WEEK_DAYS = ['Mon', 'Tue', 'Wed'];

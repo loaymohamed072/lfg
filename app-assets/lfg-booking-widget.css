@@ -16,7 +16,7 @@
 .lfgw-sec.sel { border-color: #999966; background: rgba(153,153,102,0.15); }
 .lfgw-sec.full { opacity: .35; cursor: not-allowed; }
 .lfgw-sec .l { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 20px; line-height: 1; }
-.lfgw-sec .n { font-size: 10px; color: rgba(255,255,255,0.45); margin-top: 4px; text-transform: uppercase; }
+.lfgw-sec .n { font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 4px; text-transform: uppercase; }
 .lfgw-sec.sel .n { color: #999966; }
 .lfgw-sec .n.hot { color: #e9b949; font-weight: 700; }
 .lfgw-actions { display: flex; gap: 10px; }
@@ -57,8 +57,8 @@ a.lfgw-btn { display: inline-flex; align-items: center; justify-content: center;
 .lfgw-feat-promo s { color: rgba(255,255,255,0.4); }
 .lfgw-promo-line { margin: 0 0 14px; padding: 9px 12px; border: 1px solid rgba(233,185,73,0.45); background: rgba(233,185,73,0.08); font-size: 13px; color: rgba(255,255,255,0.75); line-height: 1.45; }
 .lfgw-promo-line b { color: #e9b949; }
-.lfgw-promo-line s { color: rgba(255,255,255,0.4); }
-.lfgw-single-note s, .lfgw-text s { color: rgba(255,255,255,0.35); }
+.lfgw-promo-line s { color: rgba(255,255,255,0.5); }
+.lfgw-single-note s, .lfgw-text s { color: rgba(255,255,255,0.5); }
 /* Homepage: the offer pill on the bootcamp CTA (hero button on desktop, sticky bar on mobile). */
 .has-promo { position: relative; }
 .hero-promo-pill { position: absolute; top: -11px; right: -6px; padding: 4px 8px; background: #e9b949; color: #0A0A0A; font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; line-height: 1; white-space: nowrap; pointer-events: none; }
@@ -165,7 +165,7 @@ a.lfgw-btn { display: inline-flex; align-items: center; justify-content: center;
 .lfgw-pack:last-child { border-bottom: none; }
 .lfgw-pack .pinfo { font-size: 13px; color: rgba(255,255,255,0.8); }
 .lfgw-pack .pinfo b { color: #fff; font-family: 'Barlow Condensed', sans-serif; font-size: 15px; }
-.lfgw-pack .pinfo s { color: rgba(255,255,255,0.4); margin-left: 4px; }
+.lfgw-pack .pinfo s { color: rgba(255,255,255,0.5); margin-left: 4px; }
 .lfgw-pack .pinfo .now { color: #999966; font-weight: 700; }
 .lfgw-pack-buy { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: .05em; text-transform: uppercase; padding: 8px 14px; border: 1px solid rgba(153,153,102,0.5); background: transparent; color: #999966; cursor: pointer; white-space: nowrap; transition: all .18s; }
 .lfgw-pack-buy:hover { background: #999966; color: #0A0A0A; }

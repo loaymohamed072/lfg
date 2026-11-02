@@ -19,8 +19,9 @@ module.exports = async (req, res) => {
       earlyWeekPromo(db)
     ]);
     if (error) throw new Error(error.message);
-    // Prices stay the list prices; the widget applies `promo` on top so the
-    // strikethrough and the charge come from the same numbers.
+    // Prices stay the list prices; the widget applies `promo` to the single price
+    // only (packs are list price every day), so the strikethrough and the charge
+    // come from the same numbers.
     res.status(200).json({
       packages: data || [],
       single_price: Number(process.env.SINGLE_SESSION_PRICE_AED || 99),
