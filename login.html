@@ -98,14 +98,16 @@
       if (!p || typeof p !== 'string') return null;
       if (!p.startsWith('/') || p.startsWith('//')) return null;
       var base = p.split('?')[0].split('#')[0];
-      var allowed = ['/', '/bootcamp.html', '/checkin', '/checkin.html',
+      var allowed = ['/', '/bootcamp.html', '/bootcamp', '/checkin', '/checkin.html',
         '/run-checkin', '/run-checkin.html', '/leaderboard', '/leaderboard.html', '/account', '/shop',
         '/padel', '/musandam', '/padel.html'];
       return allowed.indexOf(base) >= 0 ? p : null;
     }
     var safe = safeReturn(rawPath);
+    // Booking pages keep their query, so a friend's /bootcamp?join=<token> survives sign-in.
     function destFor() {
-      if (fromBook) return (safe === '/' || safe === '/bootcamp.html' ? safe : '/') + '#bootcamps';
+      var base = safe ? safe.split('?')[0].split('#')[0] : '';
+      if (fromBook) return (base === '/' || base === '/bootcamp.html' || base === '/bootcamp' ? safe.split('#')[0] : '/') + '#bootcamps';
       return safe || '/account';
     }
     var dest = destFor();

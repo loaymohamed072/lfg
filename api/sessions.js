@@ -6,6 +6,7 @@
 // them off the row means this public endpoint never needs the api schema. Also
 // returns recent group photos (each tied to its Sunday) for the gallery.
 const { admin, getUser, formatDate } = require('./_lib');
+const { liveHolds, heldBySession } = require('./_friends');
 
 function stationLabels(n) {
   const out = [];
@@ -79,24 +80,35 @@ module.exports = async (req, res) => {
     });
 
     const ids = sessions.map(s => s.id);
-    const bySession = {}; // id -> { total, sections:{label:count}, mine }
+    const bySession = {}; // id -> { total, held, sections:{label:count}, mine }
     if (ids.length) {
-      const { data: bk } = await db.from('bookings')
-        .select('session_id,section,member_id,status')
-        .in('session_id', ids)
-        .in('status', ['booked', 'attended']);
+      const [{ data: bk }, holds] = await Promise.all([
+        db.from('bookings')
+          .select('session_id,section,member_id,status')
+          .in('session_id', ids)
+          .in('status', ['booked', 'attended']),
+        liveHolds(db, ids)
+      ]);
       (bk || []).forEach(b => {
-        const e = bySession[b.session_id] || (bySession[b.session_id] = { total: 0, sections: {}, mine: false });
+        const e = bySession[b.session_id] || (bySession[b.session_id] = { total: 0, held: 0, sections: {}, mine: false });
         e.total++;
         if (b.section) e.sections[b.section] = (e.sections[b.section] || 0) + 1;
         if (user && b.member_id === user.id) e.mine = true;
       });
+      // Spots held for friends (invite links, group checkouts in progress) count as taken,
+      // the same way the booking functions count them (sql/2026-11-02_train_with_friends.sql).
+      const held = heldBySession(holds, Date.now());
+      Object.keys(held).forEach(id => {
+        const e = bySession[id] || (bySession[id] = { total: 0, held: 0, sections: {}, mine: false });
+        e.held = held[id].total;
+        Object.keys(held[id].sections).forEach(l => { e.sections[l] = (e.sections[l] || 0) + held[id].sections[l]; });
+      });
     }
 
     const out = sessions.map(s => {
-      const e = bySession[s.id] || { total: 0, sections: {}, mine: false };
+      const e = bySession[s.id] || { total: 0, held: 0, sections: {}, mine: false };
       const n = s.stations || 4;
-      const spotsLeft = Math.max(0, s.capacity - e.total);
+      const spotsLeft = Math.max(0, s.capacity - e.total - e.held);
       const labels = stationLabels(n);
       const counts = labels.map(l => e.sections[l] || 0);
       const room = stationRoom(s.capacity, n, counts);
@@ -119,6 +131,7 @@ module.exports = async (req, res) => {
         theme: s.theme || null,
         max_capacity: s.max_capacity || s.capacity,
         booked: e.total,
+        held: e.held,
         spots_left: spotsLeft,
         sold_out: spotsLeft === 0 || s.status !== 'open',
         booked_by_me: e.mine,

@@ -2074,7 +2074,7 @@
     card.style.display = '';
     list = list || [];
     if (!list.length) { wrap.innerHTML = '<p class="empty">No paid orders yet.</p>'; return; }
-    var kindLabel = { single: 'Single session', package: 'Package', merch: 'Merch tee' };
+    var kindLabel = { single: 'Single session', package: 'Package', merch: 'Merch tee', group: 'Group tickets' };
     wrap.innerHTML = list.map(function (o) {
       var when = o.created_at ? new Date(o.created_at).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) : '—';
       var who = esc(o.name || '—');
@@ -2460,16 +2460,19 @@
     var order = []; for (var i = 0; i < n; i++) order.push(String.fromCharCode(65 + i));
     var bySec = {}; att.forEach(function (a) { var k = a.section || '—'; (bySec[k] || (bySec[k] = [])).push(a); });
     Object.keys(bySec).forEach(function (k) { if (order.indexOf(k) < 0) order.push(k); });
+    // Spots members are holding for friends (invite links, group checkouts in progress). Read-only.
+    var held = (rosterData.session && rosterData.session.held) || {};
     var html = '';
     order.forEach(function (sec) {
-      var list = bySec[sec] || []; if (!list.length) return;
-      html += '<div class="sec-h">Station ' + sec + ' (' + list.length + ')</div>';
+      var list = bySec[sec] || []; var h = held[sec] || 0;
+      if (!list.length && !(h && !q)) return;
+      html += '<div class="sec-h">Station ' + sec + ' (' + list.length + ')' + (h ? ' · ' + h + ' held for friends' : '') + '</div>';
       list.forEach(function (a) {
         var displayName = a.name ? esc(a.name) : esc((a.email || '').split('@')[0]);
         var firstTag = (a.first_timer && a.status !== 'attended')
           ? ' <span style="display:inline-block;font-family:var(--fh);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#9ec1ff;border:1px solid rgba(158,193,255,0.4);padding:1px 7px;border-radius:3px;">First-timer</span>'
           : '';
-        html += '<div class="att"><div>' + displayName + firstTag + (a.payment_type === 'single' ? ' · single' : '') + '<div class="ae">' + esc(a.email) + '</div></div>' +
+        html += '<div class="att"><div>' + displayName + firstTag + (a.payment_type === 'single' ? ' · single' : '') + (a.with_name ? ' · with ' + esc(a.with_name) : '') + '<div class="ae">' + esc(a.email) + '</div></div>' +
           '<div class="att-actions"><button class="att-btn ' + (a.status === 'attended' ? 'on' : '') + ' bo-btn" data-mark="attended" data-bk="' + esc(a.booking_id) + '">Attended</button>' +
           '<button class="att-btn ' + (a.status === 'no_show' ? 'no' : '') + ' bo-btn" data-mark="no_show" data-bk="' + esc(a.booking_id) + '">No-show</button></div></div>';
       });

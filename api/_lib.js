@@ -338,7 +338,7 @@ async function buildMeResponse(db, user) {
     db.from('member_packages').select('sessions_remaining,expires_at,status').eq('member_id', user.id),
     db.from('bookings').select('id', { count: 'exact', head: true }).eq('member_id', user.id).eq('status', 'attended'),
     db.from('bookings')
-      .select('id,status,booked_at,section,session:sessions(session_date,start_time,location)')
+      .select('id,session_id,status,booked_at,section,session:sessions(session_date,start_time,location)')
       .eq('member_id', user.id)
       .in('status', ['booked', 'attended'])
       .order('booked_at', { ascending: false }),
@@ -377,6 +377,7 @@ async function buildMeResponse(db, user) {
     .filter(b => b.session && new Date(b.session.session_date) >= today)
     .map(b => ({
       id: b.id,
+      session_id: b.session_id,   // the "Bring friends" panel on /account keys on it
       date_label: formatDate(b.session.session_date, b.session.start_time),
       location: b.session.location,
       section: b.section,
@@ -735,6 +736,14 @@ async function ownerStats(db) {
   };
 }
 
+// A booking RPC failed after claim_fulfilment marked the payment paid: put it back to
+// pending, so Stripe's webhook retry (or Admin -> reconcile) runs fulfilment again instead
+// of leaving money in with no seat. The booking functions are atomic, so a retry is safe.
+async function releaseClaim(db, sessionObj) {
+  try { await db.from('payments').update({ status: 'pending' }).eq('stripe_session_id', sessionObj.id).eq('status', 'paid'); }
+  catch (e) { console.error('[fulfill] could not reopen the payment for a retry:', e && e.message); }
+}
+
 // Idempotent fulfilment for a Stripe Checkout Session. Used by both the webhook
 // (normal path) and /api/admin/reconcile-payments (recovery path for stuck rows).
 //
@@ -783,6 +792,9 @@ async function fulfillCheckoutSession(db, sessionObj) {
   let emailKind = null;
   let emailArgs = null;
   const paidAmount = (sessionObj.amount_total || 0) / 100;
+  // Set when the card was charged but nobody got a seat and the money went back. Skips the
+  // promo redemption and the CRM tags below: nothing was bought.
+  let refunded = false;
 
   if (md.kind === 'package') {
     const { data: pkg, error: pkgErr } = await db.from('packages').select('*').eq('id', md.package_id).single();
@@ -809,32 +821,74 @@ async function fulfillCheckoutSession(db, sessionObj) {
       expiresAtIso: expires.toISOString()
     };
   } else if (md.kind === 'single' && md.session_id) {
-    const { data: booked, error: bErr } = await db.rpc('book_paid', {
-      p_member: md.member_id,
-      p_session: md.session_id,
-      p_section: md.section || null,
-      p_amount: paidAmount
-    });
-    if (bErr) return { ok: false, error: 'book_paid: ' + bErr.message };
-    if (booked && !booked.ok && !booked.dedup) console.warn('[fulfill] single booking not placed:', booked.error);
+    // A friend paying for a host's saved spot (hold_id) joins the host's station. If the
+    // hold lapsed and the station filled while they paid, they fall through to book_paid
+    // like any single and land on the emptiest open station.
+    let booked = null;
+    let withHost = null;
+    if (md.hold_id) {
+      const { data: fromHold, error: hErr } = await db.rpc('book_from_hold', {
+        p_member: md.member_id, p_hold: md.hold_id, p_payment: 'single', p_amount: paidAmount
+      });
+      if (hErr) { await releaseClaim(db, sessionObj); return { ok: false, error: 'book_from_hold: ' + hErr.message }; }
+      if (fromHold && fromHold.ok) { booked = fromHold; withHost = fromHold.dedup ? null : fromHold.host_member_id; }
+      else console.warn('[fulfill] saved spot not claimed, trying any station:', fromHold && fromHold.error);
+    }
+    if (!booked) {
+      const { data, error: bErr } = await db.rpc('book_paid', {
+        p_member: md.member_id,
+        p_session: md.session_id,
+        p_section: md.section || null,
+        p_amount: paidAmount
+      });
+      if (bErr) { await releaseClaim(db, sessionObj); return { ok: false, error: 'book_paid: ' + bErr.message }; }
+      booked = data;
+    }
     // A fresh payment that dedups means we captured the card but the member already
     // held this seat (the duplicate-charge case). The checkout guard should stop this
     // before charging; if we still land here, flag it loudly so it can be refunded.
     if (booked && booked.dedup) console.warn('[fulfill] DUPLICATE single payment - already booked, no new ticket. Refund candidate. member=' + md.member_id + ' session=' + md.session_id + ' pi=' + sessionObj.payment_intent);
-    // Look up the session for the confirmation + .ics.
-    const { data: sess } = await db.from('sessions').select('session_date,location').eq('id', md.session_id).maybeSingle();
-    if (sess) {
-      emailKind = 'single';
-      emailArgs = {
-        kind: 'single',
-        memberId: md.member_id,
-        sessionId: md.session_id,
-        sessionDate: sess.session_date,
-        section: md.section || null,
-        location: sess.location || 'CrossFit Alioth',
-        paidAmount
-      };
+    if (!booked || (!booked.ok && !booked.dedup)) {
+      // The Sunday filled (or was called off) while they paid. Never "You're in" for a
+      // seat that does not exist: refund and say so plainly.
+      console.warn('[fulfill] single booking not placed, refunding:', booked && booked.error);
+      const { refundUnplaced } = require('./_friends');
+      await refundUnplaced(db, sessionObj, { memberId: md.member_id, sessionId: md.session_id, reason: 'full' });
+      refunded = true;
+    } else {
+      // Look up the session for the confirmation + .ics, and the station the member was
+      // actually given (book_paid moves them when their pick closed), not the one they picked.
+      const [{ data: sess }, { data: seat }] = await Promise.all([
+        db.from('sessions').select('session_date,location').eq('id', md.session_id).maybeSingle(),
+        db.from('bookings').select('section').eq('member_id', md.member_id).eq('session_id', md.session_id).maybeSingle()
+      ]);
+      let note = null;
+      if (withHost) {
+        const { data: host } = await db.from('members').select('full_name').eq('id', withHost).maybeSingle();
+        const hostFirst = ((host && host.full_name) || '').trim().split(/\s+/)[0];
+        if (hostFirst) note = "You're training with " + hostFirst + '.';
+      }
+      if (sess) {
+        emailKind = 'single';
+        emailArgs = {
+          kind: 'single',
+          memberId: md.member_id,
+          sessionId: md.session_id,
+          sessionDate: sess.session_date,
+          section: (seat && seat.section) || booked.section || md.section || null,
+          location: sess.location || 'CrossFit Alioth',
+          paidAmount,
+          note
+        };
+      }
     }
+  } else if (md.kind === 'group' && md.session_id) {
+    // The buyer plus friends on one station (api/checkout.js startGroup). Books, refunds
+    // anyone who could not be placed, and sends every confirmation itself.
+    const { fulfilGroup } = require('./_friends');
+    const out = await fulfilGroup(db, sessionObj, md);
+    if (out.error) { await releaseClaim(db, sessionObj); return { ok: false, error: out.error }; }
+    refunded = !!out.refundedAll;
   } else if (md.kind === 'sponsor') {
     // Sponsored tickets go into the pool, not onto the buyer's account. The
     // unique payment_intent makes a replayed webhook a no-op, and
@@ -1162,7 +1216,7 @@ async function fulfillCheckoutSession(db, sessionObj) {
     } catch (e) { console.warn('[fulfill] trip email skipped:', e && e.message); }
   }
 
-  if (md.promo_code) {
+  if (md.promo_code && !refunded) {
     const { data: redeemed, error: rErr } = await db.rpc('redeem_promo', {
       p_code: md.promo_code,
       p_member_id: md.member_id,
@@ -1248,7 +1302,7 @@ async function fulfillCheckoutSession(db, sessionObj) {
   // Merch buyers + paid-run entries aren't bootcamp purchasers - skip the bootcamp tag.
   // (Run registrants already synced to GHL via run-register's onRunRegister.)
   // A sponsor paid for someone else's seat and booked nothing, so no tag either.
-  if (md.kind !== 'merch' && md.kind !== 'run' && md.kind !== 'sponsor' && md.kind !== 'trip' && md.kind !== 'event') {
+  if (!refunded && md.kind !== 'merch' && md.kind !== 'run' && md.kind !== 'sponsor' && md.kind !== 'trip' && md.kind !== 'event') {
     try {
       const ghl = require('./_ghl');
       const { data: m } = await db.from('members').select('email,full_name').eq('id', md.member_id).maybeSingle();
@@ -1267,14 +1321,14 @@ async function fulfillCheckoutSession(db, sessionObj) {
   // ManyChat: a paid booking that started from an Instagram DM link carries the subscriber
   // id in metadata.mc_id (set by run-pay / checkout). Tag it so Ahmed's bot skips its
   // "did you book?" follow-up. Helper never throws; no API key configured = logged no-op.
-  if (md.mc_id && (md.kind === 'run' || md.kind === 'single' || md.kind === 'package')) {
+  if (!refunded && md.mc_id && (md.kind === 'run' || md.kind === 'single' || md.kind === 'package' || md.kind === 'group')) {
     try {
       const manychat = require('./_manychat');
       await manychat.tagSubscriber(md.mc_id, md.kind === 'run' ? manychat.TAGS.run : manychat.TAGS.bootcamp);
     } catch (e) { console.warn('[fulfill → manychat]', e && e.message); }
   }
 
-  return { ok: true, fulfilled: md.kind };
+  return { ok: true, fulfilled: md.kind, refunded };
 }
 
 // Canonical site origin for the current request. Forces the apex domain to www so

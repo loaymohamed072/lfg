@@ -16,6 +16,8 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="stylesheet" href="/app-assets/lfg-app.css">
 <link rel="stylesheet" href="/app-assets/lfg-account-page.css?v=10">
+<!-- Booking widget styles (all lfgw- namespaced) for the "Bring friends" panel. -->
+<link rel="stylesheet" href="/app-assets/lfg-booking-widget.css?v=10">
 </head>
 <body>
 <span class="acct-orb" aria-hidden="true"></span>
@@ -309,6 +311,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.1"></script>
 <script src="https://js.stripe.com/v3/"></script>
 <script src="/app-assets/lfg-supabase.js?v=3"></script>
+<script src="/app-assets/lfg-friends.js?v=1"></script>
 <script>
   (function () {
     function el(id) { return document.getElementById(id); }
@@ -638,8 +641,9 @@
         }
         return '<div class="lfg-row" data-bid="' + b.id + '"><div><div class="date">' + b.date_label + '</div>' +
                '<div class="meta">' + (b.location || '') + section + '</div></div>' +
-               '<div style="display:flex;align-items:center;gap:14px;">' +
+               '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">' +
                  (b.status === 'Booked' ? '<span class="meta" style="color:#9c9;">Booked</span>' : '') +
+                 (b.status === 'Booked' && b.session_id ? '<span class="lfgf-slot" data-sid="' + b.session_id + '"></span>' : '') +
                  cancelControl +
                '</div></div>';
       }).join('');
@@ -648,6 +652,8 @@
         btn.addEventListener('mouseleave', function () { btn.style.background = 'transparent'; });
         btn.addEventListener('click', function () { cancelBooking(btn.getAttribute('data-bid'), btn); });
       });
+      // Train with a friend: hold spots on this station and share the link (lfg-friends.js).
+      if (window.lfgFriends) window.lfgFriends.mountAccount(wrap);
     }
 
     // Tiny toast helper - used wherever we'd otherwise reach for alert().

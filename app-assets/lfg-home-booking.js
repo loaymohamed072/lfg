@@ -375,6 +375,7 @@
           return '<div class="lfgw-sec' + (sec.full || sec.waiting ? ' full' : '') + '" data-sec="' + sec.label + '">' +
             '<div class="l">' + sec.label + '</div><div class="n' + (!sec.full && !sec.waiting && now <= 2 ? ' hot' : '') + '">' + n + '</div></div>';
         }).join('') + '</div>' +
+        '<div id="lfgwFriends"></div>' +
         promoHtml +
         '<div class="lfgw-actions" id="lfgwActions"></div>' +
         '<div class="lfgw-terms">' + TERMS_LINE + '</div>' +
@@ -382,8 +383,8 @@
       renderActions();
       if (!hasCredits) wirePromoBlock('single', null);
       modalEl.querySelectorAll('.lfgw-sec').forEach(function (t) {
-        if (t.classList.contains('full')) return;
         t.addEventListener('click', function () {
+          if (t.classList.contains('full')) return; // checked on click: a group can open a waiting station
           modalEl.querySelectorAll('.lfgw-sec').forEach(function (x) { x.classList.remove('sel'); });
           t.classList.add('sel'); pickedSection = t.getAttribute('data-sec'); renderActions();
         });
@@ -391,8 +392,17 @@
       modalEl.querySelectorAll('.lfgw-pack-buy, .lfgw-streak-go').forEach(function (b) {
         b.addEventListener('click', function () { openPackageModal(Number(b.getAttribute('data-pkg'))); });
       });
+      if (window.lfgFriends) window.lfgFriends.mount(modalEl, s, friendHooks);
       overlay.classList.add('show');
     }
+    // What lfg-friends.js needs from this modal: the pick, the prices, the credit count.
+    var friendHooks = {
+      picked: function () { return pickedSection; },
+      unpick: function () { pickedSection = null; modalEl.querySelectorAll('.lfgw-sec.sel').forEach(function (x) { x.classList.remove('sel'); }); renderActions(); },
+      changed: function () { renderActions(); },
+      price: function () { return { buyer: appliedPromo ? appliedPromo.final_amount : disc(singlePrice), friend: disc(singlePrice) }; },
+      credits: function () { return credits; }
+    };
 
     async function openPackageModal(packageId) {
       if (!loggedIn) {
@@ -432,13 +442,17 @@
     }
 
     function renderActions() {
-      var dis = pickedSection ? '' : 'disabled';
+      // Friends added in the picker (lfg-friends.js): everyone pays by card, together.
+      var g = window.lfgFriends ? window.lfgFriends.state(activeBookingId) : { n: 0, ok: true };
+      var dis = pickedSection && g.ok ? '' : 'disabled';
       var price = appliedPromo ? appliedPromo.final_amount : disc(singlePrice);
+      var label = g.n ? 'Pay for ' + (g.n + 1) + ' · AED ' + Math.round((price + g.n * disc(singlePrice)) * 100) / 100
+        : (credits > 0 ? 'Use 1 credit' : 'Book · AED ' + price);
       document.getElementById('lfgwActions').innerHTML =
         '<button class="lfgw-btn lfgw-btn-ghost" id="lfgwCancel">Cancel</button>' +
-        '<button class="lfgw-btn lfgw-btn-primary" id="lfgwGo" ' + dis + '>' + (credits > 0 ? 'Use 1 credit' : 'Book · AED ' + price) + '</button>';
+        '<button class="lfgw-btn lfgw-btn-primary" id="lfgwGo" ' + dis + '>' + label + '</button>';
       document.getElementById('lfgwCancel').addEventListener('click', closeModal);
-      document.getElementById('lfgwGo').addEventListener('click', credits > 0 ? doCredit : doBuy);
+      document.getElementById('lfgwGo').addEventListener('click', credits > 0 && !g.n ? doCredit : doBuy);
     }
 
     async function doCredit() {
@@ -449,6 +463,7 @@
       if (res.ok && res.data.ok) {
         credits = res.data.credits_left; injectHeader(); setBookBtnLabel();
         showResult('You’re in.', fmtCard(s).full + ' · ' + fmtTime(s) + ' · Station <b>' + res.data.section + '</b><br><br>Credits left: <b>' + credits + '</b>');
+        if (window.lfgFriends) window.lfgFriends.afterBooking(activeBookingId);
         refresh();
       } else { showToast((res.data && res.data.error) || 'Could not book', true); btn.disabled = false; btn.textContent = 'Use 1 credit'; }
     }
@@ -521,11 +536,20 @@
       var btn = document.getElementById('lfgwGo'); btn.disabled = true; btn.textContent = 'Loading…';
       var payload = { kind: 'single', session_id: activeBookingId, section: pickedSection };
       if (appliedPromo) payload.promo_code = appliedPromo.code;
+      var g = window.lfgFriends ? window.lfgFriends.state(activeBookingId) : { n: 0 };
+      if (g.n) payload.friends = g.friends;
       var s = byId(activeBookingId), sid = activeBookingId;
       var ok = await startEmbedded(payload, {
-        title: (s ? fmtCard(s).full + ' · ' + fmtTime(s) : 'Single session') + ' · Station ' + pickedSection,
+        title: (s ? fmtCard(s).full + ' · ' + fmtTime(s) : 'Single session') + ' · Station ' + pickedSection + (g.n ? ' · ' + (g.n + 1) + ' of you' : ''),
         onSuccess: function () {
-          showResult('Payment confirmed.', 'You’re booked for <b>' + (s ? fmtCard(s).full + ' · ' + fmtTime(s) : 'your Sunday session') + '</b>.<br>Your station is in <b>My bookings</b>.');
+          var when = s ? fmtCard(s).full + ' · ' + fmtTime(s) : 'your Sunday session';
+          if (g.n) {
+            window.lfgFriends.reset(sid);
+            showResult('Payment confirmed.', 'You and ' + g.n + (g.n === 1 ? ' friend are' : ' friends are') + ' booked for <b>' + when + '</b>, together on one station.<br>Each friend gets their own confirmation email.');
+          } else {
+            showResult('Payment confirmed.', 'You’re booked for <b>' + when + '</b>.<br>Your station is in <b>My bookings</b>.');
+            if (window.lfgFriends) window.lfgFriends.afterBooking(sid, { wait: true });
+          }
           refresh();
         },
         onBack: function () { openBookingModal(sid); }
@@ -611,6 +635,20 @@
         if (nowLogged && !loggedIn) { markLoggedIn(); }
         else if (!nowLogged && loggedIn) { loggedIn = false; credits = 0; streak = 0; setBookBtnLabel(); injectHeader(); }
       });
+    }
+
+    // Train with a friend (lfg-friends.js) borrows this modal for the station picker rows,
+    // the "Bring friends" panel after booking, and the /bootcamp?join= landing. Loaded from
+    // here so no page needs another script tag.
+    window.lfgWidget = {
+      modal: modalEl, terms: TERMS_LINE,
+      show: function () { overlay.classList.add('show'); },
+      close: closeModal, result: showResult, toast: showToast,
+      checkout: startEmbedded, book: startBooking, refresh: refresh
+    };
+    if (!window.lfgFriends && !document.getElementById('lfgf-js')) {
+      var fjs = document.createElement('script'); fjs.id = 'lfgf-js'; fjs.src = '/app-assets/lfg-friends.js?v=1';
+      document.head.appendChild(fjs);
     }
 
     refresh().then(function () {

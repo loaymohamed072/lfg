@@ -8,7 +8,8 @@ const { admin, authService, ensureMember, canonicalOrigin, buildAuthLink } = req
 const { sendLoginLink } = require('./_email');
 
 // Only these internal paths can be the post-login destination.
-const ALLOWED_NEXT = new Set(['/', '/account', '/bootcamp.html', '/leaderboard', '/run-checkin', '/checkin', '/shop']);
+// '/bootcamp' (the clean URL) carries a friend's ?join= invite token through sign-in.
+const ALLOWED_NEXT = new Set(['/', '/account', '/bootcamp.html', '/bootcamp', '/leaderboard', '/run-checkin', '/checkin', '/shop']);
 
 const bucket = (global.__lfgLoginLinkBucket = global.__lfgLoginLinkBucket || new Map());
 const WINDOW_MS = 15 * 60 * 1000;

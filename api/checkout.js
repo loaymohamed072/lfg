@@ -1,10 +1,16 @@
 // POST /api/checkout - creates a Stripe Checkout Session (test mode).
 // Body: { kind:'single'|'package'|'merch'|'sponsor', package_id?, session_id?, promo_code?, qty?, note? }
+// Train with a friend (2026-11-02), both on kind 'single':
+//   join: TOKEN          a friend pays for a spot a host saved (price + station from the hold)
+//   friends: [{name,email}] (1-7) + section   the buyer pays for themselves and friends, one
+//                        station. A 35-minute checkout hold keeps the group's spots while
+//                        they pay; the payment row is kind 'group'.
 // Auth: required for every kind except 'sponsor', which is public (see below).
 // Returns: { url } to redirect the member to Stripe.
 const Stripe = require('stripe');
 const { admin, getUser, ensureMember, validatePromoCode, earlyWeekPromo, earlyWeekPrice, safeError } = require('./_lib');
 const { cleanMcId } = require('./_manychat');
+const F = require('./_friends');
 
 module.exports = async (req, res) => {
   const user = await getUser(req);
@@ -70,6 +76,124 @@ module.exports = async (req, res) => {
       return { amount: p.final_amount, early: false, promo: p };
     }
 
+    // The buyer plus 1-7 friends on one station, paid by card for everyone (the buyer's
+    // credits are never spent on friends). Skips the balancing window, never the station
+    // cap. Friends become members before payment (an existing member by exact email, else
+    // a silent guest account), the same as trip-pay, so fulfilment is one atomic call.
+    async function startGroup() {
+      const f = F.cleanFriends(body.friends, user.email);
+      if (!f.ok) return res.status(400).json({ error: f.error });
+      const friends = f.friends;
+      const section = String(body.section || '');
+      if (!/^[A-Z]$/.test(section)) return res.status(400).json({ error: 'Pick a station' });
+      const { data: sess } = await db.from('sessions').select('*').eq('id', body.session_id).eq('status', 'open').maybeSingle();
+      if (!sess) return res.status(400).json({ error: 'Session not available' });
+      if (!F.bookingOpen(sess, Date.now())) return res.status(409).json({ error: 'Booking has closed for this Sunday.' });
+      const { data: existingBk } = await db.from('bookings').select('id')
+        .eq('session_id', sess.id).eq('member_id', user.id).in('status', ['booked', 'attended']).maybeSingle();
+      if (existingBk) return res.status(409).json({ error: "You're already booked for this session. Hold spots for friends from My bookings instead." });
+
+      // Cheap checks before any friend account exists: the checkout cap and station room.
+      const sinceHour = new Date(Date.now() - 3600 * 1000).toISOString();
+      const [{ count: recent }, { data: mine }, load] = await Promise.all([
+        db.from('booking_holds').select('id', { count: 'exact', head: true })
+          .eq('host_member_id', user.id).eq('kind', 'checkout').gte('created_at', sinceHour),
+        db.from('booking_holds').select('id,section,spots,claimed,stripe_session_id')
+          .eq('host_member_id', user.id).eq('session_id', sess.id).eq('kind', 'checkout')
+          .is('cancelled_at', null).eq('claimed', 0).gt('expires_at', new Date().toISOString()),
+        F.stationLoad(db, sess.id, section)
+      ]);
+      if ((recent || 0) >= F.CHECKOUTS_PER_HOUR) return res.status(429).json({ error: 'Too many checkouts in a row. Wait a few minutes and try again.' });
+      const people = friends.length + 1;
+      // This buyer's own earlier unpaid hold gets replaced, so it does not count against them.
+      const mineHere = (mine || []).filter((m) => m.section === section).reduce((a, m) => a + m.spots - m.claimed, 0);
+      const room = F.stationRoom(sess.capacity, sess.stations, section, load.booked, load.held - mineHere);
+      const noRoom = (r) => r > 0
+        ? 'Station ' + section + ' has room for ' + r + ' of you. Pick another station or remove a friend.'
+        : 'Station ' + section + ' is full. Pick another station.';
+      if (room < people) return res.status(409).json({ error: noRoom(room), room });
+
+      // A friend who already has a spot this Sunday: say so before anyone pays.
+      const { data: known } = await db.from('members').select('id,email').in('email', friends.map((x) => x.email));
+      if (known && known.length) {
+        const { data: inAlready } = await db.from('bookings').select('member_id')
+          .eq('session_id', sess.id).in('member_id', known.map((k) => k.id)).in('status', ['booked', 'attended']);
+        if (inAlready && inAlready.length) {
+          const ids = new Set(inAlready.map((b) => b.member_id));
+          const hit = friends.find((x) => known.some((k) => k.email === x.email && ids.has(k.id)));
+          return res.status(409).json({ error: (hit ? hit.name : 'A friend') + ' already has a spot this Sunday. Remove them and try again.' });
+        }
+      }
+
+      // The buyer's seat can carry a promo code; friends pay the normal ticket. Priced
+      // before any friend account exists, so a bad code creates nothing.
+      const list = F.listPrice();
+      const buyer = await priceWithPromo(list, body.promo_code);
+      if (buyer.error) return res.status(400).json({ error: buyer.error });
+      const friendAmount = earlyWeekPrice(list, early);
+
+      const members = await F.memberIdsForFriends(db, friends, user.id);
+      if (members.length !== friends.length) return res.status(400).json({ error: 'Each friend needs their own email.' });
+
+      // An earlier unpaid attempt: expire its Stripe session so it can never be paid later.
+      for (const m of mine || []) {
+        if (m.stripe_session_id) { try { await stripe.checkout.sessions.expire(m.stripe_session_id); } catch (e) { /* already done */ } }
+      }
+      const { data: held, error: hErr } = await db.rpc('create_booking_hold', {
+        p_host: user.id, p_session: sess.id, p_kind: 'checkout', p_spots: people, p_price: friendAmount,
+        p_section: section, p_friends: members.map((m) => ({ member_id: m.member_id, name: m.name }))
+      });
+      if (hErr) throw new Error('create_booking_hold: ' + hErr.message);
+      if (!held || !held.ok) {
+        return res.status(409).json({ error: held && held.room != null ? noRoom(held.room) : ((held && held.error) || 'Could not hold the spots.'), room: held && held.room });
+      }
+      const releaseHold = () => db.from('booking_holds').update({ cancelled_at: new Date().toISOString() }).eq('id', held.hold_id);
+
+      const total = Math.round((buyer.amount + friendAmount * friends.length) * 100) / 100;
+      const gmeta = {
+        kind: 'group', member_id: user.id, session_id: String(sess.id), section, hold_id: held.hold_id,
+        buyer_amount: String(buyer.amount), friend_amount: String(friendAmount), seats: String(people)
+      };
+      if (buyer.promo) gmeta.promo_code = buyer.promo.code;
+      if (mc_id) gmeta.mc_id = mc_id;
+      const { data: pay, error: payErr } = await db.from('payments')
+        .insert({ member_id: user.id, kind: 'group', amount_aed: total, promo_code: buyer.promo ? buyer.promo.code : null, status: 'pending' })
+        .select('id').single();
+      if (payErr) { await releaseHold(); throw new Error('payment insert: ' + payErr.message); }
+
+      const day = new Date(sess.session_date).toDateString();
+      const friendLine = priceItem(friendAmount, "LFG Bootcamp - Friend's ticket", day + ' · Station ' + section + ' with you');
+      friendLine.quantity = friends.length;
+      let session;
+      try {
+        session = await stripe.checkout.sessions.create({
+          ui_mode: 'embedded_page',
+          mode: 'payment',
+          line_items: [
+            priceItem(buyer.amount, 'LFG Bootcamp - Single Session', day + ' · Station ' + section + (buyer.early ? earlyNote : '')),
+            friendLine
+          ],
+          customer_email: user.email,
+          metadata: gmeta,
+          payment_method_types: ['card'],
+          redirect_on_completion: 'never',
+          // The hold lasts 35 minutes; the card form closes before it does.
+          expires_at: Math.floor(Date.now() / 1000) + F.STRIPE_EXPIRE_MIN * 60
+        });
+      } catch (e) {
+        await releaseHold();
+        await db.from('payments').update({ status: 'failed' }).eq('id', pay.id);
+        throw e;
+      }
+      await Promise.all([
+        db.from('payments').update({ stripe_session_id: session.id }).eq('id', pay.id),
+        db.from('booking_holds').update({ stripe_session_id: session.id }).eq('id', held.hold_id)
+      ]);
+      return res.status(200).json({
+        client_secret: session.client_secret, id: session.id, publishable_key: process.env.STRIPE_PUBLISHABLE_KEY, seats: people
+      });
+    }
+
     if (kind === 'package') {
       const { data: pkg } = await db.from('packages').select('*').eq('id', body.package_id).eq('active', true).single();
       if (!pkg) return res.status(400).json({ error: 'Package not available' });
@@ -83,6 +207,36 @@ module.exports = async (req, res) => {
       metadata.package_id = String(pkg.id);
       lineItem = priceItem(priced.amount, 'LFG - ' + pkg.name, pkg.sessions_count + ' bootcamp credits · valid ' + pkg.validity_months + ' months' + (priced.early ? earlyNote : ''));
 
+    } else if (kind === 'single' && body.join != null) {
+      // A friend paying for a spot a host saved for them. The price was locked in the
+      // hold (never more than today's), the station is the host's, and promo codes do
+      // not apply to a saved spot.
+      const tok = String(body.join);
+      if (!F.validToken(tok)) return res.status(400).json({ error: 'This invite link is not valid.' });
+      const { data: h } = await db.from('booking_holds')
+        .select('id,session_id,section,host_member_id,spots,claimed,price_aed,expires_at,cancelled_at')
+        .eq('token', tok).eq('kind', 'invite').maybeSingle();
+      if (!h) return res.status(404).json({ error: 'This invite link is not valid.' });
+      if (h.host_member_id === user.id) return res.status(409).json({ error: 'This is your own invite link.' });
+      const state = F.holdState(h, Date.now());
+      if (state !== 'active') {
+        return res.status(409).json({ status: state, error: state === 'full' ? 'The saved spots on this invite are all taken.' : 'This saved spot has ended.' });
+      }
+      if (body.promo_code) return res.status(400).json({ error: "Promo codes don't apply to a saved spot." });
+      const { data: sess } = await db.from('sessions').select('*').eq('id', h.session_id).eq('status', 'open').maybeSingle();
+      if (!sess || !F.bookingOpen(sess, Date.now())) return res.status(400).json({ error: 'Session not available' });
+      const { data: existingBk } = await db.from('bookings').select('id')
+        .eq('session_id', sess.id).eq('member_id', user.id).in('status', ['booked', 'attended']).maybeSingle();
+      if (existingBk) return res.status(409).json({ error: "You're already booked for this session. Check your account - no need to pay again." });
+      const amount = Math.min(Number(h.price_aed), earlyWeekPrice(F.listPrice(), early));
+      metadata.session_id = String(sess.id);
+      metadata.section = h.section;
+      metadata.hold_id = h.id;
+      lineItem = priceItem(amount, 'LFG Bootcamp - Single Session', new Date(sess.session_date).toDateString() + ' · Station ' + h.section + ' with a friend');
+
+    } else if (kind === 'single' && hasFriends(body.friends)) {
+      return await startGroup();
+
     } else if (kind === 'single') {
       const { data: sess } = await db.from('sessions').select('*').eq('id', body.session_id).eq('status', 'open').single();
       if (!sess) return res.status(400).json({ error: 'Session not available' });
@@ -94,10 +248,11 @@ module.exports = async (req, res) => {
       const { data: existingBk } = await db.from('bookings').select('id')
         .eq('session_id', sess.id).eq('member_id', user.id).in('status', ['booked', 'attended']).maybeSingle();
       if (existingBk) return res.status(409).json({ error: "You're already booked for this session. Check your account - no need to pay again." });
-      // Don't sell a single seat for a full session.
+      // Don't sell a single seat for a full session. Spots held for friends count as taken.
       const { count } = await db.from('bookings').select('id', { count: 'exact', head: true })
         .eq('session_id', sess.id).in('status', ['booked', 'attended']);
-      if ((count || 0) >= sess.capacity) return res.status(409).json({ error: 'Session is full' });
+      const held = F.heldBySession(await F.liveHolds(db, [sess.id]), Date.now())[sess.id];
+      if ((count || 0) + (held ? held.total : 0) >= sess.capacity) return res.status(409).json({ error: 'Session is full' });
 
       const priced = await priceWithPromo(Number(process.env.SINGLE_SESSION_PRICE_AED || 99), body.promo_code);
       if (priced.error) return res.status(400).json({ error: priced.error });
@@ -187,6 +342,11 @@ module.exports = async (req, res) => {
     return safeError(res, 'checkout', e, 'Checkout failed. Try again or message us on WhatsApp.');
   }
 };
+
+// True when the body carries at least one friend row with anything typed in it.
+function hasFriends(list) {
+  return Array.isArray(list) && list.some((f) => f && (String(f.name || '').trim() || String(f.email || '').trim()));
+}
 
 function priceItem(amountAed, name, description) {
   return {

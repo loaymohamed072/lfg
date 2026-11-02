@@ -22,6 +22,16 @@ module.exports = async (req, res) => {
     if (!data || data.ok !== true) {
       return res.status(400).json({ error: (data && data.error) || 'Could not cancel' });
     }
+    // A host who cancels releases the spots they were holding for friends that Sunday.
+    // Friends who already claimed keep their bookings. Best-effort: the holds would
+    // expire on their own within 24 hours anyway.
+    try {
+      const { data: bk } = await db.from('bookings').select('session_id').eq('id', bookingId).maybeSingle();
+      if (bk) {
+        await db.from('booking_holds').update({ cancelled_at: new Date().toISOString() })
+          .eq('host_member_id', user.id).eq('session_id', bk.session_id).eq('kind', 'invite').is('cancelled_at', null);
+      }
+    } catch (e) { console.warn('[cancel-booking] release friend holds:', e && e.message); }
     return res.status(200).json(data);
   } catch (e) {
     return safeError(res, 'cancel-booking', e, 'Could not cancel booking');
