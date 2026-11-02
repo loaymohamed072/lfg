@@ -262,8 +262,11 @@ a.lfgw-btn { display: inline-flex; align-items: center; justify-content: center;
 @keyframes lfgw-spin { to { transform: rotate(360deg); } }
 
 /* Train with a friend: a friend's name and email read as typed, not shouted
-   like a promo code. The rows borrow the promo field's box and face. */
-.lfgw-promo-field input.lfgf-in {
+   like a promo code, and at 16px so iPhone Safari doesn't zoom in on focus.
+   The rows borrow the promo field's box and face. */
+.lfgw-promo-field input.lfgf-in,
+.lfgw-promo-field.lfgf-mail input {
+  font-size: 16px;
   text-transform: none;
   letter-spacing: normal;
 }

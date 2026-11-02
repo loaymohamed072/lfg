@@ -446,7 +446,8 @@
       var g = window.lfgFriends ? window.lfgFriends.state(activeBookingId) : { n: 0, ok: true };
       var dis = pickedSection && g.ok ? '' : 'disabled';
       var price = appliedPromo ? appliedPromo.final_amount : disc(singlePrice);
-      var label = g.n ? 'Pay for ' + (g.n + 1) + ' · AED ' + Math.round((price + g.n * disc(singlePrice)) * 100) / 100
+      // No-break spaces: on a phone the label wraps at the dot, never between AED and the amount.
+      var label = g.n ? 'Pay for ' + (g.n + 1) + ' · AED ' + Math.round((price + g.n * disc(singlePrice)) * 100) / 100
         : (credits > 0 ? 'Use 1 credit' : 'Book · AED ' + price);
       document.getElementById('lfgwActions').innerHTML =
         '<button class="lfgw-btn lfgw-btn-ghost" id="lfgwCancel">Cancel</button>' +
