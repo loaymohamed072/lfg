@@ -61,6 +61,9 @@ module.exports = async (req, res) => {
       const location = s.location || 'CrossFit Alioth';
       const theme = s.theme || null;
       const urgency = urgencyOf(s);
+      // A Sunday the admin made free: AED 0 for everyone, no discount line.
+      const free = !!s.is_free;
+      const label = free ? 'Free this Sunday' : priceLabel;
       return {
         date: s.session_date,
         weekday: fmt(when, { weekday: 'long' }),
@@ -76,19 +79,20 @@ module.exports = async (req, res) => {
         spots_left: s.spots_left,
         sold_out: !!s.sold_out,
         urgency,
-        price_aed: price,
+        is_free: free,
+        price_aed: free ? 0 : price,
         list_price_aed: listPrice,
-        price_label: priceLabel,
+        price_label: label,
         booking_url: origin + '/bootcamp',
         summary: dateLabel + ', ' + timeLabel + ' at ' + location + '.' + (theme ? ' Theme: ' + theme + '.' : '')
-          + (s.sold_out ? ' Sold out.' : ' ' + urgency + '. ' + priceLabel + '.')
+          + (s.sold_out ? ' Sold out.' : ' ' + urgency + '. ' + label + '.')
       };
     };
 
     const list = body.sessions;
     return res.status(200).json({
       bootcamp: list[0] ? shape(list[0]) : null,
-      upcoming: list.slice(0, 4).map(s => { const x = shape(s); return { date: x.date, weekday: x.weekday, theme: x.theme, sold_out: x.sold_out, urgency: x.urgency }; })
+      upcoming: list.slice(0, 4).map(s => { const x = shape(s); return { date: x.date, weekday: x.weekday, theme: x.theme, is_free: x.is_free, sold_out: x.sold_out, urgency: x.urgency }; })
     });
   } catch (err) {
     return safeError(res, '/api/next-bootcamp', err, 'Could not load the next bootcamp');

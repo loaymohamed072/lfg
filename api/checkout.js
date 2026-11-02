@@ -12,6 +12,9 @@ const { admin, getUser, ensureMember, validatePromoCode, earlyWeekPromo, earlyWe
 const { cleanMcId } = require('./_manychat');
 const F = require('./_friends');
 
+// A Sunday the admin made free never takes a card: /api/book books it at AED 0.
+const FREE_SUNDAY = { error: 'This Sunday is free. Book it without paying.', free: true };
+
 module.exports = async (req, res) => {
   const user = await getUser(req);
   // Sponsored tickets are the one PUBLIC checkout on the site. They are a gift to
@@ -92,6 +95,7 @@ module.exports = async (req, res) => {
       if (!/^[A-Z]$/.test(section)) return res.status(400).json({ error: 'Pick a station' });
       const { data: sess } = await db.from('sessions').select('*').eq('id', body.session_id).eq('status', 'open').maybeSingle();
       if (!sess) return res.status(400).json({ error: 'Session not available' });
+      if (sess.is_free) return res.status(409).json(FREE_SUNDAY);
       if (!F.bookingOpen(sess, Date.now())) return res.status(409).json({ error: 'Booking has closed for this Sunday.' });
       const { data: existingBk } = await db.from('bookings').select('id')
         .eq('session_id', sess.id).eq('member_id', user.id).in('status', ['booked', 'attended']).maybeSingle();
@@ -197,6 +201,7 @@ module.exports = async (req, res) => {
       if (body.promo_code) return res.status(400).json({ error: "Promo codes don't apply to a saved spot." });
       const { data: sess } = await db.from('sessions').select('*').eq('id', h.session_id).eq('status', 'open').maybeSingle();
       if (!sess || !F.bookingOpen(sess, Date.now())) return res.status(400).json({ error: 'Session not available' });
+      if (sess.is_free) return res.status(409).json(FREE_SUNDAY);
       const { data: existingBk } = await db.from('bookings').select('id')
         .eq('session_id', sess.id).eq('member_id', user.id).in('status', ['booked', 'attended']).maybeSingle();
       if (existingBk) return res.status(409).json({ error: "You're already booked for this session. Check your account - no need to pay again." });
@@ -212,6 +217,7 @@ module.exports = async (req, res) => {
     } else if (kind === 'single') {
       const { data: sess } = await db.from('sessions').select('*').eq('id', body.session_id).eq('status', 'open').single();
       if (!sess) return res.status(400).json({ error: 'Session not available' });
+      if (sess.is_free) return res.status(409).json(FREE_SUNDAY);
       // Guard against paying twice for the same session. A member can only hold one
       // booking per session (unique index member_id+session_id), so a second single
       // checkout would capture the card but book_paid would dedup it - money in, no

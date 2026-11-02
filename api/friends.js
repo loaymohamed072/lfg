@@ -73,7 +73,7 @@ async function landing(req, res, db, token) {
   if (!h) return res.status(404).json({ ok: false, status: 'invalid', error: 'This invite link is not valid.' });
 
   const [{ data: sess }, { data: host }, early] = await Promise.all([
-    db.from('sessions').select('id,session_date,start_time,location,status').eq('id', h.session_id).maybeSingle(),
+    db.from('sessions').select('id,session_date,start_time,location,status,is_free').eq('id', h.session_id).maybeSingle(),
     db.from('members').select('full_name').eq('id', h.host_member_id).maybeSingle(),
     earlyWeekPromo(db)
   ]);
@@ -102,7 +102,8 @@ async function landing(req, res, db, token) {
     station: h.section,
     host_first_name: F.firstName(host && host.full_name) || null,
     spots_left: status === 'active' ? h.spots - h.claimed : 0,
-    price_aed: Math.min(Number(h.price_aed), earlyWeekPrice(F.listPrice(), early)),
+    price_aed: sess && sess.is_free ? 0 : Math.min(Number(h.price_aed), earlyWeekPrice(F.listPrice(), early)),
+    free: !!(sess && sess.is_free),
     expires_at: h.expires_at,
     viewer
   });
@@ -113,7 +114,7 @@ async function hostView(req, res, db, sessionId) {
   if (!user) return res.status(401).json({ error: 'Not authenticated' });
   if (!UUID_RE.test(sessionId)) return res.status(400).json({ error: 'Missing session_id' });
   const [{ data: sess }, { data: bk }, { data: mine }] = await Promise.all([
-    db.from('sessions').select('id,session_date,start_time,location,status,capacity,stations').eq('id', sessionId).maybeSingle(),
+    db.from('sessions').select('id,session_date,start_time,location,status,capacity,stations,is_free').eq('id', sessionId).maybeSingle(),
     db.from('bookings').select('section,status,payment_type,amount_paid_aed').eq('member_id', user.id).eq('session_id', sessionId).maybeSingle(),
     db.from('booking_holds').select('id,token,spots,claimed,expires_at')
       .eq('host_member_id', user.id).eq('session_id', sessionId).eq('kind', 'invite')
@@ -133,7 +134,9 @@ async function hostView(req, res, db, sessionId) {
     ok: true, booked: true, open, section: bk.section,
     room: open ? Math.max(0, Math.min(7 - held, stationRoom)) : 0,
     station_room: stationRoom, held, holds,
-    price_aed: await priceForHost(db, bk),
+    // On a free Sunday friends join free too.
+    price_aed: sess.is_free ? 0 : await priceForHost(db, bk),
+    free: !!sess.is_free,
     session: sessionOut(sess)
   });
 }
@@ -144,21 +147,21 @@ async function createHold(req, res, db, user, body) {
   const sessionId = String(body.session_id || '');
   if (!UUID_RE.test(sessionId)) return res.status(400).json({ error: 'Missing session_id' });
   const [{ data: sess }, { data: bk }] = await Promise.all([
-    db.from('sessions').select('id,session_date,start_time,status').eq('id', sessionId).maybeSingle(),
+    db.from('sessions').select('id,session_date,start_time,status,is_free').eq('id', sessionId).maybeSingle(),
     db.from('bookings').select('status,payment_type,amount_paid_aed').eq('member_id', user.id).eq('session_id', sessionId).maybeSingle()
   ]);
   if (!sess) return res.status(404).json({ error: 'Session not found' });
   if (!F.bookingOpen(sess, Date.now())) return res.status(409).json({ error: 'Booking has closed for this Sunday.' });
   if (!bk || bk.status !== 'booked') return res.status(409).json({ error: 'Book your own spot first, then hold spots for friends.' });
 
-  const price = await priceForHost(db, bk);
+  const price = sess.is_free ? 0 : await priceForHost(db, bk);
   const { data: r, error } = await db.rpc('create_booking_hold', {
     p_host: user.id, p_session: sessionId, p_kind: 'invite', p_spots: spots, p_price: price, p_section: null, p_friends: null
   });
   if (error) throw new Error('create_booking_hold: ' + error.message);
   if (!r || !r.ok) return res.status(409).json({ error: (r && r.error) || 'Could not hold the spots.', room: r && r.room });
   return res.status(200).json({
-    ok: true, price_aed: price,
+    ok: true, price_aed: price, free: !!sess.is_free,
     hold: { id: r.hold_id, link: linkFor(req, r.token), spots, claimed: 0, left: spots, expires_at: r.expires_at }
   });
 }
@@ -211,7 +214,7 @@ async function invite(req, res, db, user, body) {
   if (!friend) return res.status(200).json(MISS);
 
   const [{ data: sess }, early] = await Promise.all([
-    db.from('sessions').select('session_date,start_time,location').eq('id', h.session_id).maybeSingle(),
+    db.from('sessions').select('session_date,start_time,location,is_free').eq('id', h.session_id).maybeSingle(),
     earlyWeekPromo(db)
   ]);
   const { sendFriendInvite, formatTime12 } = require('./_email');
@@ -222,7 +225,8 @@ async function invite(req, res, db, user, body) {
     to: email, firstName: F.firstName(friend.full_name), hostFirst,
     sessionDate: sess && sess.session_date, timeLabel: formatTime12(sess && sess.start_time),
     location: sess && sess.location, section: h.section,
-    priceAed: Math.min(Number(h.price_aed), earlyWeekPrice(F.listPrice(), early)),
+    priceAed: sess && sess.is_free ? 0 : Math.min(Number(h.price_aed), earlyWeekPrice(F.listPrice(), early)),
+    free: !!(sess && sess.is_free),
     link: linkFor(req, h.token), untilLabel: until
   });
   if (!sent.ok) {

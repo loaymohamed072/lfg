@@ -338,7 +338,7 @@ async function buildMeResponse(db, user) {
     db.from('member_packages').select('sessions_remaining,expires_at,status').eq('member_id', user.id),
     db.from('bookings').select('id', { count: 'exact', head: true }).eq('member_id', user.id).eq('status', 'attended'),
     db.from('bookings')
-      .select('id,session_id,status,booked_at,section,session:sessions(session_date,start_time,location)')
+      .select('id,session_id,status,booked_at,section,payment_type,session:sessions(session_date,start_time,location)')
       .eq('member_id', user.id)
       .in('status', ['booked', 'attended'])
       .order('booked_at', { ascending: false }),
@@ -381,6 +381,7 @@ async function buildMeResponse(db, user) {
       date_label: formatDate(b.session.session_date, b.session.start_time),
       location: b.session.location,
       section: b.section,
+      free: b.payment_type === 'free', // a cancelled free spot gives nothing back
       status: b.status === 'attended' ? 'Attended' : 'Booked',
       can_cancel: b.status === 'booked' && cancelCutoffOk(b.session.session_date)
     }));

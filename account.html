@@ -630,11 +630,11 @@
       if (!list.length) { wrap.innerHTML = emptySessionCard(); return; }
       wrap.innerHTML = list.map(function (b) {
         var statusText = b.status || 'Booked';
-        var section = b.section ? ' · Section ' + b.section : '';
+        var section = (b.section ? ' · Section ' + b.section : '') + (b.free ? ' · Free' : '');
         var cancelControl = '';
         if (b.status === 'Booked') {
           cancelControl = b.can_cancel
-            ? '<button class="lfg-cancel-btn" data-bid="' + b.id + '" style="background:transparent;border:1px solid rgba(220,80,80,0.45);color:#e58a8a;padding:8px 14px;font-family:var(--font-head,inherit);font-size:12px;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;transition:background 0.2s,color 0.2s;">Cancel</button>'
+            ? '<button class="lfg-cancel-btn" data-bid="' + b.id + '"' + (b.free ? ' data-free="1"' : '') + ' style="background:transparent;border:1px solid rgba(220,80,80,0.45);color:#e58a8a;padding:8px 14px;font-family:var(--font-head,inherit);font-size:12px;letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;transition:background 0.2s,color 0.2s;">Cancel</button>'
             : '<span class="meta" style="font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:0.1em;text-transform:uppercase;">Past 8 AM cutoff</span>';
         } else {
           cancelControl = '<span class="meta">' + statusText + '</span>';
@@ -650,7 +650,7 @@
       wrap.querySelectorAll('.lfg-cancel-btn').forEach(function (btn) {
         btn.addEventListener('mouseenter', function () { btn.style.background = 'rgba(220,80,80,0.12)'; });
         btn.addEventListener('mouseleave', function () { btn.style.background = 'transparent'; });
-        btn.addEventListener('click', function () { cancelBooking(btn.getAttribute('data-bid'), btn); });
+        btn.addEventListener('click', function () { cancelBooking(btn.getAttribute('data-bid'), btn, btn.getAttribute('data-free') === '1'); });
       });
       // Train with a friend: hold spots on this station and share the link (lfg-friends.js).
       if (window.lfgFriends) window.lfgFriends.mountAccount(wrap);
@@ -668,9 +668,13 @@
     }
 
     // Themed confirm - returns a Promise<boolean> so callers can `await` the user's choice.
-    function confirmCancel(bookingId) {
+    function confirmCancel(bookingId, free) {
       return new Promise(function (resolve) {
         var modal = el('cancelModal');
+        // A free Sunday cost nothing, so cancelling it gives nothing back (cancel_booking).
+        el('cancelModalBody').textContent = free
+          ? 'This was a free Sunday, so nothing comes back. Your spot opens for someone else.'
+          : 'Your credit goes straight back to your account. You can book another Sunday after.';
         modal.classList.add('show');
         var keep = el('cancelKeep');
         var go = el('cancelConfirm');
@@ -696,9 +700,9 @@
       });
     }
 
-    async function cancelBooking(bookingId, btn) {
+    async function cancelBooking(bookingId, btn, free) {
       if (!bookingId) return;
-      var ok = await confirmCancel(bookingId);
+      var ok = await confirmCancel(bookingId, free);
       if (!ok) return;
 
       btn.disabled = true;
@@ -708,7 +712,7 @@
       var r = await lfg.api('/api/cancel-booking', { method: 'POST', body: JSON.stringify({ booking_id: bookingId }) });
 
       if (r.ok && r.data && r.data.ok) {
-        toast('Booking cancelled. Credit returned to your account.', 'ok');
+        toast(r.data.free ? 'Booking cancelled. Your spot is open for someone else.' : 'Booking cancelled. Credit returned to your account.', 'ok');
         var me = await lfg.api('/api/me');
         if (me.ok && me.data) {
           el('creditsK').textContent = me.data.sessions_remaining != null ? me.data.sessions_remaining : 0;

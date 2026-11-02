@@ -69,7 +69,7 @@
 
   function shareText(o) {
     return 'Training with a friend is always better. I saved you a spot on Station ' + o.station +
-      ' at LFG Sunday Bootcamp, ' + o.when + '. Same price as a normal ticket: AED ' + o.price + '. Grab it here: ' + o.link;
+      ' at LFG Sunday Bootcamp, ' + o.when + '. ' + (o.free ? 'It’s free this Sunday' : 'Same price as a normal ticket: AED ' + o.price) + '. Grab it here: ' + o.link;
   }
 
   // Title and line for the /bootcamp?join= landing, by hold status.
@@ -112,6 +112,12 @@
   function mount(modalEl, session, hooks) {
     var slot = modalEl.querySelector('#lfgwFriends');
     if (!slot || !session) { picker = null; return; }
+    // A free Sunday has nothing to pay for friends: they join free from the host's link.
+    if (session.is_free) {
+      picker = null;
+      slot.innerHTML = '<div class="lfgw-text">Bringing friends? Book your spot, then hold spots for them on your station. They join free.</div>';
+      return;
+    }
     modalEl.classList.add('co'); // the widget's scrollable-modal class: rows make it taller
     picker = { s: session, h: hooks || {}, el: slot, rows: store[session.id] || (store[session.id] = []), own: '', group: false, tiles: [] };
     modalEl.querySelectorAll('.lfgw-sec').forEach(function (t) {
@@ -287,7 +293,7 @@
       }
       box.innerHTML = '<div class="lfgw-upsell lfgf-panel">' +
         '<div class="lfgw-upsell-h">Bring friends: hold spots on Station ' + esc(d.section) + '</div>' +
-        '<div class="lfgw-text">Training with a friend is always better. The spots stay locked for your friends for 24 hours, then open to everyone. Same price as a normal ticket: <b>AED ' + esc(d.price_aed) + '</b>.</div>' +
+        '<div class="lfgw-text">Training with a friend is always better. The spots stay locked for your friends for 24 hours, then open to everyone. ' + (d.free ? 'This Sunday is free, for them too.' : 'Same price as a normal ticket: <b>AED ' + esc(d.price_aed) + '</b>.') + '</div>' +
         make + '<div class="lfgw-promo-msg lfgf-msg lfgf-main-msg" role="status" aria-live="polite"></div>' +
         (d.holds.length ? '<div class="lfgf-holds">' + d.holds.map(function (h) { return holdHtml(d, h); }).join('') + '</div>' : '') +
         '</div>';
@@ -340,7 +346,7 @@
         });
         var wa = el.querySelector('.lfgf-wa');
         if (wa) wa.addEventListener('click', function () {
-          var url = 'https://wa.me/?text=' + encodeURIComponent(shareText({ station: d.section, when: whenText(d.session), price: d.price_aed, link: el.getAttribute('data-link') }));
+          var url = 'https://wa.me/?text=' + encodeURIComponent(shareText({ station: d.section, when: whenText(d.session), price: d.price_aed, free: d.free, link: el.getAttribute('data-link') }));
           // window.open with 'noopener' always returns null, so clear opener by hand instead.
           var win = window.open(url, '_blank');
           if (win) win.opener = null; else window.location.href = url;
@@ -430,12 +436,13 @@
     var html = '<div class="lfgw-eyebrow">Saved spot' + (d.status === 'active' ? ' · Sunday' : '') + '</div>' +
       '<div class="lfgw-title">' + esc(c.title) + '</div>';
     if (d.status === 'active') {
-      html += '<div class="lfgw-text">' + esc(when) + ' · ' + esc(d.session.location) + '.<br>Same price: <b>AED ' + esc(d.price_aed) + '</b>.</div>' +
+      html += '<div class="lfgw-text">' + esc(when) + ' · ' + esc(d.session.location) + '.<br>' + (d.free ? '<b>Free this Sunday.</b>' : 'Same price: <b>AED ' + esc(d.price_aed) + '</b>.') + '</div>' +
         '<div class="lfgw-text">' + d.spots_left + (d.spots_left === 1 ? ' spot' : ' spots') + ' left · held for ' +
         timeLeft(d.expires_at, Date.now()).replace(' left', '').replace('Under', 'under') + '</div>';
       if (!v) actions = btn('ghost', 'close', 'Close') + btn('primary', 'signin', 'Sign in to join');
       else if (v.is_host) { note = 'This is your invite link. Send it to your friends.'; actions = btn('ghost', 'close', 'Close') + btn('primary', 'copy', 'Copy link'); }
       else if (v.booked) { note = 'You’re already booked for this Sunday.'; actions = btn('ghost', 'close', 'Close') + '<a class="lfgw-btn lfgw-btn-primary" href="/account">My bookings</a>'; }
+      else if (d.free) actions = btn('ghost', 'close', 'Close') + btn('primary', 'credit', 'Join free');
       else if (v.credits > 0) actions = btn('ghost', 'card', 'Pay AED ' + esc(d.price_aed)) + btn('primary', 'credit', 'Use 1 credit');
       else actions = btn('ghost', 'close', 'Close') + btn('primary', 'card', 'Pay AED ' + esc(d.price_aed));
     } else {
@@ -472,7 +479,7 @@
       if (r.ok && r.data && r.data.ok) {
         clearJoin();
         w.result('You’re in.', 'Station <b>' + esc(r.data.section) + '</b> with ' + esc(host) + ' · ' + esc(when) +
-          '<br><br>Credits left: <b>' + esc(r.data.credits_left) + '</b>');
+          '<br><br>' + (d.free ? 'This Sunday is free. Nothing to pay.' : 'Credits left: <b>' + esc(r.data.credits_left) + '</b>'));
         w.refresh();
       } else {
         w.toast((r.data && r.data.error) || 'Could not book', true);

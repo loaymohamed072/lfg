@@ -596,3 +596,92 @@ test('early week: a code on a pack is weighed against the list price, on a singl
   assert.equal(packWithCode.status, 200, JSON.stringify(packWithCode.body));
   assert.equal(lastCharge().aed, 349.6);
 });
+
+// ------------------------------------------------------------------ free Sunday
+// Loay, 2 Nov 2026: the admin makes one Sunday free. /api/book books it with book_free (no
+// credit), every card path refuses it, a friend's invite joins it free, and only an admin can
+// flip it, only on a Sunday still to come.
+const book = require('../api/book');
+const setSessionFree = require('../api/admin/set-session-free');
+const freeSessions = () => [{ id: SID, session_date: '2099-01-04', start_time: '12:45:00', location: 'TWF', status: 'open', capacity: 32, stations: 4, is_free: true }];
+const bookingRpcs = () => DB.rpcCalls.map((c) => c.name).filter((n) => n !== 'ensure_referral_code');
+
+test('free Sunday: /api/book books it with book_free, and the email promises no credit back', async () => {
+  mail.length = 0;
+  DB = newDb({
+    tables: tables({ sessions: freeSessions() }),
+    rpc: { ensure_referral_code: () => ({}), book_free: () => ({ ok: true, booking_id: 'bk-free', section: 'A', credits_left: 2, free: true }) },
+    tokens: { tok: BUYER }, authUsers: [BUYER]
+  });
+  const r = await call(book, { token: 'tok', body: { session_id: SID, section: 'A' } });
+  assert.equal(r.status, 200, JSON.stringify(r.body));
+  assert.equal(r.body.free, true);
+  assert.deepEqual(bookingRpcs(), ['book_free']);
+  assert.equal(mail.length, 1);
+  assert.match(mail[0].html, /Free Sunday · nothing to pay/);
+  assert.match(mail[0].html, /so someone else can take it/);
+  assert.doesNotMatch(mail[0].html, /credit goes straight back/);
+});
+
+test('free Sunday: a normal Sunday still spends a credit', async () => {
+  DB = newDb({
+    tables: tables(),
+    rpc: { ensure_referral_code: () => ({}), book_with_credit: () => ({ ok: true, booking_id: 'bk-c', section: 'A', credits_left: 1 }) },
+    tokens: { tok: BUYER }, authUsers: [BUYER]
+  });
+  const r = await call(book, { token: 'tok', body: { session_id: SID, section: 'A' } });
+  assert.equal(r.status, 200, JSON.stringify(r.body));
+  assert.deepEqual(bookingRpcs(), ['book_with_credit']);
+});
+
+test('free Sunday: no card path opens Stripe for it', async () => {
+  stripeCalls.length = 0;
+  DB = newDb({ tables: tables({ sessions: freeSessions() }), rpc: { ensure_referral_code: () => ({}) }, tokens: { tok: BUYER }, authUsers: [BUYER] });
+  const single = await call(checkout, { token: 'tok', body: { kind: 'single', session_id: SID, section: 'A' } });
+  const group = await call(checkout, { token: 'tok', body: { kind: 'single', session_id: SID, section: 'A', friends: [{ name: 'Pal', email: 'pal@example.com' }] } });
+  for (const r of [single, group]) {
+    assert.equal(r.status, 409, JSON.stringify(r.body));
+    assert.equal(r.body.free, true);
+  }
+  assert.equal(stripeCalls.filter((c) => c[0] === 'create').length, 0);
+  assert.equal(DB.tables.payments.length, 0);
+  assert.equal(DB.rpcCalls.filter((c) => c.name === 'create_booking_hold').length, 0);
+});
+
+test('free Sunday: a friend joins from the invite free, and paying for it by card is refused', async () => {
+  stripeCalls.length = 0; mail.length = 0;
+  const TOKEN = 'f'.repeat(64);
+  const hold = { id: HOLD, session_id: SID, section: 'B', kind: 'invite', token: TOKEN, host_member_id: BUYER.id, spots: 2, claimed: 0,
+    price_aed: 0, expires_at: future(), cancelled_at: null };
+  DB = newDb({
+    tables: tables({ sessions: freeSessions(), booking_holds: [hold] }),
+    rpc: { ensure_referral_code: () => ({}),
+           book_from_hold: () => ({ ok: true, booking_id: 'bk-j', section: 'B', session_id: SID, host_member_id: BUYER.id, via: 'hold', credits_left: 0 }) },
+    tokens: { tok: MEMBER }, authUsers: [BUYER, MEMBER]
+  });
+  const card = await call(checkout, { token: 'tok', body: { kind: 'single', join: TOKEN } });
+  assert.equal(card.status, 409, JSON.stringify(card.body));
+  assert.equal(card.body.free, true);
+  const r = await call(book, { token: 'tok', body: { join: TOKEN } });
+  assert.equal(r.status, 200, JSON.stringify(r.body));
+  assert.equal(DB.rpcCalls.find((x) => x.name === 'book_from_hold').args.p_payment, 'free');
+  assert.equal(stripeCalls.filter((x) => x[0] === 'create').length, 0);
+  assert.match(mail[0].html, /Free Sunday · nothing to pay/);
+});
+
+test('free Sunday: only an admin can flip it, and only on a Sunday still to come', async () => {
+  const past = { id: 'cccccccc-0000-4000-8000-000000000001', session_date: '2020-01-05', start_time: '12:45:00', status: 'open', is_free: false };
+  DB = newDb({
+    tables: tables({ sessions: [Object.assign({}, freeSessions()[0], { is_free: false }), past] }),
+    tokens: { mem: MEMBER, adm: ADMIN }, authUsers: [MEMBER, ADMIN]
+  });
+  const denied = await call(setSessionFree, { token: 'mem', body: { sessions: [{ session_id: SID, is_free: true }] } });
+  assert.equal(denied.status, 403);
+  const bad = await call(setSessionFree, { token: 'adm', body: { sessions: [{ session_id: SID, is_free: 'yes' }] } });
+  assert.equal(bad.status, 400);
+  const ok = await call(setSessionFree, { token: 'adm', body: { sessions: [{ session_id: SID, is_free: true }, { session_id: past.id, is_free: true }] } });
+  assert.equal(ok.status, 200, JSON.stringify(ok.body));
+  assert.equal(ok.body.applied, 1);
+  assert.equal(DB.tables.sessions.find((s) => s.id === SID).is_free, true);
+  assert.equal(DB.tables.sessions.find((s) => s.id === past.id).is_free, false);
+});

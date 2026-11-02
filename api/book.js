@@ -3,6 +3,8 @@
 // (No credits / full / already booked) so the UI can offer to buy instead.
 // Body { join: TOKEN } instead books a friend onto a host's held spot with the friend's
 // OWN credit (book_from_hold); the station comes from the hold.
+// On a Sunday the admin made free (sessions.is_free) both paths book at AED 0 and take no
+// credit: book_free, and book_from_hold with 'free'.
 // Also fires a branded LFG confirmation email + .ics calendar invite.
 const { admin, getUser, ensureMember } = require('./_lib');
 const { sendBookingConfirmation } = require('./_email');
@@ -26,13 +28,14 @@ module.exports = async (req, res) => {
   const db = admin();
   try {
     await ensureMember(db, user);
-    const { data, error } = await db.rpc('book_with_credit', { p_member: user.id, p_session: sessionId, p_section: section });
+    const { data: sess } = await db.from('sessions').select('session_date,location,is_free').eq('id', sessionId).maybeSingle();
+    const free = !!(sess && sess.is_free);
+    const { data, error } = await db.rpc(free ? 'book_free' : 'book_with_credit', { p_member: user.id, p_session: sessionId, p_section: section });
     if (error) throw new Error(error.message);
     if (!data || !data.ok) return res.status(409).json(data || { ok: false, error: 'Could not book' });
 
-    // Send confirmation. Look up the session so we know the date + location.
+    // Send confirmation with the session's date + location.
     try {
-      const { data: sess } = await db.from('sessions').select('session_date,location').eq('id', sessionId).maybeSingle();
       if (sess) {
         const r = await sendBookingConfirmation(db, {
           kind: 'single',
@@ -42,7 +45,8 @@ module.exports = async (req, res) => {
           section: data.section || section,
           location: sess.location || 'CrossFit Alioth',
           paidAmount: 0,
-          creditsLeft: data.credits_left
+          creditsLeft: data.credits_left,
+          free
         });
         if (!r.ok) console.warn('[book] confirmation email skipped:', r.error);
       }
@@ -67,10 +71,11 @@ async function bookFromJoin(res, user, token) {
     const { data: h } = await db.from('booking_holds').select('id,session_id,host_member_id')
       .eq('token', token).eq('kind', 'invite').maybeSingle();
     if (!h) return res.status(404).json({ ok: false, error: 'This invite link is not valid.' });
-    const { data: sess } = await db.from('sessions').select('session_date,start_time,location,status').eq('id', h.session_id).maybeSingle();
+    const { data: sess } = await db.from('sessions').select('session_date,start_time,location,status,is_free').eq('id', h.session_id).maybeSingle();
     if (!F.bookingOpen(sess, Date.now())) return res.status(409).json({ ok: false, error: 'Booking has closed for this Sunday.' });
+    const free = !!sess.is_free;
 
-    const { data, error } = await db.rpc('book_from_hold', { p_member: user.id, p_hold: h.id, p_payment: 'credit', p_amount: 0 });
+    const { data, error } = await db.rpc('book_from_hold', { p_member: user.id, p_hold: h.id, p_payment: free ? 'free' : 'credit', p_amount: 0 });
     if (error) throw new Error(error.message);
     if (!data || !data.ok) return res.status(409).json(data || { ok: false, error: 'Could not book' });
 
@@ -80,7 +85,7 @@ async function bookFromJoin(res, user, token) {
       const r = await sendBookingConfirmation(db, {
         kind: 'single', memberId: user.id, sessionId: h.session_id, sessionDate: sess.session_date,
         section: data.section, location: sess.location || 'CrossFit Alioth', paidAmount: 0,
-        creditsLeft: data.credits_left,
+        creditsLeft: data.credits_left, free,
         note: hostFirst ? "You're training with " + hostFirst + '.' : null
       });
       if (!r.ok) console.warn('[book join] confirmation email skipped:', r.error);

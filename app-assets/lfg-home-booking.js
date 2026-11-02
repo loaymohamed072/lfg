@@ -187,7 +187,7 @@
     })();
 
     function setBookBtnLabel() {
-      var label = (loggedIn && credits > 0) ? 'Book Now · 1 credit' : 'Book Now · ' + disc(singlePrice) + ' AED';
+      var label = sessions[0] && sessions[0].is_free ? 'Book Now · Free' : (loggedIn && credits > 0) ?'Book Now · 1 credit' : 'Book Now · ' + disc(singlePrice) + ' AED';
       bookBtn.innerHTML = label + ARROW;
     }
 
@@ -222,17 +222,20 @@
         '<div class="lfgw-feat-date">' + c.full + ' · ' + fmtTime(s) + '</div>' +
         '<div class="lfgw-feat-sub">' + (s.location || 'CrossFit Alioth') + '</div>' +
         '<div class="lfgw-feat-stats">' + stats + '</div>' +
-        (promo.active ? '<div class="lfgw-feat-promo"><b>' + promo.percent + '% off</b> until ' + promo.ends + ' · Book now and get <s>AED ' + singlePrice + '</s> <b>AED ' + disc(singlePrice) + '</b></div>' : '');
+        (s.is_free ? '<div class="lfgw-feat-promo"><b>Free this Sunday.</b> Book your spot, nothing to pay.</div>'
+          : promo.active ? '<div class="lfgw-feat-promo"><b>' + promo.percent + '% off</b> until ' + promo.ends + ' · Book now and get <s>AED ' + singlePrice + '</s> <b>AED ' + disc(singlePrice) + '</b></div>' : '');
     }
     // Homepage: a pill on the bootcamp CTA (hero on desktop, sticky bar on
     // mobile) so a visitor who never scrolls still sees the offer. No-op on
     // pages without those buttons.
     function renderHeroPromo() {
+      // A free next Sunday outranks the early-week discount on the pill.
+      var freeNext = !!(sessions[0] && sessions[0].is_free);
       document.querySelectorAll('.hero-actions-desktop a[href="/bootcamp"], .mobile-sticky-bar a[href="/bootcamp"]').forEach(function (a) {
         var pill = a.querySelector('.hero-promo-pill');
-        if (!promo.active) { if (pill) pill.remove(); a.classList.remove('has-promo'); return; }
+        if (!promo.active && !freeNext) { if (pill) pill.remove(); a.classList.remove('has-promo'); return; }
         if (!pill) { pill = document.createElement('span'); pill.className = 'hero-promo-pill'; a.appendChild(pill); a.classList.add('has-promo'); }
-        pill.textContent = promo.percent + '% off until Wed';
+        pill.textContent = freeNext ? 'Free this Sunday' : promo.percent + '% off until Wed';
       });
     }
 
@@ -243,7 +246,7 @@
         var c = fmtCard(s), sold = s.sold_out ? ' lfgw-soldout' : '';
         return '<button class="bootcamp-date-card' + sold + '" type="button" data-sid="' + s.id + '"' + (s.sold_out ? ' disabled' : '') + '>' +
           '<span class="bdc-day">SUN</span><span class="bdc-date">' + c.date + '</span>' +
-          '<span class="bdc-time">' + (s.sold_out ? 'Sold out' : 'Open') + '</span></button>';
+          '<span class="bdc-time">' + (s.sold_out ? 'Sold out' : s.is_free ? 'Free' : 'Open') + '</span></button>';
       }).join('');
       datesWrap.querySelectorAll('[data-sid]').forEach(function (b) {
         b.addEventListener('click', function () { startBooking(b.getAttribute('data-sid')); });
@@ -342,11 +345,13 @@
       activeBookingId = sessionId; pickedSection = null; appliedPromo = null;
       var c = fmtCard(s);
       var hasCredits = credits > 0;
+      // A Sunday the admin made free: no card, no credit, no promo code, no pack pitch.
+      var free = !!s.is_free;
       // Four Sundays in a row on single tickets: say what a pack would cost THEM,
       // in the one place they are about to pay again (Omar, 30 Sep 2026). The
       // 8-credit pack is the one the site pushes; the biggest stands in if it
       // is ever off sale.
-      var streakPack = (!hasCredits && streak >= 4 && packages.length)
+      var streakPack = (!hasCredits && !free && streak >= 4 && packages.length)
         ? (packages.filter(function (p) { return p.sessions_count === 8; })[0] || packages[packages.length - 1])
         : null;
       var streakHtml = streakPack
@@ -354,7 +359,7 @@
           '-credit pack makes each one <b>AED ' + Math.round(packPrice(streakPack) / streakPack.sessions_count) + '</b> instead of ' + disc(singlePrice) + '. ' +
           '<button type="button" class="lfgw-streak-go" data-pkg="' + streakPack.id + '">See the pack</button></div>'
         : '';
-      var upsell = hasCredits ? '' :
+      var upsell = hasCredits || free ? '' :
         '<div class="lfgw-upsell"><div class="lfgw-upsell-h">Train more, pay less</div>' +
         packages.map(function (p) {
           var anchor = singlePrice * p.sessions_count;
@@ -362,14 +367,16 @@
             '<button class="lfgw-pack-buy" data-pkg="' + p.id + '">Get</button></div>';
         }).join('') + '</div>';
       // Promo input only matters for the paid path; hide it when the user is using credits.
-      var promoHtml = hasCredits ? '' : promoBlockMarkup();
+      var promoHtml = hasCredits || free ? '' : promoBlockMarkup();
       modalEl.innerHTML =
         '<div class="lfgw-eyebrow">Reserve your spot</div>' +
         '<div class="lfgw-title">' + c.full + ' · ' + fmtTime(s) + '</div>' +
-        '<div class="lfgw-text">' + (hasCredits
+        '<div class="lfgw-text">' + (free
+          ? '<b>This Sunday is free.</b> Pick a station, then book. Nothing to pay.'
+          : hasCredits
           ? 'You have <b>' + credits + ' credit' + (credits === 1 ? '' : 's') + '</b>. Pick a station, then book.'
           : 'Pick a station, then book a single for <b>' + disc(singlePrice) + ' AED</b>' + (promo.active ? ' <s>' + singlePrice + '</s>' : '') + '.') + '</div>' +
-        (hasCredits ? '' : promoLine()) +
+        (hasCredits || free ? '' : promoLine()) +
         streakHtml +
         '<div class="lfgw-seclabel">Pick your station</div>' +
         '<div class="lfgw-secgrid">' + s.sections.map(function (sec) {
@@ -384,7 +391,7 @@
         '<div class="lfgw-terms">' + TERMS_LINE + '</div>' +
         upsell;
       renderActions();
-      if (!hasCredits) wirePromoBlock('single', null);
+      if (!hasCredits && !free) wirePromoBlock('single', null);
       modalEl.querySelectorAll('.lfgw-sec').forEach(function (t) {
         t.addEventListener('click', function () {
           if (t.classList.contains('full')) return; // checked on click: a group can open a waiting station
@@ -447,15 +454,17 @@
       // Friends added in the picker (lfg-friends.js): everyone pays by card, together.
       var g = window.lfgFriends ? window.lfgFriends.state(activeBookingId) : { n: 0, ok: true };
       var dis = pickedSection && g.ok ? '' : 'disabled';
+      // A free Sunday books through /api/book like a credit, and the server takes no credit.
+      var fs = byId(activeBookingId), free = !!(fs && fs.is_free);
       var price = appliedPromo ? appliedPromo.final_amount : disc(singlePrice);
       // No-break spaces: on a phone the label wraps at the dot, never between AED and the amount.
-      var label = g.n ? 'Pay for ' + (g.n + 1) + ' · AED ' + Math.round((price + g.n * disc(singlePrice)) * 100) / 100
+      var label = free ? 'Book · Free' : g.n ?'Pay for ' + (g.n + 1) + ' · AED ' + Math.round((price + g.n * disc(singlePrice)) * 100) / 100
         : (credits > 0 ? 'Use 1 credit' : 'Book · AED ' + price);
       document.getElementById('lfgwActions').innerHTML =
         '<button class="lfgw-btn lfgw-btn-ghost" id="lfgwCancel">Cancel</button>' +
         '<button class="lfgw-btn lfgw-btn-primary" id="lfgwGo" ' + dis + '>' + label + '</button>';
       document.getElementById('lfgwCancel').addEventListener('click', closeModal);
-      document.getElementById('lfgwGo').addEventListener('click', credits > 0 && !g.n ? doCredit : doBuy);
+      document.getElementById('lfgwGo').addEventListener('click', free || (credits > 0 && !g.n) ? doCredit : doBuy);
     }
 
     async function doCredit() {
@@ -465,10 +474,11 @@
       var res = await window.lfg.api('/api/book', { method: 'POST', body: JSON.stringify({ session_id: activeBookingId, section: pickedSection, mc_id: window.lfg.mcId ? window.lfg.mcId() : null }) });
       if (res.ok && res.data.ok) {
         credits = res.data.credits_left; injectHeader(); setBookBtnLabel();
-        showResult('You’re in.', fmtCard(s).full + ' · ' + fmtTime(s) + ' · Station <b>' + res.data.section + '</b><br><br>Credits left: <b>' + credits + '</b>');
+        showResult('You’re in.', fmtCard(s).full + ' · ' + fmtTime(s) + ' · Station <b>' + res.data.section + '</b><br><br>' +
+          (res.data.free ? 'This Sunday is free. Nothing to pay.' : 'Credits left: <b>' + credits + '</b>'));
         if (window.lfgFriends) window.lfgFriends.afterBooking(activeBookingId);
         refresh();
-      } else { showToast((res.data && res.data.error) || 'Could not book', true); btn.disabled = false; btn.textContent = 'Use 1 credit'; }
+      } else { showToast((res.data && res.data.error) || 'Could not book', true); btn.disabled = false; btn.textContent = s && s.is_free ? 'Book · Free' : 'Use 1 credit'; }
     }
     // Embedded Stripe checkout - opens the payment form in a window inside the modal
     // instead of redirecting off-site. Returns true once the form is mounted, false if

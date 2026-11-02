@@ -747,3 +747,18 @@ Flags, no BLOCK:
 - Carried, not touched here: sharp 0.34.5 high CVEs (GHSA-f88m-g3jw-g9cj, GHSA-rgj7-g3m4-5g8c, GHSA-wq5f-xc86-pv6w), legacy baseline 2/9, one header to harden, the CSP flags above.
 
 Verdict for this change: FLAG.
+
+## 2026-11-03 Free Sunday and singles-only early-week discount: change review before deploy
+
+Scope: `sessions.is_free`, `bookings.payment_type` 'free', new `book_free`, 'free' branches in `book_from_hold` and `cancel_booking` (sql/2026-11-03_free_sunday.sql, applied), `POST /api/admin/set-session-free`, free routing in `/api/book`, card refusal in `/api/checkout`, free pricing in `/api/friends`, `/api/next-bootcamp`, emails, widget, account and admin pages. Same commit set: the early-week discount now prices singles only (pack branch of checkout and validate-promo). ASVS L2.
+
+Checked, with evidence:
+- Authorization (V8): `book_free`, `book_from_hold`, `cancel_booking` executable by service_role only (has_function_privilege anon/authenticated false; Supabase advisors list none of them). Anon-key probe: `rpc('book_free')` and `rpc('cancel_booking')` refused with 42501. `sessions` has RLS on with no policies, so the public key's UPDATE grant reaches no rows (anon update of `is_free` changed 0 rows).
+- Admin route: member token 403, malformed body 400, admin 200; only today-or-later Sundays change (past Sunday untouched in the unit test and the e2e).
+- No IDOR: `/api/book` books for the verified token's user only; `cancel_booking` still checks ownership.
+- Business logic: a free booking cancels with `credit_returned: false` and no new pack (the old function minted a 1-credit pack for every pack-less booking, which a free Sunday would have turned into free AED 99 credits). Credits are untouched by a free booking. Every card path (single, group, invite join) answers 409 on a free Sunday, so Stripe never sees one. `book_free` and `book_from_hold('free')` both re-check `is_free` inside the locked transaction.
+- Tests: scripts/friends-api.test.js 36/36 (5 free-Sunday, 2 early-week tests red on the old code). E2E against production data with Stripe TEST and throwaway accounts: 29/29 free Sunday, 62/62 pricing; every row removed, confirmed by SQL.
+
+Gate (`security-gate.sh --legacy --url https://www.lfgdubai.com`): FLAG, nothing new. Carried: legacy baseline 2/9, CSP without script-src, sharp 0.34.5 (dev-only image tool, 3 advisories), semgrep "JWT" hits are the public Supabase key in pages (by design), web_vuln_scan innerHTML leads (the new strings are static or escaped). Supabase advisors unchanged: `short_name` search_path, `vector` in public, older SECURITY DEFINER functions callable by anon/authenticated (`is_coach`, `bootcamp_checkin_state`, `crm_*`, `group_leaderboard`, `lfg_get_stats`, `mark_password_set`), leaked-password protection off.
+
+Verdict: FLAG.

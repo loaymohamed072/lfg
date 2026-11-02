@@ -46,7 +46,7 @@ module.exports = async (req, res) => {
     const nowMs = Date.now();
     const todayStr = new Date(new Date().toDateString()).toISOString().slice(0, 10);
     const fromStr = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-    const SEL = 'id,session_date,start_time,location,capacity,max_capacity,bump_increment,status,stations,photo_url,theme';
+    const SEL = 'id,session_date,start_time,location,capacity,max_capacity,bump_increment,status,stations,photo_url,theme,is_free';
 
     // Calendar + recent group photos (past/today, newest first) in parallel.
     const [sessRes, photoRes] = await Promise.all([
@@ -132,6 +132,8 @@ module.exports = async (req, res) => {
         stations: n,
         photo_url: s.photo_url || null,
         theme: s.theme || null,
+        // A Sunday the admin made free: booked at AED 0, no card, no credit spent.
+        is_free: !!s.is_free,
         max_capacity: s.max_capacity || s.capacity,
         booked: e.total,
         held: e.held,

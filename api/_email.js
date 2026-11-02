@@ -162,13 +162,15 @@ function formatTime12(startTime) {
 // Build the booking-confirmation email for a single Sunday bootcamp.
 // note: one plain line under the greeting (a group, or the friend you're training with).
 // bookedBy: first name of the member who paid for this person's ticket.
-function buildSingleConfirmation({ firstName, sessionDate, section, location, paidAmount, creditsLeft, timeLabel, note, bookedBy }) {
+function buildSingleConfirmation({ firstName, sessionDate, section, location, paidAmount, creditsLeft, timeLabel, note, bookedBy, free }) {
   const niceDate = formatDubaiDate(sessionDate);
   const when = timeLabel || '12:30 PM';
   const preheader = (bookedBy ? bookedBy + ' booked you in for ' : "You're booked for ") + niceDate + ' at ' + when + '.';
   const greeting = firstName ? 'Hey ' + escapeHtml(firstName) + ',' : 'Hey,';
   const paidLine = bookedBy
     ? '<div style="margin-top:6px;font-size:13px;color:rgba(255,255,255,0.55);">Booked by ' + escapeHtml(bookedBy) + '</div>'
+    : free
+    ? '<div style="margin-top:6px;font-size:13px;color:rgba(255,255,255,0.55);">Free Sunday · nothing to pay</div>'
     : paidAmount > 0
     ? '<div style="margin-top:6px;font-size:13px;color:rgba(255,255,255,0.55);">Paid AED ' + escapeHtml(String(paidAmount)) + '</div>'
     : (typeof creditsLeft === 'number'
@@ -176,7 +178,10 @@ function buildSingleConfirmation({ firstName, sessionDate, section, location, pa
         : '');
   const lead = bookedBy ? escapeHtml(bookedBy) + ' booked you a spot. See you on the turf.' : 'See you on the turf.';
   const noteHtml = note ? `<p style="margin:-8px 0 22px;color:rgba(255,255,255,0.75);font-size:14px;line-height:1.55;">${escapeHtml(note)}</p>` : '';
-  const cancelLine = bookedBy
+  // A free spot gives nothing back when cancelled (cancel_booking), so its line says so.
+  const cancelLine = free
+    ? 'Need to cancel? You can free your spot from <a href="https://www.lfgdubai.com/account" style="color:#999966;text-decoration:underline;">My Account</a> any time up to 8:00 AM Dubai time on session day, so someone else can take it.'
+    : bookedBy
     ? 'Need to cancel? Sign in to <a href="https://www.lfgdubai.com/account" style="color:#999966;text-decoration:underline;">My Account</a> with this email any time up to 8:00 AM Dubai time on session day, and a credit goes to your account.'
     : 'Need to cancel? You can free your spot from <a href="https://www.lfgdubai.com/account" style="color:#999966;text-decoration:underline;">My Account</a> any time up to 8:00 AM Dubai time on session day, and your credit goes straight back.';
 
@@ -229,7 +234,7 @@ async function sendBookingConfirmation(db, args) {
     const firstName = (member.full_name || '').split(/\s+/)[0] || null;
 
     if (kind === 'single') {
-      const { sessionDate, section, location, paidAmount, sessionId, note, bookedBy } = args;
+      const { sessionDate, section, location, paidAmount, sessionId, note, bookedBy, free } = args;
       // Read the session's real start time (set from the Schedule tab) so the email,
       // its time line, and the calendar invite all reflect whatever the owner configured.
       let startTime = null;
@@ -238,7 +243,7 @@ async function sendBookingConfirmation(db, args) {
         startTime = sess && sess.start_time ? sess.start_time : null;
       } catch (e) { /* fall back to default below */ }
       const timeLabel = formatTime12(startTime);
-      const html = buildSingleConfirmation({ firstName, sessionDate, section, location, paidAmount, timeLabel, note, bookedBy });
+      const html = buildSingleConfirmation({ firstName, sessionDate, section, location, paidAmount, timeLabel, note, bookedBy, free });
       const ics = buildIcs({
         uid: 'lfg-' + sessionId + '-' + memberId + '@lfgdubai.com',
         startDubaiIso: sessionDate + 'T' + (startTime || '12:30:00') + '+04:00',
@@ -278,7 +283,7 @@ async function sendBookingConfirmation(db, args) {
 
 // Train with a friend: a member saved spots on their station and sent the link to an
 // existing member by email (api/friends.js). Only ever sent to an address already on LFG.
-function buildFriendInvite({ firstName, hostFirst, sessionDate, timeLabel, location, section, priceAed, link, untilLabel }) {
+function buildFriendInvite({ firstName, hostFirst, sessionDate, timeLabel, location, section, priceAed, link, untilLabel, free }) {
   const greeting = firstName ? 'Hey ' + escapeHtml(firstName) + ',' : 'Hey,';
   const host = escapeHtml(hostFirst || 'Your friend');
   const niceDate = formatDubaiDate(sessionDate);
@@ -290,11 +295,11 @@ function buildFriendInvite({ firstName, hostFirst, sessionDate, timeLabel, locat
         <div style="font-family:'Barlow Condensed','Helvetica Neue',sans-serif;font-size:11px;letter-spacing:0.26em;text-transform:uppercase;color:#999966;margin-bottom:6px;">Your saved spot</div>
         <div style="font-family:'Barlow Condensed','Helvetica Neue',sans-serif;font-weight:700;font-size:24px;letter-spacing:0.02em;color:#fff;line-height:1.1;">${escapeHtml(niceDate)} · ${escapeHtml(timeLabel || '12:30 PM')}</div>
         <div style="margin-top:10px;color:rgba(255,255,255,0.7);font-size:14px;">${escapeHtml(location || 'CrossFit Alioth')} · Station <b style="color:#999966;">${escapeHtml(section)}</b></div>
-        <div style="margin-top:6px;font-size:13px;color:rgba(255,255,255,0.55);">Same price as a normal ticket: AED ${escapeHtml(String(priceAed))}</div>
+        <div style="margin-top:6px;font-size:13px;color:rgba(255,255,255,0.55);">${free ? 'Free this Sunday, for you too.' : 'Same price as a normal ticket: AED ' + escapeHtml(String(priceAed))}</div>
       </td></tr>
     </table>
     <a href="${escapeHtml(link)}" style="display:inline-block;margin-top:22px;background:#999966;color:#0A0A0A;font-family:'Barlow Condensed','Helvetica Neue',sans-serif;font-weight:800;font-size:14px;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;padding:14px 28px;">Join ${host}</a>
-    <p style="margin:22px 0 0;font-size:13px;color:rgba(255,255,255,0.5);line-height:1.6;">Pay by card or use one of your credits. The spot is held until ${escapeHtml(untilLabel)} Dubai time, then it opens to everyone.</p>
+    <p style="margin:22px 0 0;font-size:13px;color:rgba(255,255,255,0.5);line-height:1.6;">${free ? 'No card and no credit needed.' : 'Pay by card or use one of your credits.'} The spot is held until ${escapeHtml(untilLabel)} Dubai time, then it opens to everyone.</p>
   `;
   return emailShell({ preheader: (hostFirst || 'Your friend') + ' saved you a spot at LFG Sunday Bootcamp.', bodyHtml: body });
 }
