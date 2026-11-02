@@ -727,3 +727,23 @@ stand). No BLOCK on shipped surface. Runtime authz unchanged (no auth or RLS tou
 Verdict for this change: FLAG (carried CSP and baseline flags stand). No BLOCK on shipped surface. Runtime authz unchanged (no auth or RLS touched).
 
 Round 3 (same day, same branch): presentation edits only. `admin.html` starts the check-in feed with the Today numbers instead of after them (same GET route, same auth), rounds the revenue tiles to whole dirhams, formats Members dates through `dayLabel()` (output still escaped with `esc()`), changes two subtitles, and writes the revenue comparison bars with one new `innerHTML` at the Today renderer that carries only two rounded percentages, one `toLocaleString` amount and fixed labels. `lfg-admin-fx.js` holds late cards and the board height; the skin adds CSS. `web_vuln_scan` FLAG 83 leads (was 80: the new bars sink plus two existing sinks whose line numbers moved); none takes a server string. No route, auth, RLS, CORS or header change. Verdict unchanged: FLAG.
+
+## 2026-11-02 Train with a friend (ea5be07..b7c297f): change review before deploy
+
+Scope: new `api/friends.js` and `api/_friends.js`; edits to checkout, book, sessions, `_lib` (Stripe fulfilment), `_email`, cancel-booking, send-login-link, the admin roster, capacity and stations routes, the account, admin and login pages, `app-assets/lfg-friends.js`; `sql/2026-11-02_train_with_friends.sql`, applied to production on 2 Nov after Loay's OK. All 12 function bodies in the database match the committed file byte for byte (md5 of `prosrc` against the file).
+
+Checked:
+- Data access: `booking_holds` and `booking_hold_invites` have RLS on, no policies, and every privilege revoked from anon and authenticated. Every new or replaced function is SECURITY DEFINER with `search_path` pinned, EXECUTE revoked from public, anon and authenticated, granted to service_role only. Runtime: the anon key gets 401 (42501) on both tables and on `rpc/create_booking_hold`. Advisors after the migration: the two tables carry only the INFO "RLS enabled, no policy" every service-role table has; no new WARN or ERROR.
+- Auth: `api/friends.js` verifies the Supabase JWT on the server (`getUser` → `auth.getUser`); host-only operations check `host_member_id` inside the functions.
+- Payments: the Stripe webhook verifies the signature over the raw body (`constructEvent`) before any side effect; `claim_fulfilment` is the atomic dedupe; `book_group_paid` stores its outcome on the hold, so a retry repeats the same refund under the one idempotency key and emails once.
+- XSS: the 13 `innerHTML` sinks in `app-assets/lfg-friends.js` interpolate through `esc()` (the title carrying the host's name, location, date, price) or static and computed values.
+- Secrets: leak scan PASS; gitleaks PASS including history. The three semgrep "JWT" hits are the anon key (role=anon); this diff adds none.
+- Invite tokens: two random UUIDs, about 244 random bits.
+
+Flags, no BLOCK:
+- Inviting by email tells a signed-in host whether an address belongs to an LFG member (the "exact email" choice). Bounded by 10 attempts per link and 20 per host per day (`record_hold_invite`).
+- Paying for a group reveals, after the charge, whether a typed friend was already booked that Sunday (their ticket is refunded).
+- A buyer who reopens the card form every 30 minutes can keep up to 8 spots held; bounded by 16 checkout-held spots per Sunday.
+- Carried, not touched here: sharp 0.34.5 high CVEs (GHSA-f88m-g3jw-g9cj, GHSA-rgj7-g3m4-5g8c, GHSA-wq5f-xc86-pv6w), legacy baseline 2/9, one header to harden, the CSP flags above.
+
+Verdict for this change: FLAG.
