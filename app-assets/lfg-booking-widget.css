@@ -260,3 +260,10 @@ a.lfgw-btn { display: inline-flex; align-items: center; justify-content: center;
 .lfgw-co-spin { display: flex; align-items: center; justify-content: center; gap: 11px; min-height: 260px; color: rgba(255,255,255,0.55); font-family: 'Barlow', sans-serif; font-size: 13px; letter-spacing: .03em; }
 .lfgw-spinner { width: 20px; height: 20px; border: 2px solid rgba(153,153,102,0.25); border-top-color: #999966; border-radius: 50%; animation: lfgw-spin .7s linear infinite; flex: none; }
 @keyframes lfgw-spin { to { transform: rotate(360deg); } }
+
+/* Train with a friend: a friend's name and email read as typed, not shouted
+   like a promo code. The rows borrow the promo field's box and face. */
+.lfgw-promo-field input.lfgf-in {
+  text-transform: none;
+  letter-spacing: normal;
+}
