@@ -795,6 +795,8 @@ async function fulfillCheckoutSession(db, sessionObj) {
   // Set when the card was charged but nobody got a seat and the money went back. Skips the
   // promo redemption and the CRM tags below: nothing was bought.
   let refunded = false;
+  // Set when the promo's seat itself was refunded (a group buyer who already had a spot).
+  let promoVoid = false;
 
   if (md.kind === 'package') {
     const { data: pkg, error: pkgErr } = await db.from('packages').select('*').eq('id', md.package_id).single();
@@ -823,18 +825,26 @@ async function fulfillCheckoutSession(db, sessionObj) {
   } else if (md.kind === 'single' && md.session_id) {
     // A friend paying for a host's saved spot (hold_id) joins the host's station. If the
     // hold lapsed and the station filled while they paid, they fall through to book_paid
-    // like any single and land on the emptiest open station.
+    // like any single and land on the emptiest open station. A Sunday called off while
+    // they paid books nobody: the card is refunded.
     let booked = null;
     let withHost = null;
+    let calledOff = false;
     if (md.hold_id) {
       const { data: fromHold, error: hErr } = await db.rpc('book_from_hold', {
         p_member: md.member_id, p_hold: md.hold_id, p_payment: 'single', p_amount: paidAmount
       });
       if (hErr) { await releaseClaim(db, sessionObj); return { ok: false, error: 'book_from_hold: ' + hErr.message }; }
       if (fromHold && fromHold.ok) { booked = fromHold; withHost = fromHold.dedup ? null : fromHold.host_member_id; }
+      else if (fromHold && fromHold.reason === 'closed') calledOff = true;
       else console.warn('[fulfill] saved spot not claimed, trying any station:', fromHold && fromHold.error);
     }
-    if (!booked) {
+    if (!booked && !calledOff) {
+      // book_paid does not look at the session's status, so check it here first.
+      const { data: st } = await db.from('sessions').select('status').eq('id', md.session_id).maybeSingle();
+      if (st && st.status === 'cancelled') calledOff = true;
+    }
+    if (!booked && !calledOff) {
       const { data, error: bErr } = await db.rpc('book_paid', {
         p_member: md.member_id,
         p_session: md.session_id,
@@ -848,12 +858,12 @@ async function fulfillCheckoutSession(db, sessionObj) {
     // held this seat (the duplicate-charge case). The checkout guard should stop this
     // before charging; if we still land here, flag it loudly so it can be refunded.
     if (booked && booked.dedup) console.warn('[fulfill] DUPLICATE single payment - already booked, no new ticket. Refund candidate. member=' + md.member_id + ' session=' + md.session_id + ' pi=' + sessionObj.payment_intent);
-    if (!booked || (!booked.ok && !booked.dedup)) {
+    if (calledOff || !booked || (!booked.ok && !booked.dedup)) {
       // The Sunday filled (or was called off) while they paid. Never "You're in" for a
       // seat that does not exist: refund and say so plainly.
-      console.warn('[fulfill] single booking not placed, refunding:', booked && booked.error);
+      console.warn('[fulfill] single booking not placed, refunding:', calledOff ? 'session called off' : booked && booked.error);
       const { refundUnplaced } = require('./_friends');
-      await refundUnplaced(db, sessionObj, { memberId: md.member_id, sessionId: md.session_id, reason: 'full' });
+      await refundUnplaced(db, sessionObj, { memberId: md.member_id, sessionId: md.session_id, reason: calledOff ? 'closed' : 'full' });
       refunded = true;
     } else {
       // Look up the session for the confirmation + .ics, and the station the member was
@@ -889,6 +899,7 @@ async function fulfillCheckoutSession(db, sessionObj) {
     const out = await fulfilGroup(db, sessionObj, md);
     if (out.error) { await releaseClaim(db, sessionObj); return { ok: false, error: out.error }; }
     refunded = !!out.refundedAll;
+    promoVoid = !!out.buyerRefunded;
   } else if (md.kind === 'sponsor') {
     // Sponsored tickets go into the pool, not onto the buyer's account. The
     // unique payment_intent makes a replayed webhook a no-op, and
@@ -1216,7 +1227,7 @@ async function fulfillCheckoutSession(db, sessionObj) {
     } catch (e) { console.warn('[fulfill] trip email skipped:', e && e.message); }
   }
 
-  if (md.promo_code && !refunded) {
+  if (md.promo_code && !refunded && !promoVoid) {
     const { data: redeemed, error: rErr } = await db.rpc('redeem_promo', {
       p_code: md.promo_code,
       p_member_id: md.member_id,

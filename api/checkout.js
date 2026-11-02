@@ -78,8 +78,10 @@ module.exports = async (req, res) => {
 
     // The buyer plus 1-7 friends on one station, paid by card for everyone (the buyer's
     // credits are never spent on friends). Skips the balancing window, never the station
-    // cap. Friends become members before payment (an existing member by exact email, else
-    // a silent guest account), the same as trip-pay, so fulfilment is one atomic call.
+    // cap. Nothing here looks a typed email up or makes an account: the answer is the same
+    // whoever the friends are, and their accounts are only made after the payment succeeds
+    // (fulfilGroup). create_booking_hold carries every limit: station room, 16 checkout-held
+    // spots per Sunday, 3 unpaid group checkouts per buyer per day.
     async function startGroup() {
       const f = F.cleanFriends(body.friends, user.email);
       if (!f.ok) return res.status(400).json({ error: f.error });
@@ -93,59 +95,27 @@ module.exports = async (req, res) => {
         .eq('session_id', sess.id).eq('member_id', user.id).in('status', ['booked', 'attended']).maybeSingle();
       if (existingBk) return res.status(409).json({ error: "You're already booked for this session. Hold spots for friends from My bookings instead." });
 
-      // Cheap checks before any friend account exists: the checkout cap and station room.
-      const sinceHour = new Date(Date.now() - 3600 * 1000).toISOString();
-      const [{ count: recent }, { data: mine }, load] = await Promise.all([
-        db.from('booking_holds').select('id', { count: 'exact', head: true })
-          .eq('host_member_id', user.id).eq('kind', 'checkout').gte('created_at', sinceHour),
-        db.from('booking_holds').select('id,section,spots,claimed,stripe_session_id')
-          .eq('host_member_id', user.id).eq('session_id', sess.id).eq('kind', 'checkout')
-          .is('cancelled_at', null).eq('claimed', 0).gt('expires_at', new Date().toISOString()),
-        F.stationLoad(db, sess.id, section)
-      ]);
-      if ((recent || 0) >= F.CHECKOUTS_PER_HOUR) return res.status(429).json({ error: 'Too many checkouts in a row. Wait a few minutes and try again.' });
-      const people = friends.length + 1;
-      // This buyer's own earlier unpaid hold gets replaced, so it does not count against them.
-      const mineHere = (mine || []).filter((m) => m.section === section).reduce((a, m) => a + m.spots - m.claimed, 0);
-      const room = F.stationRoom(sess.capacity, sess.stations, section, load.booked, load.held - mineHere);
-      const noRoom = (r) => r > 0
-        ? 'Station ' + section + ' has room for ' + r + ' of you. Pick another station or remove a friend.'
-        : 'Station ' + section + ' is full. Pick another station.';
-      if (room < people) return res.status(409).json({ error: noRoom(room), room });
-
-      // A friend who already has a spot this Sunday: say so before anyone pays.
-      const { data: known } = await db.from('members').select('id,email').in('email', friends.map((x) => x.email));
-      if (known && known.length) {
-        const { data: inAlready } = await db.from('bookings').select('member_id')
-          .eq('session_id', sess.id).in('member_id', known.map((k) => k.id)).in('status', ['booked', 'attended']);
-        if (inAlready && inAlready.length) {
-          const ids = new Set(inAlready.map((b) => b.member_id));
-          const hit = friends.find((x) => known.some((k) => k.email === x.email && ids.has(k.id)));
-          return res.status(409).json({ error: (hit ? hit.name : 'A friend') + ' already has a spot this Sunday. Remove them and try again.' });
-        }
-      }
-
-      // The buyer's seat can carry a promo code; friends pay the normal ticket. Priced
-      // before any friend account exists, so a bad code creates nothing.
+      // The buyer's seat can carry a promo code; friends pay the normal ticket.
       const list = F.listPrice();
       const buyer = await priceWithPromo(list, body.promo_code);
       if (buyer.error) return res.status(400).json({ error: buyer.error });
       const friendAmount = earlyWeekPrice(list, early);
 
-      const members = await F.memberIdsForFriends(db, friends, user.id);
-      if (members.length !== friends.length) return res.status(400).json({ error: 'Each friend needs their own email.' });
-
-      // An earlier unpaid attempt: expire its Stripe session so it can never be paid later.
-      for (const m of mine || []) {
-        if (m.stripe_session_id) { try { await stripe.checkout.sessions.expire(m.stripe_session_id); } catch (e) { /* already done */ } }
-      }
+      const people = friends.length + 1;
+      const noRoom = (r) => r > 0
+        ? 'Station ' + section + ' has room for ' + r + ' of you. Pick another station or remove a friend.'
+        : 'Station ' + section + ' is full. Pick another station.';
       const { data: held, error: hErr } = await db.rpc('create_booking_hold', {
         p_host: user.id, p_session: sess.id, p_kind: 'checkout', p_spots: people, p_price: friendAmount,
-        p_section: section, p_friends: members.map((m) => ({ member_id: m.member_id, name: m.name }))
+        p_section: section, p_friends: friends.map((x) => ({ name: x.name, email: x.email }))
       });
       if (hErr) throw new Error('create_booking_hold: ' + hErr.message);
       if (!held || !held.ok) {
         return res.status(409).json({ error: held && held.room != null ? noRoom(held.room) : ((held && held.error) || 'Could not hold the spots.'), room: held && held.room });
+      }
+      // The new hold replaced an earlier unpaid one: close that card form for good.
+      if (held.replaced_stripe_session) {
+        try { await stripe.checkout.sessions.expire(held.replaced_stripe_session); } catch (e) { /* already closed */ }
       }
       const releaseHold = () => db.from('booking_holds').update({ cancelled_at: new Date().toISOString() }).eq('id', held.hold_id);
 

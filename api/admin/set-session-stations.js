@@ -10,6 +10,7 @@
 // view (all read session.stations live), so this single change reflects everywhere. Points are
 // not station-based, so they are unaffected.
 const { admin, getUser, isAdmin } = require('../_lib');
+const { liveHolds } = require('../_friends');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -59,7 +60,16 @@ module.exports = async (req, res) => {
     const { error: se } = await db.from('sessions').update({ stations: n }).eq('id', body.session_id);
     if (se) throw new Error(se.message);
 
-    res.status(200).json({ ok: true, stations: n, moved: outOfRange.length, counts });
+    // Spots members were holding for friends on a removed station end now. Friends who
+    // already claimed moved with the bookings above. (No email to the host: the station is
+    // gone for everyone and the panel shows the hold as ended.)
+    const drop = (await liveHolds(db, [body.session_id])).filter(h => !valid.has(h.section)).map(h => h.id);
+    if (drop.length) {
+      const { error: he } = await db.from('booking_holds').update({ cancelled_at: new Date().toISOString() }).in('id', drop);
+      if (he) throw new Error(he.message);
+    }
+
+    res.status(200).json({ ok: true, stations: n, moved: outOfRange.length, counts, released_holds: drop.length });
   } catch (e) {
     console.error('[/api/admin/set-session-stations]', e);
     res.status(500).json({ error: 'Update failed' });

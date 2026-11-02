@@ -7,9 +7,6 @@
 
 const MAX_FRIENDS = 7;
 const BOOK_GRACE_MS = 135 * 60 * 1000;     // booking stays open 135 min after start (api/sessions.js)
-const INVITES_PER_HOLD = 10;
-const INVITES_PER_DAY = 20;
-const CHECKOUTS_PER_HOUR = 6;              // mirrors create_booking_hold
 const STRIPE_EXPIRE_MIN = 31;              // Stripe's floor is 30 min; the hold lasts 35
 const TOKEN_RE = /^[a-f0-9]{64}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -102,14 +99,15 @@ function stationRoom(capacity, stations, section, booked, held) {
 }
 
 // After book_group_paid: who got a seat, who already had one, and what to refund.
-// Nobody booked means a full refund; anyone already booked gets their ticket back.
-function planGroupOutcome({ result, buyerId, buyerAmount, friendAmount, paid }) {
+// Nobody booked means a full refund. Anyone already booked gets their ticket back, and so
+// does each typed friend who could not become a separate member (unused).
+function planGroupOutcome({ result, buyerId, buyerAmount, friendAmount, paid, unused }) {
   const total = Number(paid) || 0;
   if (!result || !result.ok) return { full: true, refund: total, booked: [], already: [] };
   const booked = (result.booked || []).map((b) => b.member_id);
   const already = result.already || [];
   if (!booked.length) return { full: true, refund: total, booked, already };
-  let refund = 0;
+  let refund = (Number(unused) || 0) * (Number(friendAmount) || 0);
   already.forEach((id) => { refund += id === buyerId ? Number(buyerAmount) || 0 : Number(friendAmount) || 0; });
   refund = Math.min(total, Math.round(refund * 100) / 100);
   return { full: false, refund, booked, already };
@@ -154,32 +152,39 @@ async function promoConfigPct(db) {
 
 function listPrice() { return Number(process.env.SINGLE_SESSION_PRICE_AED || 99); }
 
-// Members for the friends a buyer pays for. An existing member is linked by exact email;
-// anyone new becomes a guest member (createGuestMember: confirmed, passwordless, nothing
-// sent), so they can sign in with that email later and find the booking. An email that
-// already has a login but no LFG row (a coaching-only account) gets its row added.
+// Members for the friends a buyer paid for, made only AFTER the payment succeeded. An
+// existing member is linked by exact email; anyone new becomes a guest member
+// (createGuestMember: confirmed, passwordless, nothing sent), so they can sign in with that
+// email later and find the booking. An email that already has a login but no LFG row (a
+// coaching-only account) gets its row added. A friend who cannot be made into a separate
+// member (their email is the buyer's, a repeat, or the auth service refuses it) is left
+// out and their ticket refunded, rather than holding up the whole group.
 async function memberIdsForFriends(db, friends, buyerId) {
   const { createGuestMember, authService } = require('./_lib');
   const out = [];
   for (const f of friends) {
-    const { data: known } = await db.from('members').select('id').eq('email', f.email).limit(1);
-    let id = known && known.length ? known[0].id : null;
-    if (!id) {
-      try {
-        id = (await createGuestMember(db, { name: f.name, email: f.email, guestOf: buyerId })).memberId;
-      } catch (e) {
-        if (!/no member row/.test(e.message || '')) throw e;
-        // generateLink only builds a link, it sends nothing; it is the one admin call
-        // that resolves an existing login by email.
-        const { data: link } = await authService().auth.admin.generateLink({ type: 'magiclink', email: f.email });
-        const uid = link && link.user && link.user.id;
-        if (!uid) throw e;
-        const { error: upErr } = await db.from('members').upsert({ id: uid, email: f.email, full_name: f.name }, { onConflict: 'id' });
-        if (upErr) throw new Error('friend member: ' + upErr.message);
-        id = uid;
+    try {
+      const { data: known } = await db.from('members').select('id').eq('email', f.email).limit(1);
+      let id = known && known.length ? known[0].id : null;
+      if (!id) {
+        try {
+          id = (await createGuestMember(db, { name: f.name, email: f.email, guestOf: buyerId })).memberId;
+        } catch (e) {
+          if (!/no member row/.test(e.message || '')) throw e;
+          // generateLink only builds a link, it sends nothing; it is the one admin call
+          // that resolves an existing login by email.
+          const { data: link } = await authService().auth.admin.generateLink({ type: 'magiclink', email: f.email });
+          const uid = link && link.user && link.user.id;
+          if (!uid) throw e;
+          const { error: upErr } = await db.from('members').upsert({ id: uid, email: f.email, full_name: f.name }, { onConflict: 'id' });
+          if (upErr) throw new Error('friend member: ' + upErr.message);
+          id = uid;
+        }
       }
+      if (id && id !== buyerId && !out.some((o) => o.member_id === id)) out.push({ member_id: id, name: f.name, email: f.email });
+    } catch (e) {
+      console.warn('[friends] could not make a member for a friend, refunding that ticket:', e && e.message);
     }
-    if (id && id !== buyerId && !out.some((o) => o.member_id === id)) out.push({ member_id: id, name: f.name, email: f.email });
   }
   return out;
 }
@@ -241,58 +246,80 @@ async function refundUnplaced(db, sessionObj, { memberId, sessionId, reason, gro
   return refund;
 }
 
-// kind 'group': the buyer plus friends, one station. Returns { refundedAll } or { error }.
+// kind 'group': the buyer plus friends, one station.
+// Returns { refundedAll, buyerRefunded } or { dedup } or { error }. buyerRefunded: the buyer
+// already had a seat, so their own ticket went back and their promo must not be redeemed.
 async function fulfilGroup(db, sessionObj, md) {
   const paid = (sessionObj.amount_total || 0) / 100;
   const buyerAmount = Number(md.buyer_amount) || 0;
   const friendAmount = Number(md.friend_amount) || 0;
-  const { data: hold } = await db.from('booking_holds').select('id,session_id,section,friends').eq('id', md.hold_id).maybeSingle();
-  const friends = hold && Array.isArray(hold.friends) ? hold.friends : [];
+  const { data: hold } = await db.from('booking_holds')
+    .select('id,session_id,section,friends,fulfilled_at').eq('id', md.hold_id).maybeSingle();
+  // A retry after this group was already booked: nothing to book, refund or send.
+  if (hold && hold.fulfilled_at) return { dedup: true };
+  const typed = hold && Array.isArray(hold.friends) ? hold.friends.filter((f) => f && f.email) : [];
 
   let result = { ok: false, reason: 'no_hold' };
+  let members = [];
   if (hold && hold.session_id === md.session_id) {
+    // Accounts for the friends exist only now that the card went through.
+    members = await memberIdsForFriends(db, typed, md.member_id);
     const r = await db.rpc('book_group_paid', {
       p_buyer: md.member_id, p_session: md.session_id, p_section: hold.section || md.section || null,
-      p_friends: friends.map((f) => f.member_id).filter(Boolean),
+      p_friends: members.map((m) => m.member_id),
       p_buyer_amount: buyerAmount, p_friend_amount: friendAmount, p_hold: hold.id
     });
     if (r.error) return { error: 'book_group_paid: ' + r.error.message };
     result = r.data;
+    if (result && result.dedup) return { dedup: true };
   }
 
-  const plan = planGroupOutcome({ result, buyerId: md.member_id, buyerAmount, friendAmount, paid });
+  const unused = Math.max(0, typed.length - members.length);
+  const plan = planGroupOutcome({ result, buyerId: md.member_id, buyerAmount, friendAmount, paid, unused });
   if (plan.full) {
     console.warn('[fulfill] group not placed, refunding:', result && (result.error || result.reason));
     await refundUnplaced(db, sessionObj, { memberId: md.member_id, sessionId: md.session_id,
       reason: (result && result.reason) || 'full', group: true });
     return { refundedAll: true };
   }
+  const buyerRefunded = plan.already.indexOf(md.member_id) !== -1;
   let refunded = null;
   if (plan.refund > 0) {
     refunded = await refundCheckout(db, sessionObj, { amountAed: plan.refund, keptAed: paid - plan.refund, reason: 'already_booked' });
   }
 
-  // Confirmations. Names are the ones the buyer typed, never a member's stored name.
+  // Confirmations. Friends' names are the ones the buyer typed, never a member's stored
+  // name, and a refunded friend ticket is never named.
   try {
     const { sendBookingConfirmation } = require('./_email');
     const sess = await sessionFor(db, md.session_id);
-    if (!sess) return { refundedAll: false };
+    if (!sess) return { refundedAll: false, buyerRefunded };
     const who = await namesFor(db, [md.member_id]);
     const buyerFirst = firstName(who[md.member_id] && who[md.member_id].full_name) || 'A friend';
     const nameOf = {};
-    friends.forEach((f) => { nameOf[f.member_id] = f.name; });
+    members.forEach((m) => { nameOf[m.member_id] = m.name; });
     const newFriends = plan.booked.filter((id) => id !== md.member_id);
-    const skipped = plan.already.filter((id) => id !== md.member_id).map((id) => nameOf[id]).filter(Boolean);
     const groupNames = newFriends.map((id) => nameOf[id]).filter(Boolean);
-    let note = groupNames.length ? 'You booked ' + joinNames(groupNames) + ' on Station ' + result.section + ' with you.' : '';
-    if (skipped.length) {
-      note += ' ' + joinNames(skipped) + (skipped.length === 1 ? ' already had a spot' : ' already had spots') +
-        (refunded && refunded.ok ? ', so we refunded AED ' + plan.refund + '.' : '. We will refund that ticket.');
+    // A buyer who already had a seat keeps it: their email names THEIR station.
+    let buyerSection = result.section;
+    if (buyerRefunded) {
+      const { data: seat } = await db.from('bookings').select('section')
+        .eq('member_id', md.member_id).eq('session_id', md.session_id).maybeSingle();
+      buyerSection = (seat && seat.section) || null;
+    }
+    const lines = [];
+    if (groupNames.length) lines.push('You booked ' + joinNames(groupNames) + ' on Station ' + result.section + (buyerRefunded ? '.' : ' with you.'));
+    if (buyerRefunded) lines.push('You already had your own spot' + (buyerSection ? ' on Station ' + buyerSection : '') + ', so your ticket was refunded.');
+    const friendRefund = Math.round((plan.refund - (buyerRefunded ? buyerAmount : 0)) * 100) / 100;
+    const friendTickets = plan.already.filter((id) => id !== md.member_id).length + unused;
+    if (friendRefund > 0 && friendTickets > 0) {
+      lines.push(friendTickets + (friendTickets === 1 ? ' ticket' : ' tickets') + ' could not be used, so ' +
+        (refunded && refunded.ok ? 'we refunded AED ' + friendRefund + '.' : 'we will refund AED ' + friendRefund + '.'));
     }
     await sendBookingConfirmation(db, {
       kind: 'single', memberId: md.member_id, sessionId: md.session_id, sessionDate: sess.session_date,
-      section: result.section, location: sess.location || 'CrossFit Alioth',
-      paidAmount: Math.round((paid - plan.refund) * 100) / 100, note: note.trim() || null
+      section: buyerSection, location: sess.location || 'CrossFit Alioth',
+      paidAmount: Math.round((paid - plan.refund) * 100) / 100, note: lines.join(' ') || null
     });
     for (const id of newFriends) {
       await sendBookingConfirmation(db, {
@@ -302,11 +329,11 @@ async function fulfilGroup(db, sessionObj, md) {
       });
     }
   } catch (e) { console.warn('[fulfill] group emails skipped:', e && e.message); }
-  return { refundedAll: false };
+  return { refundedAll: false, buyerRefunded };
 }
 
 module.exports = {
-  MAX_FRIENDS, INVITES_PER_HOLD, INVITES_PER_DAY, CHECKOUTS_PER_HOUR, STRIPE_EXPIRE_MIN,
+  MAX_FRIENDS, STRIPE_EXPIRE_MIN,
   cleanEmail, cleanName, firstName, validToken, cleanFriends, friendPrice, holdState, bookingOpen,
   sectionCap, heldBySession, stationRoom, planGroupOutcome, joinNames,
   liveHolds, stationLoad, promoConfigPct, listPrice, memberIdsForFriends,

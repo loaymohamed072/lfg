@@ -94,6 +94,10 @@ test('planGroupOutcome: refund nobody, part, or all', () => {
   assert.deepEqual(F.planGroupOutcome({ ...base, result: { ok: false, reason: 'full' } }), { full: true, refund: 277, booked: [], already: [] });
   assert.equal(F.planGroupOutcome({ ...base, result: { ok: true, booked: [], already: ['b', 'f1', 'f2'] } }).full, true);
   assert.equal(F.planGroupOutcome({ ...base, result: null }).refund, 277);
+  // A typed friend who could not become a separate member: their ticket comes back too.
+  assert.deepEqual(F.planGroupOutcome({ ...base, unused: 1, result: { ok: true, booked: [{ member_id: 'b' }, { member_id: 'f1' }], already: [] } }),
+    { full: false, refund: 89, booked: ['b', 'f1'], already: [] });
+  assert.equal(F.planGroupOutcome({ ...base, unused: 1, result: { ok: true, booked: [{ member_id: 'f2' }], already: ['b'] } }).refund, 188);
 });
 
 test('small helpers', () => {

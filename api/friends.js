@@ -186,32 +186,28 @@ async function invite(req, res, db, user, body) {
   if (!h) return res.status(404).json({ error: 'That hold has already ended.' });
   if (F.holdState(h, Date.now()) !== 'active') return res.status(409).json({ error: 'This link has ended. Make a new one.' });
 
-  const since = new Date(Date.now() - 864e5).toISOString();
-  const [perHold, perDay, { data: me }] = await Promise.all([
-    db.from('booking_hold_invites').select('id', { count: 'exact', head: true }).eq('hold_id', h.id),
-    db.from('booking_hold_invites').select('id', { count: 'exact', head: true }).eq('host_member_id', user.id).gte('created_at', since),
-    db.from('members').select('full_name').eq('id', user.id).maybeSingle()
-  ]);
-  if ((perHold.count || 0) >= F.INVITES_PER_HOLD) return res.status(429).json({ error: 'You sent the most invites for this link. Share the link instead.' });
-  if ((perDay.count || 0) >= F.INVITES_PER_DAY) return res.status(429).json({ error: 'You sent a lot of invites today. Share your link instead.' });
+  const { data: me } = await db.from('members').select('full_name').eq('id', user.id).maybeSingle();
   const hostFirst = F.firstName(me && me.full_name);
   if (!hostFirst) return res.status(409).json({ error: 'Add your name in My Account first, so your friend knows the invite is from you.', needs_name: true });
 
-  // Exact match only, and nothing about a miss beyond "not on LFG yet". Every attempt is
-  // recorded (a miss as a hash of the address), so the caps above also bound lookups.
+  // Exact match only, and nothing about a miss beyond "not on LFG yet". record_hold_invite
+  // counts every attempt (a miss as a hash of the address) under one lock per host, so the
+  // caps hold under parallel requests and answer the same for members and strangers.
   const { data: found } = await db.from('members').select('id,full_name').eq('email', email).limit(1);
   const friend = found && found[0] && found[0].id !== user.id ? found[0] : null;
   const hash = crypto.createHash('sha256').update(email).digest('hex');
   const MISS = { ok: true, sent: false, message: 'Not on LFG yet. Send them your link.' };
-  const { error: insErr } = await db.from('booking_hold_invites').insert({
-    hold_id: h.id, host_member_id: user.id, email_sha256: hash, invited_member_id: friend ? friend.id : null
+  const { data: rec, error: recErr } = await db.rpc('record_hold_invite', {
+    p_host: user.id, p_hold: h.id, p_email_sha256: hash, p_member: friend ? friend.id : null
   });
-  if (insErr) {
-    if (!/duplicate key|unique/i.test(insErr.message || '')) throw new Error('invite insert: ' + insErr.message);
-    const { data: prev } = await db.from('booking_hold_invites').select('invited_member_id')
-      .eq('hold_id', h.id).eq('email_sha256', hash).maybeSingle();
-    return res.status(200).json(prev && prev.invited_member_id ? { ok: true, sent: true, message: 'Already sent to that email.' } : MISS);
+  if (recErr) throw new Error('record_hold_invite: ' + recErr.message);
+  if (!rec || !rec.ok) {
+    const reason = rec && rec.reason;
+    if (reason === 'hold_cap') return res.status(429).json({ error: 'You sent the most invites for this link. Share the link instead.' });
+    if (reason === 'day_cap') return res.status(429).json({ error: 'You sent a lot of invites today. Share your link instead.' });
+    return res.status(409).json({ error: 'This link has ended. Make a new one.' });
   }
+  if (rec.repeat) return res.status(200).json(rec.invited_member_id ? { ok: true, sent: true, message: 'Already sent to that email.' } : MISS);
   if (!friend) return res.status(200).json(MISS);
 
   const [{ data: sess }, early] = await Promise.all([

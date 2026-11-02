@@ -4,6 +4,7 @@
 // endpoint only writes lfg_dev.sessions, which the service role can do. That keeps
 // the server off the api schema entirely. Admin only. Body: { stations, location? }
 const { admin, getUser, isAdmin } = require('../_lib');
+const { liveHolds } = require('../_friends');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -23,12 +24,13 @@ module.exports = async (req, res) => {
     if (selErr) throw new Error(selErr.message);
     const ids = (sess || []).map(s => s.id);
 
-    // Never drop a session below a station that already has bookings.
+    // Never drop a session below a station that already has bookings, or spots a member
+    // is holding for friends.
     const maxIdxBy = {};
     if (ids.length) {
       const { data: bk } = await db.from('bookings').select('session_id,section')
         .in('session_id', ids).in('status', ['booked', 'attended']);
-      (bk || []).forEach(b => {
+      (bk || []).concat(await liveHolds(db, ids)).forEach(b => {
         if (!b.section) return;
         const idx = b.section.charCodeAt(0) - 65;
         if (idx > (maxIdxBy[b.session_id] == null ? -1 : maxIdxBy[b.session_id])) maxIdxBy[b.session_id] = idx;
