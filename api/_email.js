@@ -308,20 +308,24 @@ async function sendFriendInvite(args) {
   });
 }
 
-// A card payment that could not become a seat (the Sunday filled while they paid, or it
-// was called off). Plain: what happened, the refund, where to book instead.
+// A card payment that could not become a seat (the Sunday filled while they paid, it was
+// called off, or everyone was already booked). Plain: what happened, the refund, what next.
 function buildRefundNotice({ firstName, sessionDate, amount, group, refunded, reason }) {
   const greeting = firstName ? 'Hey ' + escapeHtml(firstName) + ',' : 'Hey,';
   const day = sessionDate ? escapeHtml(formatDubaiDate(sessionDate)) : 'That Sunday';
-  const what = reason === 'closed' ? day + ' was called off' : day + ' filled up while you were paying';
+  const already = reason === 'already_booked';
+  const what = already
+    ? (group ? 'Everyone in your group was' : 'You were') + ' already booked for ' + (sessionDate ? day : 'that Sunday') + ', so there was nothing new to book.'
+    : (reason === 'closed' ? day + ' was called off' : day + ' filled up while you were paying') +
+      ', so we could not book ' + (group ? 'your group' : 'you') + ' in.';
   const money = refunded
     ? 'We refunded AED ' + escapeHtml(String(amount)) + ' to your card. It can take 5 to 10 days to show.'
     : 'We are refunding AED ' + escapeHtml(String(amount)) + ' to your card and will email you when it is done.';
   const body = `
-    <h1 style="font-family:'Barlow Condensed','Helvetica Neue',sans-serif;font-weight:800;font-size:26px;text-transform:uppercase;letter-spacing:0.04em;margin:0 0 8px;color:#fff;">No spot this <span style="color:#999966;">time.</span></h1>
-    <p style="margin:0 0 16px;color:rgba(255,255,255,0.65);font-size:15px;line-height:1.55;">${greeting}<br>${what}, so we could not book ${group ? 'your group' : 'you'} in.</p>
+    <h1 style="font-family:'Barlow Condensed','Helvetica Neue',sans-serif;font-weight:800;font-size:26px;text-transform:uppercase;letter-spacing:0.04em;margin:0 0 8px;color:#fff;">${already ? 'Already <span style="color:#999966;">booked.</span>' : 'No spot this <span style="color:#999966;">time.</span>'}</h1>
+    <p style="margin:0 0 16px;color:rgba(255,255,255,0.65);font-size:15px;line-height:1.55;">${greeting}<br>${what}</p>
     <p style="margin:0 0 22px;color:rgba(255,255,255,0.8);font-size:15px;line-height:1.55;">${money}</p>
-    <a href="https://www.lfgdubai.com/bootcamp" style="display:inline-block;background:#999966;color:#0A0A0A;font-family:'Barlow Condensed','Helvetica Neue',sans-serif;font-weight:800;font-size:14px;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;padding:14px 28px;">Pick another Sunday</a>
+    <a href="https://www.lfgdubai.com/${already ? 'account' : 'bootcamp'}" style="display:inline-block;background:#999966;color:#0A0A0A;font-family:'Barlow Condensed','Helvetica Neue',sans-serif;font-weight:800;font-size:14px;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;padding:14px 28px;">${already ? 'See my bookings' : 'Pick another Sunday'}</a>
     <p style="margin:22px 0 0;font-size:13px;color:rgba(255,255,255,0.5);line-height:1.6;">Questions? Reply to this email.</p>
   `;
   return emailShell({ preheader: 'Your payment was refunded.', bodyHtml: body });

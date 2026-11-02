@@ -218,11 +218,13 @@ module.exports = async (req, res) => {
       const { data: existingBk } = await db.from('bookings').select('id')
         .eq('session_id', sess.id).eq('member_id', user.id).in('status', ['booked', 'attended']).maybeSingle();
       if (existingBk) return res.status(409).json({ error: "You're already booked for this session. Check your account - no need to pay again." });
-      // Don't sell a single seat for a full session. Spots held for friends count as taken.
+      // Don't sell a single seat for a full session. Spots held for friends count as taken,
+      // unless the Sunday can still grow: book_paid then grows it for this payer.
       const { count } = await db.from('bookings').select('id', { count: 'exact', head: true })
         .eq('session_id', sess.id).in('status', ['booked', 'attended']);
       const held = F.heldBySession(await F.liveHolds(db, [sess.id]), Date.now())[sess.id];
-      if ((count || 0) + (held ? held.total : 0) >= sess.capacity) return res.status(409).json({ error: 'Session is full' });
+      const taken = (count || 0) + (held ? held.total : 0);
+      if (taken >= F.capacityForBooker(sess, count || 0, held ? held.total : 0)) return res.status(409).json({ error: 'Session is full' });
 
       const priced = await priceWithPromo(Number(process.env.SINGLE_SESSION_PRICE_AED || 99), body.promo_code);
       if (priced.error) return res.status(400).json({ error: priced.error });

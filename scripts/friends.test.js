@@ -187,3 +187,29 @@ test('emails: friend confirmation, invite, refund', () => {
   assert.match(E.buildRefundNotice({ sessionDate: '2026-11-08', amount: 99, refunded: false, reason: 'closed' }), /was called off, so we could not book you in/);
   for (const html of [conf, inv, ref]) assert.equal(html.indexOf('—'), -1, 'no em dashes in the new emails');
 });
+
+test('C: capacityForBooker grows a Sunday that held spots fill, never past max', () => {
+  const sun = { capacity: 32, max_capacity: 96, bump_increment: 10 };
+  assert.equal(F.capacityForBooker(sun, 24, 8), 48);    // 24 booked + four 2-person checkouts: 42, rounded to whole pairs per station
+  assert.equal(F.capacityForBooker(sun, 24, 7), 32);    // room left: nothing to grow
+  assert.equal(F.capacityForBooker({ capacity: 32, max_capacity: 32, bump_increment: 10 }, 24, 8), 32);
+  assert.equal(F.capacityForBooker({ capacity: 90, max_capacity: 96, bump_increment: 10 }, 80, 10), 96);
+  assert.equal(F.capacityForBooker({ capacity: 32 }, 30, 2), 32);   // no max_capacity: a hard cap
+  assert.equal(F.capacityForBooker({ capacity: 30, max_capacity: 96, bump_increment: 10, stations: 3 }, 26, 4), 42);  // 40, pairs of 3
+});
+
+test('F: the refund email for a group that was already booked says so', () => {
+  const E = require('../api/_email');
+  const g = E.buildRefundNotice({ firstName: 'Sara', sessionDate: '2026-11-08', amount: 188, group: true, refunded: true, reason: 'already_booked' });
+  assert.match(g, /Already <span[^>]*>booked\.<\/span>/);
+  assert.match(g, /Everyone in your group was already booked for Sunday,? 8 November, so there was nothing new to book\./);
+  assert.match(g, /We refunded AED 188 to your card/);
+  assert.match(g, /href="https:\/\/www\.lfgdubai\.com\/account"[^>]*>See my bookings</);
+  assert.doesNotMatch(g, /filled up|No spot this/);
+  const solo = E.buildRefundNotice({ amount: 99, refunded: false, reason: 'already_booked' });
+  assert.match(solo, /You were already booked for that Sunday, so there was nothing new to book\./);
+  for (const html of [g, solo]) assert.equal(html.indexOf('—'), -1, 'no em dashes');
+  // The other reasons read as before.
+  assert.match(E.buildRefundNotice({ sessionDate: '2026-11-08', amount: 99, refunded: true, reason: 'full' }),
+    /filled up while you were paying, so we could not book you in\./);
+});

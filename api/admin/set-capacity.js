@@ -20,7 +20,7 @@ module.exports = async (req, res) => {
     const [{ count }, holds] = await Promise.all([
       db.from('bookings').select('id', { count: 'exact', head: true })
         .eq('session_id', body.session_id).in('status', ['booked', 'attended']),
-      liveHolds(db, [body.session_id])
+      liveHolds(db, [body.session_id], { strict: true })
     ]);
     const held = (heldBySession(holds, Date.now())[body.session_id] || { total: 0 }).total;
     if (cap < (count || 0) + held) {

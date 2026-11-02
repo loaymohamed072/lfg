@@ -21,6 +21,7 @@ declare
   r jsonb; hold1 uuid; hold2 uuid; hold3 uuid; ck1 uuid; ck2 uuid; ck2b uuid; ck3 uuid; ck4 uuid;
   hA uuid; hB uuid; hC uuid; hS3 uuid; ok_n int; i int; m uuid; v int; rec record;
   members_before int;
+  e1 uuid; e2 uuid; e3 uuid; q1 uuid; q2 uuid; q3 uuid; c1 uuid; c2 uuid; c3 uuid; c4 uuid; x uuid[] := '{}';
 begin
   -- Members (auth row first: members.id references auth.users).
   foreach m in array array[h,f1,f2,f3,f4,f5,o1,o2,o3,o4,o5,b,b2,b3,g1,g2,g3] loop
@@ -192,10 +193,13 @@ begin
     and (select fulfilled_at from booking_holds where id = ck2) is not null
     and public.session_held_counts(s1, 4) = array[0,0,0,0]
     and public.session_station_counts(s1, 4) = array[5,0,3,0], public.session_station_counts(s1, 4)::text);
+  perform pg_temp.chk('B: the answer is stored on the hold', (select outcome->>'section' from booking_holds where id = ck2) = 'C'
+    and jsonb_array_length((select outcome->'booked' from booking_holds where id = ck2)) = 3);
   select count(*) into v from public.bookings where session_id = s1 and status = 'booked';
   r := public.book_group_paid(b, s1, 'C', array[g1, g2], 99, 89, ck2);
-  perform pg_temp.chk('2: a second call for the same checkout is a no-op', (r->>'ok')::boolean and (r->>'dedup')::boolean
-    and r->'booked' is null and (select count(*) from bookings where session_id = s1 and status = 'booked') = v, r::text);
+  perform pg_temp.chk('2, B: a second call answers the stored outcome and books nothing', (r->>'ok')::boolean and (r->>'dedup')::boolean
+    and r->>'section' = 'C' and jsonb_array_length(r->'booked') = 3 and jsonb_array_length(r->'already') = 0
+    and (select count(*) from bookings where session_id = s1 and status = 'booked') = v, r::text);
 
   r := public.book_group_paid(b2, s1, 'D', array[g1, g3, g3, b2], 99, 89, null);
   perform pg_temp.chk('already-booked friend is skipped and reported, duplicates ignored', (r->>'ok')::boolean
@@ -309,16 +313,132 @@ begin
   perform pg_temp.chk('2: the retry dedups', (r->>'ok')::boolean and (r->>'dedup')::boolean
     and (select count(*) from bookings where session_id = s6 and member_id = o4) = 1, r::text);
 
+  -- ------------------------------------------------ E: 3 abandoned group checkouts a day
   insert into public.sessions(session_date, start_time, location, capacity, max_capacity, stations, status)
   values ('2099-02-15', '12:45', 'TWF TEST', 32, 32, 4, 'open') returning id into s7;
+  -- Reopening the card form replaces the live hold, so it never counts.
   ok_n := 0;
-  for i in 1..4 loop
+  for i in 1..5 loop
     r := public.create_booking_hold(o3, s7, 'checkout', 2, 89, 'A', null);
     exit when not (r->>'ok')::boolean;
     ok_n := ok_n + 1;
   end loop;
-  perform pg_temp.chk('3: 3 unpaid group checkouts per buyer per day', ok_n = 3
-    and r->>'error' like 'You started 3 group checkouts today without paying%', ok_n || ' ' || r::text);
+  perform pg_temp.chk('E: reopening the card form 5 times never hits the cap', ok_n = 5
+    and (select count(*) from booking_holds where host_member_id = o3 and kind = 'checkout' and cancelled_at is null) = 1, ok_n || ' ' || r::text);
+  -- A bigint advisory key shows as classid (high half) and objid (low half).
+  perform pg_temp.chk('E: a hold takes one lock per host', exists (select 1 from pg_locks
+    where locktype = 'advisory' and pid = pg_backend_pid()
+      and classid = ((hashtext('lfg_booking_holds:' || o3::text)::bigint >> 32) & 4294967295)::oid
+      and objid = (hashtext('lfg_booking_holds:' || o3::text)::bigint & 4294967295)::oid));
+  -- A hold released because Stripe failed (checkout.js cancels it) never counts.
+  for i in 1..3 loop
+    update public.booking_holds set cancelled_at = now() where host_member_id = o3 and kind = 'checkout' and cancelled_at is null;
+    r := public.create_booking_hold(o3, s7, 'checkout', 2, 89, 'A', null);
+  end loop;
+  perform pg_temp.chk('E: released checkouts never count', (r->>'ok')::boolean, r::text);
+  -- Nor does a paid one.
+  r := public.book_group_paid(o3, s7, 'A', '{}'::uuid[], 99, 89, (r->>'hold_id')::uuid);
+  perform pg_temp.chk('E: setup, that checkout is paid', (r->>'ok')::boolean, r::text);
+  -- Abandoned ones do, live or run out: three today, then the next is refused.
+  insert into public.sessions(session_date, start_time, location, capacity, max_capacity, stations, status)
+  values ('2099-03-01', '12:45', 'TWF TEST', 32, 32, 4, 'open'), ('2099-03-08', '12:45', 'TWF TEST', 32, 32, 4, 'open'),
+         ('2099-03-15', '12:45', 'TWF TEST', 32, 32, 4, 'open');
+  select id into e1 from sessions where location = 'TWF TEST' and session_date = '2099-03-01';
+  select id into e2 from sessions where location = 'TWF TEST' and session_date = '2099-03-08';
+  select id into e3 from sessions where location = 'TWF TEST' and session_date = '2099-03-15';
+  r := public.create_booking_hold(o3, e1, 'checkout', 2, 89, 'A', null);
+  update public.booking_holds set expires_at = now() - interval '1 minute' where id = (r->>'hold_id')::uuid;
+  r := public.create_booking_hold(o3, e1, 'checkout', 2, 89, 'A', null);
+  perform pg_temp.chk('E: a hold that ran out is not cancelled by the next one, so it still counts', (r->>'ok')::boolean
+    and (select count(*) from booking_holds where host_member_id = o3 and session_id = e1 and cancelled_at is null) = 2, r::text);
+  r := public.create_booking_hold(o3, e2, 'checkout', 2, 89, 'A', null);
+  perform pg_temp.chk('E: setup, one ran out and two are live', (r->>'ok')::boolean, r::text);
+  r := public.create_booking_hold(o3, e3, 'checkout', 2, 89, 'A', null);
+  perform pg_temp.chk('3, E: the fourth abandoned checkout of the day is refused', (r->>'ok')::boolean = false
+    and r->>'error' like 'You started 3 group checkouts today without paying%', r::text);
+  r := public.create_booking_hold(o3, e2, 'checkout', 2, 89, 'A', null);
+  perform pg_temp.chk('E: at the cap, reopening a live card form still works', (r->>'ok')::boolean, r::text);
+
+  -- ------------------------------------------------ B: every settled answer is stored
+  insert into public.sessions(session_date, start_time, location, capacity, max_capacity, stations, status)
+  values ('2099-04-05', '12:45', 'TWF TEST', 8, 8, 4, 'open') returning id into q1;
+  r := public.create_booking_hold(b3, q1, 'checkout', 2, 89, 'A', null);  ck1 := (r->>'hold_id')::uuid;
+  r := public.book_group_paid(b3, q1, 'A', array[g1, g2], 99, 89, ck1);
+  perform pg_temp.chk('B: no room is stored, and the hold ends', (r->>'ok')::boolean = false and r->>'reason' = 'full'
+    and (select outcome->>'reason' from booking_holds where id = ck1) = 'full'
+    and (select fulfilled_at is not null and cancelled_at is not null from booking_holds where id = ck1), r::text);
+  r := public.book_group_paid(b3, q1, 'A', array[g1], 99, 89, ck1);
+  perform pg_temp.chk('B: a retry answers no room again, even with room now', (r->>'dedup')::boolean and r->>'reason' = 'full'
+    and (select count(*) from bookings where session_id = q1) = 0, r::text);
+
+  insert into public.sessions(session_date, start_time, location, capacity, max_capacity, stations, status)
+  values ('2099-04-12', '12:45', 'TWF TEST', 32, 32, 4, 'open') returning id into q2;
+  -- The buyer and their friend both book with a credit while the group's card form is open.
+  r := public.create_booking_hold(h, q2, 'checkout', 2, 89, 'C', null);  ck2b := (r->>'hold_id')::uuid;
+  r := public.book_with_credit(h, q2, 'A');
+  r := public.book_with_credit(f3, q2, 'B');
+  r := public.book_group_paid(h, q2, 'C', array[f3], 99, 89, ck2b);
+  perform pg_temp.chk('B, F: everyone already in is stored', (r->>'ok')::boolean and jsonb_array_length(r->'booked') = 0
+    and jsonb_array_length((select outcome->'already' from booking_holds where id = ck2b)) = 2, r::text);
+  r := public.book_group_paid(h, q2, 'C', array[f3], 99, 89, ck2b);
+  perform pg_temp.chk('B: and answered again on a retry', (r->>'dedup')::boolean and jsonb_array_length(r->'already') = 2, r::text);
+
+  insert into public.sessions(session_date, start_time, location, capacity, max_capacity, stations, status)
+  values ('2099-04-19', '12:45', 'TWF TEST', 32, 32, 4, 'open') returning id into q3;
+  r := public.create_booking_hold(b2, q3, 'checkout', 2, 89, 'D', null);  ck3 := (r->>'hold_id')::uuid;
+  update public.sessions set status = 'cancelled' where id = q3;
+  r := public.book_group_paid(b2, q3, 'D', array[g3], 99, 89, ck3);
+  perform pg_temp.chk('B: called off is stored', r->>'reason' = 'closed'
+    and (select outcome->>'reason' from booking_holds where id = ck3) = 'closed', r::text);
+  begin
+    update public.booking_holds set outcome = null where id = ck3;
+    perform pg_temp.chk('B: a settled hold always keeps its outcome', false);
+  exception when check_violation then
+    perform pg_temp.chk('B: a settled hold always keeps its outcome', true);
+  end;
+
+  -- ------------------------------------------------ C: held spots never strand a real booker
+  -- 24 booked plus four 2-person checkouts fill capacity 32 (production's settings). One bump
+  -- is 32 + 10, which sessions_even_capacity stores as 48.
+  for i in 1..30 loop
+    m := gen_random_uuid(); x := x || m;
+    insert into auth.users(id, email) values (m, 'twf-' || m || '@twf.lfg.invalid');
+    insert into public.members(id, email, full_name) values (m, 'twf-' || m || '@twf.lfg.invalid', 'Test ' || left(m::text, 4));
+  end loop;
+  insert into public.sessions(session_date, start_time, location, capacity, max_capacity, stations, status, bump_threshold, bump_increment)
+  values ('2099-05-03', '12:45', 'TWF TEST', 32, 96, 4, 'open', 5, 10), ('2099-05-10', '12:45', 'TWF TEST', 32, 96, 4, 'open', 5, 10),
+         ('2099-05-17', '12:45', 'TWF TEST', 32, 32, 4, 'open', 5, 10), ('2099-05-24', '12:45', 'TWF TEST', 32, 32, 4, 'open', 5, 10);
+  select id into c1 from sessions where location = 'TWF TEST' and session_date = '2099-05-03';
+  select id into c2 from sessions where location = 'TWF TEST' and session_date = '2099-05-10';
+  select id into c3 from sessions where location = 'TWF TEST' and session_date = '2099-05-17';
+  select id into c4 from sessions where location = 'TWF TEST' and session_date = '2099-05-24';
+  foreach m in array array[c1, c2, c3, c4] loop
+    for i in 1..24 loop
+      insert into public.bookings(member_id, session_id, section, payment_type, amount_paid_aed, status)
+      values (x[i], m, chr(65 + (i - 1) % 4), 'single', 99, 'booked');
+    end loop;
+    for i in 1..4 loop
+      if m = c4 then r := public.create_booking_hold(x[i], m, 'invite', 2, 89);   -- c4: invite holds instead
+      else r := public.create_booking_hold(x[24 + i], m, 'checkout', 2, 89, chr(64 + i), null); end if;
+    end loop;
+  end loop;
+  perform pg_temp.chk('C: setup, held spots fill each Sunday', public.session_taken(c1) = 32 and public.session_taken(c2) = 32
+    and public.session_taken(c3) = 32 and public.session_taken(c4) = 32
+    and (select bool_and(capacity = 32) from sessions where id in (c1, c2, c3, c4)), r::text);
+  r := public.book_with_credit(o5, c1, 'A');
+  perform pg_temp.chk('C: a credit booker held out by checkouts grows the Sunday (42, stored as 48)', (r->>'ok')::boolean
+    and (select capacity from sessions where id = c1) = 48, r::text);
+  r := public.book_paid(f2, c2, 'A', 99);
+  perform pg_temp.chk('C: so does a card payer', (r->>'ok')::boolean and (select capacity from sessions where id = c2) = 48, r::text);
+  r := public.book_paid(f2, c3, 'A', 99);
+  perform pg_temp.chk('C: at max_capacity a paid card still gets in past unpaid checkouts', (r->>'ok')::boolean
+    and (select capacity from sessions where id = c3) = 32, r::text);
+  r := public.book_with_credit(o5, c3, 'B');
+  perform pg_temp.chk('C: a credit booker at max_capacity is told it is full', (r->>'ok')::boolean = false
+    and r->>'error' = 'This session is full', r::text);
+  r := public.book_paid(f2, c4, 'A', 99);
+  perform pg_temp.chk('C: spots held by invite links still fill a Sunday at max_capacity', (r->>'ok')::boolean = false
+    and r->>'error' = 'Session full', r::text);
 
   -- ------------------------------------------------ item 6: invite attempts, one lock per host
   r := public.book_with_credit(o1, s5, 'B');

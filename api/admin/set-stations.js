@@ -30,7 +30,7 @@ module.exports = async (req, res) => {
     if (ids.length) {
       const { data: bk } = await db.from('bookings').select('session_id,section')
         .in('session_id', ids).in('status', ['booked', 'attended']);
-      (bk || []).concat(await liveHolds(db, ids)).forEach(b => {
+      (bk || []).concat(await liveHolds(db, ids, { strict: true })).forEach(b => {
         if (!b.section) return;
         const idx = b.section.charCodeAt(0) - 65;
         if (idx > (maxIdxBy[b.session_id] == null ? -1 : maxIdxBy[b.session_id])) maxIdxBy[b.session_id] = idx;

@@ -90,6 +90,18 @@ function heldBySession(rows, nowMs) {
   return out;
 }
 
+// The capacity a booker meets. Bookings plus held spots filling a Sunday below
+// max_capacity make the next booking grow it by one bump_increment
+// (bump_capacity_for_held in the migration), so held spots never show it as sold out.
+// The database rounds capacity up to a whole pair per station (sessions_even_capacity).
+function capacityForBooker(sess, booked, held) {
+  const cap = Number(sess && sess.capacity) || 0;
+  const max = Number(sess && sess.max_capacity) || cap;
+  if (!((booked || 0) + (held || 0) >= cap && cap < max)) return cap;
+  const step = 2 * Math.max(Number(sess.stations) || 4, 1);
+  return Math.ceil(Math.min(cap + (Number(sess.bump_increment) || 10), max) / step) * step;
+}
+
 // Room on one station once bookings and live holds are counted, never below zero.
 function stationRoom(capacity, stations, section, booked, held) {
   const n = stations || 4;
@@ -124,11 +136,14 @@ function joinNames(names) {
 
 function nowIso() { return new Date().toISOString(); }
 
-async function liveHolds(db, sessionIds) {
+// opts.strict: an admin change to stations or capacity must see every hold or it strands
+// them, so a failed read throws instead of counting none.
+async function liveHolds(db, sessionIds, opts) {
   if (!sessionIds || !sessionIds.length) return [];
   const { data, error } = await db.from('booking_holds')
-    .select('session_id,section,spots,claimed,expires_at,cancelled_at')
+    .select('id,session_id,section,kind,spots,claimed,expires_at,cancelled_at')
     .in('session_id', sessionIds).is('cancelled_at', null).gt('expires_at', nowIso());
+  if (error && opts && opts.strict) throw new Error('live holds: ' + error.message);
   // Before the migration runs the table does not exist: count no holds rather than fail.
   if (error) { console.warn('[friends] live holds:', error.message); return []; }
   return data || [];
@@ -159,14 +174,16 @@ function listPrice() { return Number(process.env.SINGLE_SESSION_PRICE_AED || 99)
 // coaching-only account) gets its row added. A friend who cannot be made into a separate
 // member (their email is the buyer's, a repeat, or the auth service refuses it) is left
 // out and their ticket refunded, rather than holding up the whole group.
-async function memberIdsForFriends(db, friends, buyerId) {
+// opts.create false: look the friends up only, make nothing.
+async function memberIdsForFriends(db, friends, buyerId, opts) {
   const { createGuestMember, authService } = require('./_lib');
+  const create = !(opts && opts.create === false);
   const out = [];
   for (const f of friends) {
     try {
       const { data: known } = await db.from('members').select('id').eq('email', f.email).limit(1);
       let id = known && known.length ? known[0].id : null;
-      if (!id) {
+      if (!id && create) {
         try {
           id = (await createGuestMember(db, { name: f.name, email: f.email, guestOf: buyerId })).memberId;
         } catch (e) {
@@ -229,9 +246,8 @@ async function namesFor(db, ids) {
   return out;
 }
 
-// A card payment that could not become a seat: refund it and tell the buyer plainly.
-async function refundUnplaced(db, sessionObj, { memberId, sessionId, reason, group }) {
-  const refund = await refundCheckout(db, sessionObj, { amountAed: null, reason });
+// Tell the buyer plainly why their card was refunded.
+async function refundNotice(db, sessionObj, { memberId, sessionId, reason, group, refunded }) {
   try {
     const { sendRefundNotice } = require('./_email');
     const [sess, who] = await Promise.all([sessionFor(db, sessionId), namesFor(db, [memberId])]);
@@ -239,47 +255,87 @@ async function refundUnplaced(db, sessionObj, { memberId, sessionId, reason, gro
     if (m && m.email) {
       await sendRefundNotice({
         to: m.email, firstName: firstName(m.full_name), sessionDate: sess && sess.session_date,
-        amount: (sessionObj.amount_total || 0) / 100, group: !!group, refunded: refund.ok, reason
+        amount: (sessionObj.amount_total || 0) / 100, group: !!group, refunded, reason
       });
     }
   } catch (e) { console.warn('[friends] refund email skipped:', e && e.message); }
+}
+
+// A card payment that could not become a seat: refund it and tell the buyer plainly.
+async function refundUnplaced(db, sessionObj, { memberId, sessionId, reason, group }) {
+  const refund = await refundCheckout(db, sessionObj, { amountAed: null, reason });
+  await refundNotice(db, sessionObj, { memberId, sessionId, reason, group, refunded: refund.ok });
   return refund;
 }
 
-// kind 'group': the buyer plus friends, one station.
-// Returns { refundedAll, buyerRefunded } or { dedup } or { error }. buyerRefunded: the buyer
-// already had a seat, so their own ticket went back and their promo must not be redeemed.
-async function fulfilGroup(db, sessionObj, md) {
+// The checkout hold behind a paid group, and members for the friends typed into it. Runs
+// BEFORE claim_fulfilment: up to 7 accounts take a while, and a pass cut short after the
+// claim would leave the payment marked paid with no seats. Once the hold is settled the
+// friends are only looked up, for their names. A failed read answers { error } so Stripe
+// retries; it never turns into a refund.
+async function prepareGroup(db, md) {
+  const { data: hold, error } = await db.from('booking_holds')
+    .select('id,session_id,section,friends,fulfilled_at,outcome,settled_at').eq('id', md.hold_id).maybeSingle();
+  if (error) return { error: 'hold read: ' + error.message };
+  const typed = hold && Array.isArray(hold.friends) ? hold.friends.filter((f) => f && f.email) : [];
+  const members = hold && hold.session_id === md.session_id
+    ? await memberIdsForFriends(db, typed, md.member_id, { create: !hold.fulfilled_at }) : [];
+  return { hold, typed, members };
+}
+
+// Marks a paid group's hold settled. first is true only for the pass that marks it, so the
+// refund email and the confirmations go out once.
+async function settle(db, hold) {
+  if (!hold) return { first: true };
+  const { data, error } = await db.from('booking_holds').update({ settled_at: nowIso() })
+    .eq('id', hold.id).is('settled_at', null).select('id');
+  if (error) return { error: 'settle hold: ' + error.message };
+  return { first: !!(data && data.length) };
+}
+
+// kind 'group': the buyer plus friends, one station. group is prepareGroup's answer.
+// Safe to run again for the same checkout, so a retry after a lost reply finishes the
+// refund and the emails instead of stopping at dedup: book_group_paid answers a repeat
+// from the outcome stored on the hold, the refund is worked out from that outcome (the
+// same amount on every pass, under one Stripe idempotency key per checkout), and the
+// emails go out only on the pass that marks the hold settled.
+// Returns { refundedAll, buyerRefunded } or { error }. buyerRefunded: the buyer already
+// had a seat, so their own ticket went back and their promo must not be redeemed.
+async function fulfilGroup(db, sessionObj, md, group) {
   const paid = (sessionObj.amount_total || 0) / 100;
   const buyerAmount = Number(md.buyer_amount) || 0;
   const friendAmount = Number(md.friend_amount) || 0;
-  const { data: hold } = await db.from('booking_holds')
-    .select('id,session_id,section,friends,fulfilled_at').eq('id', md.hold_id).maybeSingle();
-  // A retry after this group was already booked: nothing to book, refund or send.
-  if (hold && hold.fulfilled_at) return { dedup: true };
-  const typed = hold && Array.isArray(hold.friends) ? hold.friends.filter((f) => f && f.email) : [];
+  const { hold, typed, members } = group;
 
   let result = { ok: false, reason: 'no_hold' };
-  let members = [];
   if (hold && hold.session_id === md.session_id) {
-    // Accounts for the friends exist only now that the card went through.
-    members = await memberIdsForFriends(db, typed, md.member_id);
-    const r = await db.rpc('book_group_paid', {
-      p_buyer: md.member_id, p_session: md.session_id, p_section: hold.section || md.section || null,
-      p_friends: members.map((m) => m.member_id),
-      p_buyer_amount: buyerAmount, p_friend_amount: friendAmount, p_hold: hold.id
-    });
-    if (r.error) return { error: 'book_group_paid: ' + r.error.message };
-    result = r.data;
-    if (result && result.dedup) return { dedup: true };
+    if (hold.fulfilled_at) result = hold.outcome;
+    else {
+      const r = await db.rpc('book_group_paid', {
+        p_buyer: md.member_id, p_session: md.session_id, p_section: hold.section || md.section || null,
+        p_friends: members.map((m) => m.member_id),
+        p_buyer_amount: buyerAmount, p_friend_amount: friendAmount, p_hold: hold.id
+      });
+      if (r.error) return { error: 'book_group_paid: ' + r.error.message };
+      result = r.data;
+    }
   }
 
-  const unused = Math.max(0, typed.length - members.length);
+  // Typed friends who could not become members were never sent to book_group_paid. Counted
+  // from its answer, so a retry refunds exactly what the first pass did.
+  const sent = result && result.ok ? (result.booked || []).length + (result.already || []).length - 1 : typed.length;
+  const unused = Math.max(0, typed.length - sent);
   const plan = planGroupOutcome({ result, buyerId: md.member_id, buyerAmount, friendAmount, paid, unused });
   if (plan.full) {
-    console.warn('[fulfill] group not placed, refunding:', result && (result.error || result.reason));
-    await refundUnplaced(db, sessionObj, { memberId: md.member_id, sessionId: md.session_id,
-      reason: (result && result.reason) || 'full', group: true });
+    // Nobody new to book means everyone was already in, not that the Sunday filled up.
+    const reason = result && result.ok ? 'already_booked' : (result && result.reason) || 'full';
+    console.warn('[fulfill] group not placed, refunding:', reason);
+    const refund = await refundCheckout(db, sessionObj, { amountAed: null, reason });
+    const done = await settle(db, hold);
+    if (done.error) return { error: done.error };
+    if (done.first) {
+      await refundNotice(db, sessionObj, { memberId: md.member_id, sessionId: md.session_id, reason, group: true, refunded: refund.ok });
+    }
     return { refundedAll: true };
   }
   const buyerRefunded = plan.already.indexOf(md.member_id) !== -1;
@@ -287,6 +343,9 @@ async function fulfilGroup(db, sessionObj, md) {
   if (plan.refund > 0) {
     refunded = await refundCheckout(db, sessionObj, { amountAed: plan.refund, keptAed: paid - plan.refund, reason: 'already_booked' });
   }
+  const done = await settle(db, hold);
+  if (done.error) return { error: done.error };
+  if (!done.first) return { refundedAll: false, buyerRefunded };
 
   // Confirmations. Friends' names are the ones the buyer typed, never a member's stored
   // name, and a refunded friend ticket is never named.
@@ -335,7 +394,7 @@ async function fulfilGroup(db, sessionObj, md) {
 module.exports = {
   MAX_FRIENDS, STRIPE_EXPIRE_MIN,
   cleanEmail, cleanName, firstName, validToken, cleanFriends, friendPrice, holdState, bookingOpen,
-  sectionCap, heldBySession, stationRoom, planGroupOutcome, joinNames,
+  sectionCap, heldBySession, capacityForBooker, stationRoom, planGroupOutcome, joinNames,
   liveHolds, stationLoad, promoConfigPct, listPrice, memberIdsForFriends,
-  refundCheckout, refundUnplaced, fulfilGroup, sessionFor, namesFor
+  refundCheckout, refundUnplaced, prepareGroup, fulfilGroup, sessionFor, namesFor
 };

@@ -769,6 +769,14 @@ async function fulfillCheckoutSession(db, sessionObj) {
     await ensureMember(db, authUser || { id: md.member_id });
   }
 
+  // A paid group's hold and its friends' members come before the claim (prepareGroup): a
+  // pass cut short there leaves the payment pending, so Stripe's retry runs it again.
+  let group = null;
+  if (md.kind === 'group' && md.session_id) {
+    group = await require('./_friends').prepareGroup(db, md);
+    if (group.error) return { ok: false, error: group.error };
+  }
+
   const claim = await db.rpc('claim_fulfilment', {
     p_session_id: sessionObj.id,
     p_payment_intent: sessionObj.payment_intent,
@@ -781,6 +789,12 @@ async function fulfillCheckoutSession(db, sessionObj) {
   });
   if (claim.error) return { ok: false, error: 'claim_fulfilment: ' + claim.error.message };
   if (!claim.data || claim.data.ok !== true) {
+    // Already claimed. A group whose first pass stopped after the claim (cut short, or its
+    // reply lost) is finished here: booked, refunded and told, each once (fulfilGroup).
+    if (group && group.hold && !group.hold.settled_at) {
+      const out = await require('./_friends').fulfilGroup(db, sessionObj, md, group);
+      if (out.error) return { ok: false, error: out.error };
+    }
     return { ok: true, dedup: true, reason: (claim.data && claim.data.reason) || 'already_claimed' };
   }
 
@@ -896,7 +910,7 @@ async function fulfillCheckoutSession(db, sessionObj) {
     // The buyer plus friends on one station (api/checkout.js startGroup). Books, refunds
     // anyone who could not be placed, and sends every confirmation itself.
     const { fulfilGroup } = require('./_friends');
-    const out = await fulfilGroup(db, sessionObj, md);
+    const out = await fulfilGroup(db, sessionObj, md, group);
     if (out.error) { await releaseClaim(db, sessionObj); return { ok: false, error: out.error }; }
     refunded = !!out.refundedAll;
     promoVoid = !!out.buyerRefunded;

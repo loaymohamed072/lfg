@@ -15,11 +15,14 @@
 -- Held spots (unexpired, uncancelled, not yet claimed) count as taken everywhere the
 -- database measures fullness: session_station_counts (the balancer), the full-session
 -- checks in book_with_credit and book_paid, and maybe_bump_capacity. api/sessions.js
--- adds the same count for the booking page.
+-- adds the same count for the booking page. A booker that held spots keep out grows a
+-- Sunday below max_capacity (bump_capacity_for_held), and a card that already paid is
+-- never refused for someone else's unpaid group checkout.
 --
 -- Idempotent. Signatures of existing functions are unchanged, so current callers keep
--- working: book_with_credit and book_paid differ only in counting held spots and in
--- clearing with_member_id when they reuse a cancelled row.
+-- working: book_with_credit and book_paid differ only in counting held spots (and growing
+-- or giving way for them, as above) and in clearing with_member_id when they reuse a
+-- cancelled row.
 --
 -- DEPLOY ORDER: apply this migration BEFORE deploying the code that uses it. The code
 -- reads bookings.with_member_id (api/admin/roster.js) and calls the new functions. The
@@ -44,13 +47,18 @@ create table if not exists public.booking_holds (
   kind text not null check (kind in ('invite', 'checkout')),
   stripe_session_id text,                        -- checkout holds
   friends jsonb,                                 -- checkout holds: [{name, email}] as typed; members are made after payment
-  fulfilled_at timestamptz,                      -- checkout holds: the paid group was booked (a retry is a no-op)
+  fulfilled_at timestamptz,                      -- checkout holds: the payment was settled, booked or refunded (a retry answers from outcome)
+  outcome jsonb,                                 -- checkout holds: book_group_paid's answer, so a retry can finish the refund and emails
+  settled_at timestamptz,                        -- checkout holds: the refund and emails went out (once)
   expires_at timestamptz not null,
   created_at timestamptz not null default now(),
   cancelled_at timestamptz,
-  constraint booking_holds_claimed_range check (claimed between 0 and spots)
+  constraint booking_holds_claimed_range check (claimed between 0 and spots),
+  constraint booking_holds_outcome_kept check (fulfilled_at is null or outcome is not null)
 );
 alter table public.booking_holds add column if not exists fulfilled_at timestamptz;
+alter table public.booking_holds add column if not exists outcome jsonb;
+alter table public.booking_holds add column if not exists settled_at timestamptz;
 create index if not exists booking_holds_session_live_idx on public.booking_holds (session_id, section)
   where cancelled_at is null;
 create index if not exists booking_holds_host_idx on public.booking_holds (host_member_id, created_at desc);
@@ -101,14 +109,15 @@ returns int[] language sql stable set search_path to 'public' as $$
 $$;
 
 -- Live held spots per station. p_except leaves one hold out: the one being claimed,
--- whose spots are about to turn into bookings.
-create or replace function public.session_held_counts(p_session uuid, p_n int, p_except uuid default null)
+-- whose spots are about to turn into bookings. p_kind counts one kind of hold only.
+create or replace function public.session_held_counts(p_session uuid, p_n int, p_except uuid default null, p_kind text default null)
 returns int[] language sql stable set search_path to 'public' as $$
   select array_agg(coalesce(h.held, 0)::int order by i)
     from generate_series(0, p_n - 1) i
     left join (select section, sum(spots - claimed) held from public.booking_holds
                 where session_id = p_session and cancelled_at is null and expires_at > now()
                   and claimed < spots and id is distinct from p_except
+                  and (p_kind is null or kind = p_kind)
                 group by section) h
       on h.section = chr(65 + i);
 $$;
@@ -139,7 +148,8 @@ returns int language sql stable set search_path to 'public' as $$
 $$;
 
 -- A Sunday filling with friends' invite holds grows like one filling with bookings. An
--- unpaid group checkout never moves capacity: it is free to start and lasts 35 minutes.
+-- unpaid group checkout never moves capacity on its own: it is free to start and lasts 35
+-- minutes. A real booking it blocks does (bump_capacity_for_held below).
 create or replace function public.maybe_bump_capacity(p_session uuid)
  returns void language plpgsql security definer set search_path to 'public' as $function$
 declare v_cap int; v_max int; v_inc int; v_thr int; v_booked int;
@@ -154,6 +164,27 @@ begin
   if (v_cap - v_booked) <= v_thr and v_cap < v_max then
     update public.sessions set capacity = least(v_cap + v_inc, v_max) where id = p_session;
   end if;
+end; $function$;
+
+-- A real booker held out by spots others hold for friends grows the Sunday the normal way:
+-- one bump_increment, never past max_capacity. Without it, held spots alone could sell out
+-- a Sunday that should grow (24 booked plus four 2-person checkouts at capacity 32).
+-- p_need is the seats asked for, p_except a live hold whose spots are the booker's own.
+-- Answers the capacity after, as stored (sessions_even_capacity rounds it up to a whole
+-- pair per station). api/_friends.js capacityForBooker mirrors it for the page.
+create or replace function public.bump_capacity_for_held(p_session uuid, p_need int default 1, p_except uuid default null)
+returns int language plpgsql security definer set search_path to 'public' as $function$
+declare v_cap int; v_max int; v_inc int; v_own int;
+begin
+  select capacity, max_capacity, bump_increment into v_cap, v_max, v_inc
+    from public.sessions where id = p_session for update;
+  select coalesce(sum(spots - claimed), 0) into v_own from public.booking_holds
+   where id = p_except and cancelled_at is null and expires_at > now() and claimed < spots;
+  if v_cap < v_max and public.session_taken(p_session) - v_own + coalesce(p_need, 1) > v_cap then
+    update public.sessions set capacity = least(v_cap + v_inc, v_max) where id = p_session
+    returning capacity into v_cap;
+  end if;
+  return v_cap;
 end; $function$;
 
 -- ---------------------------------------------------------------- existing booking paths
@@ -177,9 +208,13 @@ begin
   select id, status into v_existing_id, v_existing_status from public.bookings where member_id=p_member and session_id=p_session;
   if v_existing_status in ('booked','attended') then return jsonb_build_object('ok',false,'error','You already booked this session'); end if;
 
-  -- Held spots for friends count as taken.
+  -- Held spots for friends count as taken. When they hold this booker out, a Sunday below
+  -- max_capacity grows for them.
   v_booked := public.session_taken(p_session);
-  if v_booked >= v_cap then return jsonb_build_object('ok',false,'error','This session is full'); end if;
+  if v_booked >= v_cap then
+    v_cap := public.bump_capacity_for_held(p_session);
+    if v_booked >= v_cap then return jsonb_build_object('ok',false,'error','This session is full'); end if;
+  end if;
 
   v_counts := public.session_station_counts(p_session, v_stations);
   v_open := public.balanced_open_stations(v_cap, v_stations, v_counts);
@@ -222,22 +257,37 @@ create or replace function public.book_paid(p_member uuid, p_session uuid, p_sec
  returns jsonb language plpgsql security definer set search_path to 'public' as $function$
 declare v_cap int; v_status text; v_booked int; v_stations int; v_counts int[]; v_open text[];
         v_chosen text; v_booking_id uuid; v_existing_id uuid; v_existing_status text;
+        v_unpaid int := 0; v_b int[]; v_h int[];
 begin
   select capacity, status, coalesce(stations,4) into v_cap, v_status, v_stations
     from public.sessions where id = p_session for update;
   if not found then return jsonb_build_object('ok',false,'error','Session not found'); end if;
   select id, status into v_existing_id, v_existing_status from public.bookings where member_id=p_member and session_id=p_session;
   if v_existing_status in ('booked','attended') then return jsonb_build_object('ok',true,'dedup',true); end if;
-  -- Held spots for friends count as taken.
+  -- Held spots for friends count as taken. When they hold this payer out, a Sunday below
+  -- max_capacity grows for them. At max_capacity, spots held for unpaid group checkouts
+  -- still give way: this card is already charged, and is never refunded for someone
+  -- else's checkout.
   v_booked := public.session_taken(p_session);
   if v_booked >= v_cap then
-    perform public.maybe_bump_capacity(p_session);
-    select capacity into v_cap from public.sessions where id = p_session;
-    if v_booked >= v_cap then return jsonb_build_object('ok',false,'error','Session full'); end if;
+    v_cap := public.bump_capacity_for_held(p_session);
+    if v_booked >= v_cap then
+      select coalesce(sum(spots - claimed), 0)::int into v_unpaid from public.booking_holds
+       where session_id = p_session and kind = 'checkout' and cancelled_at is null
+         and expires_at > now() and claimed < spots;
+      if v_booked - v_unpaid >= v_cap then return jsonb_build_object('ok',false,'error','Session full'); end if;
+    end if;
   end if;
 
   v_counts := public.session_station_counts(p_session, v_stations);
   v_open := public.balanced_open_stations(v_cap, v_stations, v_counts);
+  if cardinality(v_open) = 0 and v_unpaid > 0 then
+    -- Every station is full only with spots held for unpaid checkouts: count without them.
+    v_b := public.session_booked_counts(p_session, v_stations);
+    v_h := public.session_held_counts(p_session, v_stations, null, 'invite');
+    for i in 1..v_stations loop v_counts[i] := v_b[i] + v_h[i]; end loop;
+    v_open := public.balanced_open_stations(v_cap, v_stations, v_counts);
+  end if;
   if p_section = any(v_open) then
     v_chosen := p_section;
   else
@@ -271,6 +321,8 @@ end; $function$;
 --             per Sunday, and it never raises capacity. Every check runs before the buyer's
 --             earlier unpaid hold is replaced; its Stripe session id comes back so the caller
 --             can expire it.
+-- The daily caps count a host's holds on every Sunday, so the function takes one lock per
+-- host first (as record_hold_invite does); the session row lock only covers one Sunday.
 create or replace function public.create_booking_hold(
   p_host uuid, p_session uuid, p_kind text, p_spots int, p_price numeric,
   p_section text default null, p_friends jsonb default null)
@@ -283,6 +335,7 @@ begin
   if p_kind is null or p_kind not in ('invite','checkout') then
     return jsonb_build_object('ok',false,'error','Unknown hold type');
   end if;
+  perform pg_advisory_xact_lock(hashtext('lfg_booking_holds:' || p_host::text));
   select capacity, status, coalesce(stations,4) into v_cap, v_status, v_stations
     from public.sessions where id = p_session for update;
   if not found then return jsonb_build_object('ok',false,'error','Session not found'); end if;
@@ -329,18 +382,22 @@ begin
       return jsonb_build_object('ok',false,'error','A group is you plus 1 to 7 friends');
     end if;
     v_section := p_section;
-    select count(*) into v_recent from public.booking_holds
-     where host_member_id = p_host and kind = 'checkout' and fulfilled_at is null
-       and created_at > now() - interval '24 hours';
-    if v_recent >= 3 then
-      return jsonb_build_object('ok',false,'error','You started 3 group checkouts today without paying. Book your own spot now, or try the group again tomorrow.');
-    end if;
-    -- The buyer's own unpaid hold on this Sunday gets replaced: leave it out of every count.
+    -- The buyer's own live unpaid hold on this Sunday gets replaced: leave it out of every count.
     select id, spots - claimed, stripe_session_id into v_old_id, v_old_left, v_old_stripe
       from public.booking_holds
      where host_member_id = p_host and session_id = p_session and kind = 'checkout' and cancelled_at is null
        and fulfilled_at is null and expires_at > now() and claimed < spots
      order by created_at desc limit 1;
+    -- Abandoned card forms are what the cap stops: checkouts that held spots and were never
+    -- paid, live or run out. A replaced hold and one released when Stripe failed (both
+    -- cancelled) do not count, nor does a paid one, so reopening the form never locks a
+    -- buyer out.
+    select count(*) into v_recent from public.booking_holds
+     where host_member_id = p_host and kind = 'checkout' and cancelled_at is null and fulfilled_at is null
+       and created_at > now() - interval '24 hours' and id is distinct from v_old_id;
+    if v_recent >= 3 then
+      return jsonb_build_object('ok',false,'error','You started 3 group checkouts today without paying. Book your own spot now, or try the group again tomorrow.');
+    end if;
     select coalesce(sum(spots - claimed), 0) into v_checkout_held from public.booking_holds
      where session_id = p_session and kind = 'checkout' and cancelled_at is null and expires_at > now()
        and claimed < spots and id is distinct from v_old_id;
@@ -366,11 +423,10 @@ begin
                     else 'Station ' || v_section || ' has room for ' || v_room || ' of you' end);
   end if;
 
-  -- Every check passed: only now does the buyer's earlier unpaid hold go.
-  if p_kind = 'checkout' then
-    update public.booking_holds set cancelled_at = now()
-     where host_member_id = p_host and session_id = p_session and kind = 'checkout'
-       and cancelled_at is null and fulfilled_at is null and claimed = 0;
+  -- Every check passed: only now does the buyer's earlier live hold go. One that ran out
+  -- unpaid stays as it is, so it keeps counting toward the daily cap.
+  if v_old_id is not null then
+    update public.booking_holds set cancelled_at = now() where id = v_old_id;
   end if;
 
   v_token := replace(gen_random_uuid()::text, '-', '') || replace(gen_random_uuid()::text, '-', '');
@@ -476,15 +532,17 @@ end; $function$;
 -- station first, then any station the whole group fits on, emptiest first, with one
 -- capacity-bump retry like book_paid. All or nothing: when no station fits, nobody is
 -- booked and the caller refunds. Anyone already booked is skipped and reported, so the
--- caller can refund that ticket. Idempotent per checkout: once the group is booked the
--- hold is marked fulfilled, and a second call answers dedup without touching anything.
+-- caller can refund that ticket. Idempotent per checkout: the answer (booked, everyone
+-- already in, no room, or called off) is stored on the hold as outcome, and a second
+-- call returns that same answer marked dedup without touching anything, so a retry after
+-- a lost reply can still finish the refund and the emails.
 create or replace function public.book_group_paid(p_buyer uuid, p_session uuid, p_section text, p_friends uuid[],
   p_buyer_amount numeric, p_friend_amount numeric, p_hold uuid default null)
 returns jsonb language plpgsql security definer set search_path to 'public' as $function$
 declare v_cap int; v_status text; v_stations int; v_hold record; v_mine boolean := false; v_live boolean := false; v_live_left int := 0;
         v_members uuid[]; v_new uuid[] := '{}'; v_already uuid[] := '{}'; v_m uuid; v_st text;
         v_need int; v_booked int[]; v_held int[]; v_chosen text; v_idx int; v_try int;
-        v_existing_id uuid; v_booking_id uuid; v_out jsonb := '[]'::jsonb;
+        v_existing_id uuid; v_booking_id uuid; v_out jsonb := '[]'::jsonb; v_ans jsonb;
 begin
   select capacity, status, coalesce(stations,4) into v_cap, v_status, v_stations
     from public.sessions where id = p_session for update;
@@ -492,17 +550,20 @@ begin
   if p_hold is not null then
     select * into v_hold from public.booking_holds where id = p_hold for update;
     v_mine := found and v_hold.session_id = p_session and v_hold.kind = 'checkout' and v_hold.host_member_id = p_buyer;
-    -- A retry after this group was already booked (the first call committed, its reply was
-    -- lost): nothing to book and nothing to refund.
+    -- A retry after this checkout was settled (the first call committed, its reply was lost).
     if v_mine and v_hold.fulfilled_at is not null then
-      return jsonb_build_object('ok',true,'dedup',true,'section',v_hold.section);
+      return v_hold.outcome || jsonb_build_object('dedup', true);
     end if;
     v_live := v_mine and v_hold.cancelled_at is null and v_hold.expires_at > now() and v_hold.claimed < v_hold.spots;
     if v_live then v_live_left := v_hold.spots - v_hold.claimed; end if;
   end if;
   if v_status = 'cancelled' then
-    if v_live then update public.booking_holds set cancelled_at = now() where id = p_hold; end if;
-    return jsonb_build_object('ok',false,'error','This session was called off','reason','closed');
+    v_ans := jsonb_build_object('ok',false,'error','This session was called off','reason','closed');
+    if v_mine then
+      update public.booking_holds set cancelled_at = case when v_live then now() else cancelled_at end,
+             fulfilled_at = now(), outcome = v_ans where id = p_hold;
+    end if;
+    return v_ans;
   end if;
 
   v_members := array[p_buyer];
@@ -515,8 +576,12 @@ begin
   end loop;
   v_need := coalesce(cardinality(v_new), 0);
   if v_need = 0 then
-    if v_live then update public.booking_holds set expires_at = least(expires_at, now()) where id = p_hold; end if;
-    return jsonb_build_object('ok',true,'section',null,'moved',false,'booked','[]'::jsonb,'already',to_jsonb(v_already));
+    v_ans := jsonb_build_object('ok',true,'section',null,'moved',false,'booked','[]'::jsonb,'already',to_jsonb(v_already));
+    if v_mine then
+      update public.booking_holds set expires_at = least(expires_at, now()), fulfilled_at = now(), outcome = v_ans
+       where id = p_hold;
+    end if;
+    return v_ans;
   end if;
 
   for v_try in 1..2 loop
@@ -539,12 +604,17 @@ begin
     end if;
     exit when v_chosen is not null or v_try = 2;
     perform public.maybe_bump_capacity(p_session);
-    select capacity into v_cap from public.sessions where id = p_session;
+    -- Spots others hold for friends grow the Sunday for a paid group too.
+    v_cap := public.bump_capacity_for_held(p_session, v_need, case when v_live then p_hold end);
   end loop;
 
   if v_chosen is null then
-    if v_live then update public.booking_holds set cancelled_at = now() where id = p_hold; end if;
-    return jsonb_build_object('ok',false,'error','No station has room for the group','reason','full','need',v_need);
+    v_ans := jsonb_build_object('ok',false,'error','No station has room for the group','reason','full','need',v_need);
+    if v_mine then
+      update public.booking_holds set cancelled_at = case when v_live then now() else cancelled_at end,
+             fulfilled_at = now(), outcome = v_ans where id = p_hold;
+    end if;
+    return v_ans;
   end if;
 
   foreach v_m in array v_new loop
@@ -566,15 +636,16 @@ begin
     v_out := v_out || jsonb_build_array(jsonb_build_object('member_id', v_m, 'booking_id', v_booking_id));
   end loop;
 
+  v_ans := jsonb_build_object('ok',true,'section',v_chosen,'moved',v_chosen is distinct from p_section,
+                              'booked',v_out,'already',to_jsonb(v_already));
   if v_mine then
     update public.booking_holds
        set claimed = case when v_live then least(spots, claimed + v_need) else claimed end,
-           expires_at = least(expires_at, now()), fulfilled_at = now()
+           expires_at = least(expires_at, now()), fulfilled_at = now(), outcome = v_ans
      where id = p_hold;
   end if;
   perform public.maybe_bump_capacity(p_session);
-  return jsonb_build_object('ok',true,'section',v_chosen,'moved',v_chosen is distinct from p_section,
-                            'booked',v_out,'already',to_jsonb(v_already));
+  return v_ans;
 end; $function$;
 
 -- One invite-by-email attempt, hit or miss, under one lock per host, so the caps cannot be
@@ -607,8 +678,9 @@ end; $function$;
 
 -- Service role only, like every booking function (SECURITY.md).
 revoke execute on function
-  public.session_booked_counts(uuid,int), public.session_held_counts(uuid,int,uuid),
+  public.session_booked_counts(uuid,int), public.session_held_counts(uuid,int,uuid,text),
   public.session_station_counts(uuid,int), public.session_taken(uuid), public.maybe_bump_capacity(uuid),
+  public.bump_capacity_for_held(uuid,int,uuid),
   public.book_with_credit(uuid,uuid,text), public.book_paid(uuid,uuid,text,numeric),
   public.create_booking_hold(uuid,uuid,text,int,numeric,text,jsonb),
   public.book_from_hold(uuid,uuid,text,numeric),
@@ -616,8 +688,9 @@ revoke execute on function
   public.record_hold_invite(uuid,uuid,text,uuid)
   from public, anon, authenticated;
 grant execute on function
-  public.session_booked_counts(uuid,int), public.session_held_counts(uuid,int,uuid),
+  public.session_booked_counts(uuid,int), public.session_held_counts(uuid,int,uuid,text),
   public.session_station_counts(uuid,int), public.session_taken(uuid), public.maybe_bump_capacity(uuid),
+  public.bump_capacity_for_held(uuid,int,uuid),
   public.book_with_credit(uuid,uuid,text), public.book_paid(uuid,uuid,text,numeric),
   public.create_booking_hold(uuid,uuid,text,int,numeric,text,jsonb),
   public.book_from_hold(uuid,uuid,text,numeric),

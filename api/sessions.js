@@ -6,7 +6,7 @@
 // them off the row means this public endpoint never needs the api schema. Also
 // returns recent group photos (each tied to its Sunday) for the gallery.
 const { admin, getUser, formatDate } = require('./_lib');
-const { liveHolds, heldBySession } = require('./_friends');
+const { liveHolds, heldBySession, capacityForBooker } = require('./_friends');
 
 function stationLabels(n) {
   const out = [];
@@ -46,7 +46,7 @@ module.exports = async (req, res) => {
     const nowMs = Date.now();
     const todayStr = new Date(new Date().toDateString()).toISOString().slice(0, 10);
     const fromStr = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-    const SEL = 'id,session_date,start_time,location,capacity,max_capacity,status,stations,photo_url,theme';
+    const SEL = 'id,session_date,start_time,location,capacity,max_capacity,bump_increment,status,stations,photo_url,theme';
 
     // Calendar + recent group photos (past/today, newest first) in parallel.
     const [sessRes, photoRes] = await Promise.all([
@@ -108,12 +108,15 @@ module.exports = async (req, res) => {
     const out = sessions.map(s => {
       const e = bySession[s.id] || { total: 0, held: 0, sections: {}, mine: false };
       const n = s.stations || 4;
-      const spotsLeft = Math.max(0, s.capacity - e.total - e.held);
+      // Held spots never sell out a Sunday that can still grow: the next booking grows it,
+      // so the page shows the capacity that booking meets (bump_capacity_for_held).
+      const capNow = capacityForBooker(s, e.total, e.held);
+      const spotsLeft = Math.max(0, capNow - e.total - e.held);
       const labels = stationLabels(n);
       const counts = labels.map(l => e.sections[l] || 0);
-      const room = stationRoom(s.capacity, n, counts);
+      const room = stationRoom(capNow, n, counts);
       const sections = labels.map((label, i) => {
-        const cap = sectionCap(s.capacity, i, n);
+        const cap = sectionCap(capNow, i, n);
         const booked = counts[i];
         // spots_now: what this station can take before the others catch up (the picker's
         // number). waiting: has room, but the others must catch up first.

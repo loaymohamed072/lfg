@@ -14,11 +14,20 @@ delete process.env.GHL_LOCATION_API_KEY;
 delete process.env.MANYCHAT_API_KEY;
 
 // ------------------------------------------------------------------ in-memory Supabase
+// Like PostgREST, a select returns only the columns it names (a column the code forgot to
+// select reads as undefined, as it would in production). db.fail['table:mode'] makes that
+// query answer with an error instead, before it touches anything.
 let DB = null;
 class Query {
-  constructor(db, t) { Object.assign(this, { db, t, f: [], mode: 'select', opts: {}, one: null, n: null, ret: false }); }
+  constructor(db, t) { Object.assign(this, { db, t, f: [], mode: 'select', opts: {}, one: null, n: null, ret: false, cols: null }); }
   rows() { return this.db.tables[this.t] || (this.db.tables[this.t] = []); }
-  select(cols, opts) { if (this.mode === 'select') this.opts = opts || {}; else this.ret = true; return this; }
+  select(cols, opts) { this.cols = cols || null; if (this.mode === 'select') this.opts = opts || {}; else this.ret = true; return this; }
+  pick(rows) {
+    // Embedded resources (members(email)) are not modelled: those rows pass through whole.
+    if (!this.cols || /[(*]/.test(this.cols)) return rows;
+    const keys = this.cols.split(',').map((c) => c.trim()).filter(Boolean);
+    return rows.map((r) => { const o = {}; keys.forEach((k) => { o[k] = r[k] === undefined ? null : r[k]; }); return o; });
+  }
   insert(v) { this.mode = 'insert'; this.v = [].concat(v); return this; }
   update(v) { this.mode = 'update'; this.v = v; return this; }
   upsert(v, o) { this.mode = 'upsert'; this.v = [].concat(v); this.key = ((o && o.onConflict) || 'id').split(','); return this; }
@@ -39,6 +48,8 @@ class Query {
   single() { this.one = 'one'; return this; }
   then(ok, bad) { return Promise.resolve().then(() => this.run()).then(ok, bad); }
   run() {
+    const failed = this.db.fail[this.t + ':' + this.mode];
+    if (failed) return { data: null, error: { message: failed }, count: null };
     const all = this.rows();
     const hit = all.filter((r) => this.f.every((fn) => fn(r)));
     let out = hit;
@@ -52,6 +63,7 @@ class Query {
       });
     } else if (this.mode === 'delete') this.db.tables[this.t] = all.filter((r) => !hit.includes(r));
     if (this.n != null) out = out.slice(0, this.n);
+    out = this.pick(out);
     const count = this.opts.count ? out.length : null;
     if (this.opts.head) return { data: null, error: null, count };
     if (this.one) return out.length ? { data: out[0], error: null } : { data: null, error: this.one === 'one' ? { message: 'no rows' } : null };
@@ -59,11 +71,11 @@ class Query {
     return { data: out, error: null, count };
   }
 }
-function newDb({ tables = {}, rpc = {}, tokens = {}, authUsers = [] } = {}) {
-  const db = { tables: JSON.parse(JSON.stringify(tables)), rpcCalls: [], authCreated: [] };
+function newDb({ tables = {}, rpc = {}, tokens = {}, authUsers = [], fail = {} } = {}) {
+  const db = { tables: JSON.parse(JSON.stringify(tables)), rpcCalls: [], authCreated: [], fail, log: [] };
   db.from = (t) => new Query(db, t);
   db.rpc = async (name, args) => {
-    db.rpcCalls.push({ name, args });
+    db.rpcCalls.push({ name, args }); db.log.push('rpc:' + name);
     if (!rpc[name]) return { data: null, error: { message: 'unexpected rpc ' + name } };
     try { return { data: await rpc[name](args, db), error: null }; } catch (e) { return { data: null, error: { message: e.message } }; }
   };
@@ -74,7 +86,7 @@ function newDb({ tables = {}, rpc = {}, tokens = {}, authUsers = [] } = {}) {
       createUser: async ({ email, user_metadata }) => {
         if (authUsers.some((u) => u.email === email)) return { data: { user: null }, error: { message: 'A user with this email address has already been registered' } };
         const u = { id: crypto.randomUUID(), email, user_metadata };
-        authUsers.push(u); db.authCreated.push(u);
+        authUsers.push(u); db.authCreated.push(u); db.log.push('auth:' + email);
         return { data: { user: u }, error: null };
       },
       generateLink: async () => ({ data: null, error: { message: 'not used in tests' } })
@@ -139,6 +151,33 @@ function tables(extra) {
 }
 const groupMeta = (extra) => Object.assign({ kind: 'group', member_id: BUYER.id, session_id: SID, section: 'A', hold_id: HOLD,
   buyer_amount: '99', friend_amount: '89', seats: '3' }, extra || {});
+// book_group_paid as the migration writes it: books whoever is not in yet on station A,
+// stores the answer on the hold, and answers a repeat from that stored outcome.
+function groupPaid(a, db) {
+  const hold = db.tables.booking_holds.find((h) => h.id === a.p_hold);
+  if (hold.fulfilled_at) return Object.assign({}, hold.outcome, { dedup: true });
+  const inAlready = (id) => db.tables.bookings.some((b) => b.member_id === id && b.session_id === a.p_session && b.status === 'booked');
+  const people = [a.p_buyer].concat(a.p_friends.filter((id) => id !== a.p_buyer));
+  const already = people.filter(inAlready);
+  const booked = people.filter((id) => !inAlready(id)).map((id) => {
+    const b = { id: crypto.randomUUID(), member_id: id, session_id: a.p_session, section: 'A', status: 'booked' };
+    db.tables.bookings.push(b);
+    return { member_id: id, booking_id: b.id };
+  });
+  const out = { ok: true, section: booked.length ? 'A' : null, moved: false, booked, already };
+  Object.assign(hold, { fulfilled_at: new Date().toISOString(), outcome: out });
+  return out;
+}
+// claim_fulfilment as production has it: pending becomes paid once; after that, already processed.
+function claimOnce(a, db) {
+  const p = db.tables.payments.find((x) => x.stripe_session_id === a.p_session_id);
+  if (!p || p.status !== 'pending') return { ok: false, reason: 'already_processed', status: p && p.status };
+  p.status = 'paid';
+  return { ok: true, claimed: true };
+}
+const groupHold = (friends, extra) => Object.assign({ id: HOLD, session_id: SID, section: 'A', kind: 'checkout', host_member_id: BUYER.id,
+  fulfilled_at: null, outcome: null, settled_at: null, friends }, extra || {});
+const refunds = () => stripeCalls.filter((c) => c[0] === 'refund');
 
 const checkout = require('../api/checkout');
 const friendsApi = require('../api/friends');
@@ -199,12 +238,7 @@ test('4, 2: friends become members after payment, and a retry of a booked group 
     }),
     rpc: {
       claim_fulfilment: () => ({ ok: true, claimed: true }), ensure_referral_code: () => ({}),
-      book_group_paid: (a, db) => {
-        groupCalls++;
-        const hold = db.tables.booking_holds[0];
-        hold.fulfilled_at = new Date().toISOString();
-        return { ok: true, section: 'A', moved: false, already: [], booked: [a.p_buyer].concat(a.p_friends).map((id) => ({ member_id: id, booking_id: crypto.randomUUID() })) };
-      }
+      book_group_paid: (a, db) => { groupCalls++; return groupPaid(a, db); }
     },
     authUsers: [BUYER, MEMBER]
   });
@@ -321,4 +355,193 @@ test('11: capacity cannot drop below booked plus held; removing a station ends i
   assert.equal(r.body.released_holds, 1);
   assert.ok(DB.tables.booking_holds.find((h) => h.id === gone.id).cancelled_at, 'the hold on D ended');
   assert.equal(DB.tables.booking_holds.find((h) => h.id === keep.id).cancelled_at, null, 'the hold on A stays');
+});
+
+// ------------------------------------------------------------------ review fixes, 2026-11-02 (A to F)
+const sessionsApi = require('../api/sessions');
+const liveHold = (section, extra) => Object.assign({ id: crypto.randomUUID(), session_id: SID, section, kind: 'invite', host_member_id: BUYER.id,
+  spots: 2, claimed: 0, expires_at: future(), cancelled_at: null }, extra || {});
+
+test('A: the fake database returns only the columns a select names', async () => {
+  DB = newDb({ tables: { t: [{ id: 1, a: 2, b: 3 }] } });
+  assert.deepEqual((await DB.from('t').select('id, a')).data, [{ id: 1, a: 2 }]);
+  assert.deepEqual((await DB.from('t').select('*')).data, [{ id: 1, a: 2, b: 3 }]);
+});
+
+test('A: a failed hold read or release leaves stations, bookings and holds as they were', async () => {
+  for (const fail of [{ 'booking_holds:select': 'connection reset' }, { 'booking_holds:update': 'connection reset' }]) {
+    const what = Object.keys(fail)[0];
+    DB = newDb({
+      tables: tables({ bookings: [{ id: 'bd', session_id: SID, member_id: MEMBER.id, section: 'D', status: 'booked', booked_at: '2026-11-01' }],
+                       booking_holds: [liveHold('D')] }),
+      tokens: { adm: ADMIN }, authUsers: [ADMIN], fail
+    });
+    const r = await call(setSessionStations, { token: 'adm', body: { session_id: SID, stations: 3 } });
+    assert.equal(r.status, 500, what);
+    assert.equal(DB.tables.sessions[0].stations, 4, what + ': stations unchanged');
+    assert.equal(DB.tables.bookings[0].section, 'D', what + ': nobody moved');
+    assert.equal(DB.tables.booking_holds[0].cancelled_at, null, what + ': the hold is untouched');
+  }
+  // Nor is capacity set below booked plus held when the holds could not be read.
+  DB = newDb({ tables: tables({ booking_holds: [liveHold('A')] }), tokens: { adm: ADMIN }, authUsers: [ADMIN],
+    fail: { 'booking_holds:select': 'connection reset' } });
+  const cap = await call(setCapacity, { token: 'adm', body: { session_id: SID, capacity: 4 } });
+  assert.equal(cap.status, 500);
+  assert.equal(DB.tables.sessions[0].capacity, 32);
+});
+
+test('B: a retry after a lost reply finishes the refund and the emails, once', async () => {
+  stripeCalls.length = 0; mail.length = 0;
+  let lose = true;
+  DB = newDb({
+    tables: tables({
+      bookings: [{ id: 'bkm', member_id: MEMBER.id, session_id: SID, section: 'B', status: 'booked' }],
+      booking_holds: [groupHold([{ name: 'Pal', email: 'stranger@example.com' }, { name: 'Mo', email: 'member@example.com' }])],
+      payments: [{ id: 'p5', stripe_session_id: 'cs_test_r', status: 'pending', kind: 'group', amount_aed: 277 }]
+    }),
+    rpc: {
+      claim_fulfilment: claimOnce, ensure_referral_code: () => ({}),
+      // The booking commits, then its reply is lost on the way back.
+      book_group_paid: (a, db) => { const out = groupPaid(a, db); if (lose) { lose = false; throw new Error('fetch failed'); } return out; }
+    },
+    authUsers: [BUYER, MEMBER]
+  });
+  const session = { id: 'cs_test_r', payment_intent: 'pi_r', amount_total: 27700, metadata: groupMeta() };
+  const first = await L.fulfillCheckoutSession(DB, session);
+  assert.equal(first.ok, false, 'the lost reply fails the webhook, so Stripe retries');
+  assert.equal(DB.tables.payments[0].status, 'pending');
+  assert.equal(refunds().length + mail.length, 0);
+
+  const retry = await L.fulfillCheckoutSession(DB, session);
+  assert.equal(retry.ok, true);
+  assert.equal(DB.rpcCalls.filter((c) => c.name === 'book_group_paid').length, 1, 'booked once');
+  assert.equal(refunds().length, 1, "Mo already had a spot: his ticket comes back");
+  assert.equal(refunds()[0][1].amount, 8900);
+  assert.equal(refunds()[0][2].idempotencyKey, 'lfg-refund-cs_test_r');
+  assert.deepEqual(mail.map((m) => m.to[0]).sort(), ['buyer@example.com', 'stranger@example.com']);
+  assert.match(mail.find((m) => m.to[0] === BUYER.email).html, /1 ticket could not be used, so we refunded AED 89\./);
+
+  // Stripe delivers the same event again: claimed and settled, so nothing more happens.
+  const again = await L.fulfillCheckoutSession(DB, session);
+  assert.equal(again.ok, true);
+  assert.equal(refunds().length, 1, 'no second refund');
+  assert.equal(mail.length, 2, 'no second round of email');
+});
+
+test('B, D: a pass cut short after the claim is finished by the next delivery, once', async () => {
+  // Cut short before booking (the payment says paid, the hold is undecided), and after it.
+  for (const decided of [false, true]) {
+    stripeCalls.length = 0; mail.length = 0;
+    const hold = groupHold([{ name: 'Mo', email: 'member@example.com' }]);
+    const bookings = [];
+    if (decided) {
+      bookings.push({ id: 'bb', member_id: BUYER.id, session_id: SID, section: 'A', status: 'booked' },
+                    { id: 'bm', member_id: MEMBER.id, session_id: SID, section: 'B', status: 'booked' });
+      Object.assign(hold, { fulfilled_at: '2026-11-02T10:00:00Z',
+        outcome: { ok: true, section: 'A', moved: false, booked: [{ member_id: BUYER.id, booking_id: 'bb' }], already: [MEMBER.id] } });
+    }
+    DB = newDb({
+      tables: tables({ bookings, booking_holds: [hold],
+        payments: [{ id: 'p6', stripe_session_id: 'cs_test_k', status: 'paid', kind: 'group', amount_aed: 188 }] }),
+      rpc: { claim_fulfilment: claimOnce, ensure_referral_code: () => ({}), book_group_paid: groupPaid },
+      authUsers: [BUYER, MEMBER]
+    });
+    const session = { id: 'cs_test_k', payment_intent: 'pi_k', amount_total: 18800, metadata: groupMeta() };
+    const out = await L.fulfillCheckoutSession(DB, session);
+    assert.equal(out.ok, true);
+    if (decided) {
+      assert.equal(refunds().length, 1, 'decided: the refund is finished');
+      assert.equal(refunds()[0][1].amount, 8900);
+      assert.deepEqual(mail.map((m) => m.to[0]), ['buyer@example.com']);
+    } else {
+      assert.ok(DB.tables.bookings.some((b) => b.member_id === BUYER.id), 'undecided: the group is booked');
+      assert.ok(DB.tables.bookings.some((b) => b.member_id === MEMBER.id));
+      assert.equal(refunds().length, 0);
+      assert.deepEqual(mail.map((m) => m.to[0]).sort(), ['buyer@example.com', 'member@example.com']);
+    }
+    const sent = mail.length;
+    await L.fulfillCheckoutSession(DB, session);
+    assert.equal(mail.length, sent, 'once');
+    assert.equal(refunds().length, decided ? 1 : 0, 'once');
+  }
+});
+
+test('B: a failed hold read fails the webhook and refunds nothing', async () => {
+  const booked = { fulfilled_at: '2026-11-02T10:00:00Z', outcome: { ok: true, section: 'A', moved: false, booked: [{ member_id: BUYER.id }], already: [] } };
+  for (const hold of [groupHold([{ name: 'Pal', email: 'stranger@example.com' }]), groupHold([], booked)]) {
+    stripeCalls.length = 0; mail.length = 0;
+    DB = newDb({
+      tables: tables({ booking_holds: [hold], payments: [{ id: 'p7', stripe_session_id: 'cs_test_f', status: 'pending', kind: 'group', amount_aed: 188 }] }),
+      rpc: { claim_fulfilment: claimOnce, ensure_referral_code: () => ({}), book_group_paid: groupPaid },
+      authUsers: [BUYER], fail: { 'booking_holds:select': 'connection reset' }
+    });
+    const out = await L.fulfillCheckoutSession(DB, { id: 'cs_test_f', payment_intent: 'pi_f', amount_total: 18800, metadata: groupMeta() });
+    assert.equal(out.ok, false);
+    assert.match(out.error, /hold read/);
+    assert.equal(refunds().length, 0, 'never a refund');
+    assert.equal(mail.length, 0);
+    assert.equal(DB.tables.payments[0].status, 'pending', 'still pending, so the retry runs it again');
+  }
+});
+
+test('C: held spots alone never sell out a Sunday that can still grow', async () => {
+  // Production settings: capacity 32, bump 10. 24 booked plus four 2-person checkouts.
+  const booked = Array.from({ length: 24 }, (_, i) => ({ id: 'cb' + i, session_id: SID, member_id: 'm' + i, section: 'ABCD'[i % 4], status: 'booked' }));
+  const held = ['A', 'B', 'C', 'D'].map((s) => liveHold(s, { kind: 'checkout', host_member_id: 'buyer-' + s }));
+  for (const max of [96, 32]) {
+    const t = tables({ bookings: booked, booking_holds: held });
+    Object.assign(t.sessions[0], { max_capacity: max, bump_increment: 10 });
+    DB = newDb({ tables: t, rpc: { ensure_upcoming_sundays: () => null }, tokens: { tok: BUYER }, authUsers: [BUYER] });
+    const sun = (await call(sessionsApi, { method: 'GET' })).body.sessions.find((s) => s.id === SID);
+    const card = await call(checkout, { token: 'tok', body: { kind: 'single', session_id: SID, section: 'A' } });
+    if (max === 96) {
+      assert.equal(sun.sold_out, false, 'the next booking grows it: 32 + 10, stored as 48');
+      assert.equal(sun.spots_left, 16);
+      assert.ok(sun.sections.every((x) => x.spots_now > 0), JSON.stringify(sun.sections));
+      assert.equal(card.status, 200, JSON.stringify(card.body));
+    } else {
+      assert.equal(sun.sold_out, true, 'at max_capacity it is full');
+      assert.equal(card.status, 409);
+    }
+  }
+});
+
+test('D: friends get their accounts before the payment is claimed', async () => {
+  stripeCalls.length = 0; mail.length = 0;
+  DB = newDb({
+    tables: tables({ booking_holds: [groupHold([{ name: 'Pal', email: 'stranger@example.com' }])],
+      payments: [{ id: 'p8', stripe_session_id: 'cs_test_d', status: 'pending', kind: 'group', amount_aed: 188 }] }),
+    rpc: { claim_fulfilment: claimOnce, ensure_referral_code: () => ({}), book_group_paid: groupPaid },
+    authUsers: [BUYER]
+  });
+  const out = await L.fulfillCheckoutSession(DB, { id: 'cs_test_d', payment_intent: 'pi_d', amount_total: 18800, metadata: groupMeta() });
+  assert.equal(out.ok, true);
+  const made = DB.log.indexOf('auth:stranger@example.com');
+  assert.ok(made !== -1 && made < DB.log.indexOf('rpc:claim_fulfilment'), DB.log.join(' '));
+});
+
+test('D: the webhook has time to finish a group', () => {
+  const fn = require('../vercel.json').functions['api/stripe-webhook.js'] || {};
+  assert.ok(fn.maxDuration >= 60, 'maxDuration ' + fn.maxDuration);
+});
+
+test('F: when everyone was already booked, the refund email says so', async () => {
+  stripeCalls.length = 0; mail.length = 0;
+  DB = newDb({
+    tables: tables({
+      bookings: [{ id: 'b1', member_id: BUYER.id, session_id: SID, section: 'C', status: 'booked' },
+                 { id: 'b2', member_id: MEMBER.id, session_id: SID, section: 'B', status: 'booked' }],
+      booking_holds: [groupHold([{ name: 'Mo', email: 'member@example.com' }])],
+      payments: [{ id: 'p9', stripe_session_id: 'cs_test_a', status: 'pending', kind: 'group', amount_aed: 188 }]
+    }),
+    rpc: { claim_fulfilment: claimOnce, ensure_referral_code: () => ({}), book_group_paid: groupPaid },
+    authUsers: [BUYER, MEMBER]
+  });
+  const out = await L.fulfillCheckoutSession(DB, { id: 'cs_test_a', payment_intent: 'pi_a', amount_total: 18800, metadata: groupMeta() });
+  assert.equal(out.refunded, true);
+  assert.equal(refunds().length, 1);
+  assert.equal(refunds()[0][1].amount, undefined, 'a full refund');
+  assert.equal(mail.length, 1);
+  assert.match(mail[0].html, /Everyone in your group was already booked for/);
+  assert.doesNotMatch(mail[0].html, /filled up/);
 });

@@ -250,6 +250,9 @@
   "functions": {
     "api/event-page.js": {
       "includeFiles": "event.html"
+    },
+    "api/stripe-webhook.js": {
+      "maxDuration": 300
     }
   }
 }
