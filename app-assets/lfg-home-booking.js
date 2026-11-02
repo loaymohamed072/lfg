@@ -224,6 +224,8 @@
         '<div class="lfgw-feat-stats">' + stats + '</div>' +
         (s.is_free ? '<div class="lfgw-feat-promo"><b>Free this Sunday.</b> Book your spot, nothing to pay.</div>'
           : promo.active ? '<div class="lfgw-feat-promo"><b>' + promo.percent + '% off</b> until ' + promo.ends + ' · Book now and get <s>AED ' + singlePrice + '</s> <b>AED ' + disc(singlePrice) + '</b></div>' : '');
+      // The bootcamp hero's "N stations" follows the next Sunday's real station count.
+      if (s.stations) document.querySelectorAll('[data-bc-stations]').forEach(function (el) { el.textContent = s.stations; });
     }
     // Homepage: a pill on the bootcamp CTA (hero on desktop, sticky bar on
     // mobile) so a visitor who never scrolls still sees the offer. No-op on
