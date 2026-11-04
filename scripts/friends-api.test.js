@@ -529,6 +529,26 @@ test('C: held spots alone never sell out a Sunday that can still grow', async ()
   }
 });
 
+// Loay, 4 Nov 2026: "station d and f need more people yet u open 1 for e". 8 Nov had
+// A17 B16 C17 D14 E16 F14 booked while friends' links held A3 B4 C1 D4 E1 F4. Counting a held
+// spot as a person made D and F read 18 and E 17, so only E opened, for one booking.
+test('4 Nov: the stations with the fewest people open; a held spot only fills its cap', async () => {
+  const people = { A: 17, B: 16, C: 17, D: 14, E: 16, F: 14 };
+  const held = { A: [1, 1, 1], B: [2, 2], C: [1], D: [2, 2], E: [1], F: [2, 1, 1] };
+  const bookings = [];
+  Object.keys(people).forEach((s) => {
+    for (let i = 0; i < people[s]; i++) bookings.push({ id: s + i, session_id: SID, member_id: s + i, section: s, status: 'booked' });
+  });
+  const holds = [].concat(...Object.keys(held).map((s) => held[s].map((spots) => liveHold(s, { spots }))));
+  const t = tables({ bookings, booking_holds: holds });
+  Object.assign(t.sessions[0], { capacity: 144, max_capacity: 144, stations: 6 });
+  DB = newDb({ tables: t, rpc: { ensure_upcoming_sundays: () => null } });
+  const sun = (await call(sessionsApi, { method: 'GET' })).body.sessions.find((s) => s.id === SID);
+  assert.deepEqual(Object.fromEntries(sun.sections.map((x) => [x.label, x.spots_now])), { A: 0, B: 0, C: 0, D: 2, E: 0, F: 2 });
+  assert.deepEqual(sun.sections.map((x) => x.spots_left), [4, 4, 6, 6, 7, 6], 'a held spot still fills its station');
+  assert.equal(sun.spots_left, 33);
+});
+
 test('D: friends get their accounts before the payment is claimed', async () => {
   stripeCalls.length = 0; mail.length = 0;
   DB = newDb({

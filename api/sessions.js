@@ -15,21 +15,19 @@ function stationLabels(n) {
 }
 function sectionCap(total, idx, n) { return Math.floor(total / n) + (idx < (total % n) ? 1 : 0); }
 // Soft balancing, mirroring public.balanced_open_stations (the RPCs enforce it; keep the
-// two in sync). The window moves with the session: a station may run 4 ahead of the
-// emptiest one while the Sunday is under half full (friends can group), 2 once it passes
-// half (stations converge and each tile reads "Only 2 left"). An odd station always takes
-// one more to complete a pair. Returns what each station can take now; 0 = waiting or full.
-function stationRoom(total, n, counts) {
-  const min = Math.min(...counts);
-  const booked = counts.reduce((a, b) => a + b, 0);
-  const win = total > 0 && booked * 2 >= total ? 2 : 4;
-  const level = 2 * Math.floor(min / 2) + win;
-  const room = counts.map((c, i) => {
-    const allow = Math.min(sectionCap(total, i, n), Math.max(level, c % 2 ? c + 1 : 0));
-    return Math.max(0, allow - c);
-  });
-  if (room.some(Boolean)) return room;
-  return counts.map((c, i) => Math.max(0, sectionCap(total, i, n) - c)); // uneven legacy caps
+// two in sync). The stations with the fewest people booked open first; a spot held for a
+// friend fills its station's cap but is not a person yet (sql/2026-11-04_balance_by_people.sql).
+// The window moves with the session: a station may run 4 ahead of the emptiest one while
+// the Sunday is under half full (friends can group), 2 once it passes half (stations
+// converge and each tile reads "Only 2 left"). people: booked per station, taken: booked
+// plus held. Returns what each station can take now; 0 = waiting or full.
+function stationRoom(total, n, people, taken) {
+  const caps = people.map((_, i) => sectionCap(total, i, n));
+  const withRoom = people.filter((_, i) => taken[i] < caps[i]);
+  if (!withRoom.length) return people.map(() => 0);
+  const win = total > 0 && taken.reduce((a, b) => a + b, 0) * 2 >= total ? 2 : 4;
+  const level = 2 * Math.floor(Math.min(...withRoom) / 2) + win;
+  return people.map((p, i) => Math.max(0, Math.min(level - p, caps[i] - taken[i])));
 }
 
 module.exports = async (req, res) => {
@@ -80,7 +78,7 @@ module.exports = async (req, res) => {
     });
 
     const ids = sessions.map(s => s.id);
-    const bySession = {}; // id -> { total, held, sections:{label:count}, mine }
+    const bySession = {}; // id -> { total, held, sections:{label:taken}, people:{label:booked}, mine }
     if (ids.length) {
       const [{ data: bk }, holds] = await Promise.all([
         db.from('bookings')
@@ -90,23 +88,26 @@ module.exports = async (req, res) => {
         liveHolds(db, ids)
       ]);
       (bk || []).forEach(b => {
-        const e = bySession[b.session_id] || (bySession[b.session_id] = { total: 0, held: 0, sections: {}, mine: false });
+        const e = bySession[b.session_id] || (bySession[b.session_id] = { total: 0, held: 0, sections: {}, people: {}, mine: false });
         e.total++;
-        if (b.section) e.sections[b.section] = (e.sections[b.section] || 0) + 1;
+        if (b.section) {
+          e.sections[b.section] = (e.sections[b.section] || 0) + 1;
+          e.people[b.section] = (e.people[b.section] || 0) + 1;
+        }
         if (user && b.member_id === user.id) e.mine = true;
       });
       // Spots held for friends (invite links, group checkouts in progress) count as taken,
       // the same way the booking functions count them (sql/2026-11-02_train_with_friends.sql).
       const held = heldBySession(holds, Date.now());
       Object.keys(held).forEach(id => {
-        const e = bySession[id] || (bySession[id] = { total: 0, held: 0, sections: {}, mine: false });
+        const e = bySession[id] || (bySession[id] = { total: 0, held: 0, sections: {}, people: {}, mine: false });
         e.held = held[id].total;
         Object.keys(held[id].sections).forEach(l => { e.sections[l] = (e.sections[l] || 0) + held[id].sections[l]; });
       });
     }
 
     const out = sessions.map(s => {
-      const e = bySession[s.id] || { total: 0, held: 0, sections: {}, mine: false };
+      const e = bySession[s.id] || { total: 0, held: 0, sections: {}, people: {}, mine: false };
       const n = s.stations || 4;
       // Held spots never sell out a Sunday that can still grow: the next booking grows it,
       // so the page shows the capacity that booking meets (bump_capacity_for_held).
@@ -114,7 +115,7 @@ module.exports = async (req, res) => {
       const spotsLeft = Math.max(0, capNow - e.total - e.held);
       const labels = stationLabels(n);
       const counts = labels.map(l => e.sections[l] || 0);
-      const room = stationRoom(capNow, n, counts);
+      const room = stationRoom(capNow, n, labels.map(l => e.people[l] || 0), counts);
       const sections = labels.map((label, i) => {
         const cap = sectionCap(capNow, i, n);
         const booked = counts[i];
