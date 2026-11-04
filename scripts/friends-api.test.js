@@ -357,6 +357,29 @@ test('11: capacity cannot drop below booked plus held; removing a station ends i
   assert.equal(DB.tables.booking_holds.find((h) => h.id === keep.id).cancelled_at, null, 'the hold on A stays');
 });
 
+// Loay, 4 Nov 2026: 150 on a 6-station Sunday was saved as 156. The typed number now rounds
+// DOWN to an even split (partners train in pairs), unless that would leave someone booked
+// without a place; then it goes in as typed and the database rounds it up, as before.
+test('11b: a typed capacity rounds down to an even split across the stations', async () => {
+  const six = (extra) => tables(Object.assign({ sessions: [{ id: SID, session_date: '2099-01-04', start_time: '12:45:00',
+    location: 'TWF', status: 'open', capacity: 36, max_capacity: 96, stations: 6 }] }, extra));
+  DB = newDb({ tables: six(), tokens: { adm: ADMIN }, authUsers: [ADMIN] });
+  const r = await call(setCapacity, { token: 'adm', body: { session_id: SID, capacity: 150 } });
+  assert.equal(r.status, 200, JSON.stringify(r.body));
+  assert.equal(r.body.capacity, 144);
+  assert.equal(DB.tables.sessions[0].capacity, 144, '24 a station');
+  assert.equal(DB.tables.sessions[0].max_capacity, 144);
+  const even = await call(setCapacity, { token: 'adm', body: { session_id: SID, capacity: 120 } });
+  assert.equal(even.body.capacity, 120, 'an even split is saved as typed');
+
+  const thirteen = Array.from({ length: 13 }, (_, i) => ({ id: 'b' + i, session_id: SID, member_id: 'm' + i,
+    section: 'ABCDEF'[i % 6], status: 'booked', booked_at: '2026-11-01' }));
+  DB = newDb({ tables: six({ bookings: thirteen }), tokens: { adm: ADMIN }, authUsers: [ADMIN] });
+  const tight = await call(setCapacity, { token: 'adm', body: { session_id: SID, capacity: 14 } });
+  assert.equal(tight.status, 200, JSON.stringify(tight.body));
+  assert.equal(DB.tables.sessions[0].capacity, 14, '12 would strand a booked member');
+});
+
 // ------------------------------------------------------------------ review fixes, 2026-11-02 (A to F)
 const sessionsApi = require('../api/sessions');
 const liveHold = (section, extra) => Object.assign({ id: crypto.randomUUID(), session_id: SID, section, kind: 'invite', host_member_id: BUYER.id,

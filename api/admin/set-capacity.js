@@ -17,20 +17,30 @@ module.exports = async (req, res) => {
   }
   try {
     // Never set capacity below what's already booked, counting spots members hold for friends.
-    const [{ count }, holds] = await Promise.all([
+    const [{ count }, holds, { data: sess, error: sessErr }] = await Promise.all([
       db.from('bookings').select('id', { count: 'exact', head: true })
         .eq('session_id', body.session_id).in('status', ['booked', 'attended']),
-      liveHolds(db, [body.session_id], { strict: true })
+      liveHolds(db, [body.session_id], { strict: true }),
+      db.from('sessions').select('stations').eq('id', body.session_id).maybeSingle()
     ]);
+    if (sessErr) throw new Error(sessErr.message);
     const held = (heldBySession(holds, Date.now())[body.session_id] || { total: 0 }).total;
-    if (cap < (count || 0) + held) {
+    const taken = (count || 0) + held;
+    if (cap < taken) {
       return res.status(409).json({ error: 'Already ' + (count || 0) + ' booked' + (held ? ' and ' + held + ' held for friends' : '') + '; capacity can\'t be lower' });
     }
+    // Partners train in pairs, so the sessions trigger keeps capacity a multiple of
+    // 2 x stations, rounding up. A typed number rounds DOWN instead (Loay, 4 Nov 2026: 150 on
+    // 6 stations became 156; it should be 144, 24 a station). If that would leave someone
+    // already in without a place, the typed number goes in and the trigger rounds it up.
+    const step = 2 * Math.max((sess && sess.stations) || 4, 1);
+    const down = Math.floor(cap / step) * step;
+    const stored = down > 0 && down >= taken ? down : cap;
     // Set max_capacity to match so the manual value is a hard ceiling: the gradual
     // auto-bump (maybe_bump_capacity) can't raise capacity past what the admin chose.
-    const { error } = await db.from('sessions').update({ capacity: cap, max_capacity: cap }).eq('id', body.session_id);
+    const { error } = await db.from('sessions').update({ capacity: stored, max_capacity: stored }).eq('id', body.session_id);
     if (error) throw new Error(error.message);
-    res.status(200).json({ ok: true, capacity: cap });
+    res.status(200).json({ ok: true, capacity: stored });
   } catch (e) {
     console.error('[/api/admin/set-capacity]', e);
     res.status(500).json({ error: 'Update failed' });
