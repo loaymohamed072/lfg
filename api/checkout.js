@@ -8,7 +8,7 @@
 // Auth: required for every kind except 'sponsor', which is public (see below).
 // Returns: { url } to redirect the member to Stripe.
 const Stripe = require('stripe');
-const { admin, getUser, ensureMember, validatePromoCode, earlyWeekPromo, earlyWeekPrice, safeError } = require('./_lib');
+const { admin, getUser, ensureMember, validatePromoCode, earlyWeekPromo, earlyWeekPrice, safeError, requireWhatsapp } = require('./_lib');
 const { cleanMcId } = require('./_manychat');
 const F = require('./_friends');
 
@@ -56,6 +56,11 @@ module.exports = async (req, res) => {
     // Guarantee the member row exists before writing payments (FK dependency).
     // An anonymous sponsor has no member row and must not be given one.
     if (user) await ensureMember(db, user);
+    // Bootcamp bookings and packs need a WhatsApp number on file (sponsors and merch do not).
+    if (user && (kind === 'single' || kind === 'package')) {
+      const wa = await requireWhatsapp(db, user);
+      if (!wa.ok) return res.status(400).json(wa);
+    }
 
     let lineItem, promo = null;
     const metadata = { kind: kind };

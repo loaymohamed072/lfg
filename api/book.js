@@ -6,7 +6,7 @@
 // On a Sunday the admin made free (sessions.is_free) both paths book at AED 0 and take no
 // credit: book_free, and book_from_hold with 'free'.
 // Also fires a branded LFG confirmation email + .ics calendar invite.
-const { admin, getUser, ensureMember } = require('./_lib');
+const { admin, getUser, ensureMember, requireWhatsapp } = require('./_lib');
 const { sendBookingConfirmation } = require('./_email');
 const manychat = require('./_manychat');
 const F = require('./_friends');
@@ -28,6 +28,8 @@ module.exports = async (req, res) => {
   const db = admin();
   try {
     await ensureMember(db, user);
+    const wa = await requireWhatsapp(db, user);
+    if (!wa.ok) return res.status(400).json(wa);
     const { data: sess } = await db.from('sessions').select('session_date,location,is_free').eq('id', sessionId).maybeSingle();
     const free = !!(sess && sess.is_free);
     const { data, error } = await db.rpc(free ? 'book_free' : 'book_with_credit', { p_member: user.id, p_session: sessionId, p_section: section });
@@ -68,6 +70,8 @@ async function bookFromJoin(res, user, token) {
   const db = admin();
   try {
     await ensureMember(db, user);
+    const wa = await requireWhatsapp(db, user);
+    if (!wa.ok) return res.status(400).json(wa);
     const { data: h } = await db.from('booking_holds').select('id,session_id,host_member_id')
       .eq('token', token).eq('kind', 'invite').maybeSingle();
     if (!h) return res.status(404).json({ ok: false, error: 'This invite link is not valid.' });

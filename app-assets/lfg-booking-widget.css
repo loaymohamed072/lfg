@@ -270,3 +270,9 @@ a.lfgw-btn { display: inline-flex; align-items: center; justify-content: center;
   text-transform: none;
   letter-spacing: normal;
 }
+/* ===== WhatsApp step (before booking, when no number is on file) =====
+   Reuses the station label, promo field and promo message styles; layout only here.
+   16px keeps iOS from zooming into the field. */
+.lfgw-wa { margin-top: 18px; }
+.lfgw-wa .lfgw-promo-field input { font-size: 16px; letter-spacing: .06em; }
+.lfgw-wa .lfgw-promo-msg { min-height: 20px; margin: 8px 0 14px; }

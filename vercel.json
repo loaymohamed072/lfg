@@ -79,7 +79,7 @@
       ]
     },
     {
-      "source": "/(account|login|admin|checkin|register|bootcamp|shop|auth|padel|padel-board|padel-score|track|musandam|event)",
+      "source": "/(account|login|admin|checkin|register|bootcamp|shop|auth|padel|padel-board|padel-score|track|musandam|event|whatsapp)",
       "headers": [
         {
           "key": "Cache-Control",

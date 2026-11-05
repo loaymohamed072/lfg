@@ -137,6 +137,54 @@ async function ensureMember(db, user) {
   return user.id;
 }
 
+// WhatsApp is how the coaches reach a member about their Sunday (Loay, 5 Nov 2026:
+// "whatsapp number is essential"). Bootcamp booking never asked for one, so 50 of the
+// 126 people booked for 8 Nov had no number anywhere.
+//
+// Every way a UAE member types a mobile: 050 123 4567, 50 123 4567, 971501234567,
+// +971 50 123 4567, +971 050..., 00971..., with spaces, dashes or brackets. A number from
+// another country needs its + (or 00) and code. Returns E.164 or null. The booking
+// widget and /whatsapp mirror this in the browser; keep the three in step.
+const WHATSAPP_ERROR = "That number doesn't look right. Try 050 123 4567, or add the country code, like +44.";
+function whatsappE164(v) {
+  const s = String(v == null ? '' : v).trim();
+  if (!s) return null;
+  let d = s.replace(/\D/g, '');
+  const intl = s.startsWith('+') || d.startsWith('00');
+  if (d.startsWith('00')) d = d.slice(2);
+  if (!intl) {
+    const m = d.match(/^(?:971|0)?(5\d{8})$/);
+    return m ? '+971' + m[1] : null;
+  }
+  if (d.startsWith('9710')) d = '971' + d.slice(4);
+  if (d.startsWith('971')) return /^9715\d{8}$/.test(d) ? '+' + d : null;
+  return /^[1-9]\d{7,14}$/.test(d) ? '+' + d : null;
+}
+
+// The member's WhatsApp number, or null. members.phone first; a member who gave one to
+// the run club only has it on run_registrations, so copy it across the first time.
+async function memberWhatsapp(db, user) {
+  const { data: m } = await db.from('members').select('phone').eq('id', user.id).maybeSingle();
+  if (m && m.phone) return m.phone;
+  let { data: reg } = await db.from('run_registrations').select('whatsapp_e164')
+    .eq('member_id', user.id).not('whatsapp_e164', 'is', null).limit(1).maybeSingle();
+  if (!reg && user.email) {
+    ({ data: reg } = await db.from('run_registrations').select('whatsapp_e164')
+      .eq('email', String(user.email).toLowerCase()).not('whatsapp_e164', 'is', null).limit(1).maybeSingle());
+  }
+  const phone = reg && whatsappE164(reg.whatsapp_e164);
+  if (!phone) return null;
+  await db.from('members').update({ phone }).eq('id', user.id);
+  return phone;
+}
+
+// Bookings and bootcamp purchases refuse without a number; the widget asks first, so
+// this answer only reaches an out-of-date page. needs_whatsapp tells it to ask.
+async function requireWhatsapp(db, user) {
+  if (await memberWhatsapp(db, user)) return { ok: true };
+  return { ok: false, needs_whatsapp: true, error: 'Add your WhatsApp number to book. Your coaches use it for Sundays.' };
+}
+
 // Create a guest player: a friend a member paid in, or a walk-in an admin typed
 // onto the board. Every padel foreign key points at members, and members.id
 // points at auth.users, so a player who never signed up still needs both rows.
@@ -334,7 +382,7 @@ async function buildMeResponse(db, user) {
     pointsRes,
     merchRes
   ] = await Promise.all([
-    db.from('members').select('full_name,referral_code').eq('id', user.id).maybeSingle(),
+    db.from('members').select('full_name,referral_code,phone').eq('id', user.id).maybeSingle(),
     db.from('member_packages').select('sessions_remaining,expires_at,status').eq('member_id', user.id),
     db.from('bookings').select('id', { count: 'exact', head: true }).eq('member_id', user.id).eq('status', 'attended'),
     db.from('bookings')
@@ -353,6 +401,8 @@ async function buildMeResponse(db, user) {
   ]);
 
   const meRow = meRowRes.data;
+  // Only a member with no number pays for the run-club lookup.
+  const whatsapp = (meRow && meRow.phone) || await memberWhatsapp(db, user);
   const pkgs = pkgsRes.data || [];
   const attended = attendedRes.count || 0;
   const bookings = bookingsRes.data || [];
@@ -421,6 +471,8 @@ async function buildMeResponse(db, user) {
     email: user.email,
     full_name: meRow ? meRow.full_name : null,
     needs_name: !(meRow && meRow.full_name),
+    whatsapp: whatsapp || null,
+    needs_whatsapp: !whatsapp,
     sessions_remaining: sessionsRemaining,
     sessions_attended: attended,
     upcoming_bookings: upcoming,
@@ -1387,6 +1439,7 @@ module.exports = {
   canonicalOrigin, buildAuthLink,
   getUser, getAuthUserById,
   ensureMember, createGuestMember, isAdmin, isGateStaff, canViewRevenue,
+  WHATSAPP_ERROR, whatsappE164, memberWhatsapp, requireWhatsapp,
   requireAdmin, requireAdminOrCron, requireGateAccess,
   safeError,
   buildMeResponse, formatDate, cancelCutoffOk,

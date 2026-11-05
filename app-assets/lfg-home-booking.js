@@ -24,7 +24,7 @@
     bookBtn.setAttribute('href', '#book');
     var ARROW = ' <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><path d="M3 8h10M9 4l4 4-4 4"/></svg>';
 
-    var sessions = [], packages = [], singlePrice = 99, credits = 0, streak = 0, loggedIn = false;
+    var sessions = [], packages = [], singlePrice = 99, credits = 0, streak = 0, loggedIn = false, needsWhatsapp = false;
     // Early-week discount from /api/packages: { active, percent, days, ends }.
     // Monday to Wednesday the server prices a single lower; the widget only
     // mirrors that so the strikethrough and the charge agree.
@@ -320,9 +320,57 @@
         }
       }
       loggedIn = !!session;
-      if (loggedIn) { var me = await window.lfg.api('/api/me'); credits = (me.ok && me.data.sessions_remaining) || 0; streak = (me.ok && me.data.streak && me.data.streak.current) || 0; }
+      if (loggedIn) { var me = await window.lfg.api('/api/me'); credits = (me.ok && me.data.sessions_remaining) || 0; streak = (me.ok && me.data.streak && me.data.streak.current) || 0; needsWhatsapp = !!(me.ok && me.data.needs_whatsapp); }
       setBookBtnLabel();
       injectHeader();
+    }
+
+    // WhatsApp step (Loay, 5 Nov 2026: "whatsapp number is essential"). Shown once, before
+    // the station picker, a pack or an invite, to a member with no number on file; the
+    // server refuses those without one (needs_whatsapp). waE164 mirrors whatsappE164 in
+    // api/_lib.js: 050 123 4567, 50..., 971..., +971..., 00971..., or +<country code>.
+    var WA_ERROR = 'That number doesn’t look right. Try 050 123 4567, or add the country code, like +44.';
+    function waE164(v) {
+      var s = String(v == null ? '' : v).trim(); if (!s) return null;
+      var d = s.replace(/\D/g, ''), intl = s.charAt(0) === '+' || d.indexOf('00') === 0;
+      if (d.indexOf('00') === 0) d = d.slice(2);
+      if (!intl) { var m = d.match(/^(?:971|0)?(5\d{8})$/); return m ? '+971' + m[1] : null; }
+      if (d.indexOf('9710') === 0) d = '971' + d.slice(4);
+      if (d.indexOf('971') === 0) return /^9715\d{8}$/.test(d) ? '+' + d : null;
+      return /^[1-9]\d{7,14}$/.test(d) ? '+' + d : null;
+    }
+    function ensureWhatsapp() {
+      if (!needsWhatsapp) return Promise.resolve(true);
+      return new Promise(function (resolve) {
+        modalEl.classList.remove('co');
+        modalEl.innerHTML =
+          '<div class="lfgw-eyebrow">Before you book</div>' +
+          '<div class="lfgw-title">What’s your WhatsApp number?</div>' +
+          '<div class="lfgw-text">Your coaches use it for Sundays: your station, the start time, and any change on the day.</div>' +
+          '<form class="lfgw-wa" id="lfgwWa" novalidate>' +
+            '<label class="lfgw-seclabel" for="lfgwWaInput">WhatsApp number</label>' +
+            '<div class="lfgw-promo-field"><input id="lfgwWaInput" name="whatsapp" type="tel" inputmode="tel" autocomplete="tel" dir="ltr" placeholder="050 123 4567" aria-describedby="lfgwWaErr" required></div>' +
+            '<div class="lfgw-promo-msg err" id="lfgwWaErr" role="alert"></div>' +
+            '<div class="lfgw-actions"><button type="button" class="lfgw-btn lfgw-btn-ghost" id="lfgwWaCancel">Cancel</button>' +
+            '<button type="submit" class="lfgw-btn lfgw-btn-primary" id="lfgwWaSave">Save my number</button></div>' +
+          '</form>';
+        overlay.classList.add('show');
+        var input = document.getElementById('lfgwWaInput'), err = document.getElementById('lfgwWaErr'), save = document.getElementById('lfgwWaSave'), touched = false;
+        function check() { var ok = !!waE164(input.value); err.textContent = ok ? '' : WA_ERROR; input.setAttribute('aria-invalid', ok ? 'false' : 'true'); return ok; }
+        input.addEventListener('blur', function () { if (input.value.trim()) { touched = true; check(); } });
+        input.addEventListener('input', function () { if (touched) check(); });
+        document.getElementById('lfgwWaCancel').addEventListener('click', function () { closeModal(); resolve(false); });
+        document.getElementById('lfgwWa').addEventListener('submit', async function (e) {
+          e.preventDefault(); touched = true;
+          if (!check()) { input.focus(); return; }
+          save.disabled = true; save.textContent = 'Saving…';
+          var r = await window.lfg.api('/api/profile', { method: 'POST', body: JSON.stringify({ whatsapp: input.value }) });
+          if (r.ok && r.data && r.data.ok) { needsWhatsapp = false; resolve(true); return; }
+          save.disabled = false; save.textContent = 'Save my number';
+          err.textContent = (r.data && r.data.error) || 'Could not save your number. Try again.';
+        });
+        setTimeout(function () { input.focus(); }, 30);
+      });
     }
 
     async function startBooking(sessionId) {
@@ -338,6 +386,7 @@
           return;
         }
       }
+      if (!(await ensureWhatsapp())) return;
       openBookingModal(sessionId);
     }
     bookBtn.addEventListener('click', function (e) { e.preventDefault(); startBooking(sessions[0] && sessions[0].id); });
@@ -422,6 +471,7 @@
         if (s) { await markLoggedIn(); }
         else { sessionStorage.setItem('lfg_buy_pkg_after_login', String(packageId)); sessionStorage.setItem('lfg_book_return_path', window.location.pathname); window.location.href = '/login'; return; }
       }
+      if (!(await ensureWhatsapp())) return;
       var pkg = packages.find(function (p) { return p.id === packageId; });
       if (!pkg) return;
       activePackageId = packageId; appliedPromo = null;
@@ -480,6 +530,9 @@
           (res.data.free ? 'This Sunday is free. Nothing to pay.' : 'Credits left: <b>' + credits + '</b>'));
         if (window.lfgFriends) window.lfgFriends.afterBooking(activeBookingId);
         refresh();
+      } else if (res.data && res.data.needs_whatsapp) {
+        needsWhatsapp = true; var sid = activeBookingId;
+        ensureWhatsapp().then(function (ok) { if (ok) openBookingModal(sid); });
       } else { showToast((res.data && res.data.error) || 'Could not book', true); btn.disabled = false; btn.textContent = s && s.is_free ? 'Book · Free' : 'Use 1 credit'; }
     }
     // Embedded Stripe checkout - opens the payment form in a window inside the modal
@@ -509,6 +562,11 @@
       payload.mc_id = window.lfg.mcId ? window.lfg.mcId() : null;
       var res = await window.lfg.api('/api/checkout', { method: 'POST', body: JSON.stringify(payload) });
       if (backedOut) return true; // user left while the session was being created
+      if (res.data && res.data.needs_whatsapp) {
+        needsWhatsapp = true; modalEl.classList.remove('co');
+        ensureWhatsapp().then(function (ok) { if (ok && opts.onBack) opts.onBack(); });
+        return false;
+      }
       if (!res.ok || !res.data || !res.data.client_secret || !res.data.publishable_key) {
         showToast((res.data && res.data.error) || 'Checkout failed', true);
         modalEl.classList.remove('co');
@@ -636,7 +694,7 @@
     // Promote to the logged-in state (used after a tap-time re-verify finds a session).
     async function markLoggedIn() {
       loggedIn = true;
-      try { var me = await window.lfg.api('/api/me'); credits = (me.ok && me.data.sessions_remaining) || 0; streak = (me.ok && me.data.streak && me.data.streak.current) || 0; } catch (e) {}
+      try { var me = await window.lfg.api('/api/me'); credits = (me.ok && me.data.sessions_remaining) || 0; streak = (me.ok && me.data.streak && me.data.streak.current) || 0; needsWhatsapp = !!(me.ok && me.data.needs_whatsapp); } catch (e) {}
       setBookBtnLabel();
       injectHeader();
     }
@@ -659,10 +717,10 @@
       modal: modalEl, terms: TERMS_LINE,
       show: function () { overlay.classList.add('show'); },
       close: closeModal, result: showResult, toast: showToast,
-      checkout: startEmbedded, book: startBooking, refresh: refresh
+      checkout: startEmbedded, book: startBooking, refresh: refresh, whatsapp: ensureWhatsapp
     };
     if (!window.lfgFriends && !document.getElementById('lfgf-js')) {
-      var fjs = document.createElement('script'); fjs.id = 'lfgf-js'; fjs.src = '/app-assets/lfg-friends.js?v=1';
+      var fjs = document.createElement('script'); fjs.id = 'lfgf-js'; fjs.src = '/app-assets/lfg-friends.js?v=2';
       document.head.appendChild(fjs);
     }
 
@@ -671,7 +729,7 @@
       var pending = sessionStorage.getItem('lfg_book_after_login');
       if (pending && loggedIn) {
         sessionStorage.removeItem('lfg_book_after_login');
-        if (byId(pending)) openBookingModal(pending);
+        if (byId(pending)) startBooking(pending);
       }
       var pendingPkg = sessionStorage.getItem('lfg_buy_pkg_after_login');
       if (pendingPkg && loggedIn) {

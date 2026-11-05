@@ -474,7 +474,9 @@
       copy(link, tmp).then(function (okc) { tmp.remove(); b.textContent = okc ? 'Copied' : 'Copy failed'; });
     });
     on('credit', async function (e) {
-      var b = e.currentTarget; b.disabled = true; b.textContent = 'Booking…';
+      var b = e.currentTarget;
+      if (w.whatsapp && !(await w.whatsapp())) return;
+      b.disabled = true; b.textContent = 'Booking…';
       var r = await post('/api/book', { join: token });
       if (r.ok && r.data && r.data.ok) {
         clearJoin();
@@ -486,8 +488,10 @@
         startJoin(token);
       }
     });
-    on('card', function (e) {
-      e.currentTarget.disabled = true;
+    on('card', async function (e) {
+      var b = e.currentTarget;
+      if (w.whatsapp && !(await w.whatsapp())) return;
+      b.disabled = true;
       w.checkout({ kind: 'single', join: token }, {
         title: 'Station ' + esc(d.station) + ' with ' + esc(host) + ' · ' + esc(when),
         onSuccess: function () {

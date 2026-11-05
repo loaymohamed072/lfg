@@ -274,6 +274,25 @@
   </div>
 </div>
 
+<!-- WhatsApp number prompt (Loay, 5 Nov 2026: the coaches reach members on WhatsApp, and
+     bootcamp booking never asked for a number). Shows on each visit until one is saved. -->
+<div class="modal-overlay" id="waModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="waTitle">
+    <div class="m-eyebrow">One thing missing</div>
+    <h3 id="waTitle">What's your WhatsApp number?</h3>
+    <p>Your coaches use it for Sundays: your station, the start time, and any change on the day.</p>
+    <div class="lfg-field">
+      <label class="lfg-label" for="waInput">WhatsApp number</label>
+      <input class="lfg-input" type="tel" id="waInput" inputmode="tel" autocomplete="tel" dir="ltr" placeholder="050 123 4567" aria-describedby="waErr" style="font-size:16px">
+    </div>
+    <div class="modal-actions">
+      <button class="lfg-btn lfg-btn-ghost" id="waLater">Not now</button>
+      <button class="lfg-btn lfg-btn-primary" id="waSave" style="flex:1">Save my number</button>
+    </div>
+    <div id="waErr" class="lfg-msg" role="alert"></div>
+  </div>
+</div>
+
 <!-- Cancel-booking confirm - themed, replaces native confirm() -->
 <div class="modal-overlay" id="cancelModal">
   <div class="modal">
@@ -311,7 +330,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.1"></script>
 <script src="https://js.stripe.com/v3/"></script>
 <script src="/app-assets/lfg-supabase.js?v=3"></script>
-<script src="/app-assets/lfg-friends.js?v=1"></script>
+<script src="/app-assets/lfg-friends.js?v=2"></script>
 <script>
   (function () {
     function el(id) { return document.getElementById(id); }
@@ -434,7 +453,9 @@
         renderPoints(res.data);
         renderReferral(res.data);
         renderOrders(res.data.merch_orders || []);
+        if (res.data.needs_whatsapp) el('waModal').dataset.pending = '1';
         if (res.data.needs_name) el('nameModal').classList.add('show');
+        else if (res.data.needs_whatsapp) el('waModal').classList.add('show');
       } else {
         el('creditsK').textContent = '0';
         el('attendedK').textContent = '0';
@@ -733,10 +754,25 @@
       if (name.length < 2) { el('nameErr').className = 'lfg-msg show err'; el('nameErr').textContent = 'Enter your name.'; return; }
       this.disabled = true; this.textContent = 'Saving…';
       var r = await lfg.api('/api/profile', { method: 'POST', body: JSON.stringify({ full_name: name }) });
-      if (r.ok && r.data.ok) { el('whoName').textContent = r.data.full_name; el('nameModal').classList.remove('show'); }
+      if (r.ok && r.data.ok) {
+        el('whoName').textContent = r.data.full_name; el('nameModal').classList.remove('show');
+        if (el('waModal').dataset.pending) el('waModal').classList.add('show');
+      }
       else { el('nameErr').className = 'lfg-msg show err'; el('nameErr').textContent = (r.data && r.data.error) || 'Could not save.'; this.disabled = false; this.textContent = 'Save'; }
     });
     el('nameInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') el('nameSave').click(); });
+
+    el('waSave').addEventListener('click', async function () {
+      var v = el('waInput').value.trim();
+      function waErr(t) { el('waErr').className = 'lfg-msg show err'; el('waErr').textContent = t; el('waInput').setAttribute('aria-invalid', 'true'); }
+      if (!v) { waErr('Enter your WhatsApp number, like 050 123 4567.'); el('waInput').focus(); return; }
+      this.disabled = true; this.textContent = 'Saving…';
+      var r = await lfg.api('/api/profile', { method: 'POST', body: JSON.stringify({ whatsapp: v }) });
+      if (r.ok && r.data.ok) { el('waModal').classList.remove('show'); delete el('waModal').dataset.pending; }
+      else { waErr((r.data && r.data.error) || 'Could not save your number. Try again.'); this.disabled = false; this.textContent = 'Save my number'; el('waInput').focus(); }
+    });
+    el('waLater').addEventListener('click', function () { el('waModal').classList.remove('show'); });
+    el('waInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') el('waSave').click(); });
 
     // ===== PWA install flow =====
     // Three paths:

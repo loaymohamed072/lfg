@@ -141,8 +141,9 @@ function tables(extra) {
   return Object.assign({
     sessions: [{ id: SID, session_date: '2099-01-04', start_time: '12:45:00', location: 'TWF', status: 'open', capacity: 32, stations: 4 }],
     members: [
-      { id: BUYER.id, email: BUYER.email, full_name: 'Bea Buyer', is_admin: false },
-      { id: MEMBER.id, email: MEMBER.email, full_name: 'Mo Member', is_admin: false },
+      // Every booker needs a WhatsApp number on file since 5 Nov 2026 (requireWhatsapp).
+      { id: BUYER.id, email: BUYER.email, full_name: 'Bea Buyer', is_admin: false, phone: '+971501110001' },
+      { id: MEMBER.id, email: MEMBER.email, full_name: 'Mo Member', is_admin: false, phone: '+971501110002' },
       { id: ADMIN.id, email: ADMIN.email, full_name: 'Ada Admin', is_admin: true }
     ],
     bookings: [], booking_holds: [], payments: [], promo_codes: [],
@@ -727,4 +728,88 @@ test('free Sunday: only an admin can flip it, and only on a Sunday still to come
   assert.equal(ok.body.applied, 1);
   assert.equal(DB.tables.sessions.find((s) => s.id === SID).is_free, true);
   assert.equal(DB.tables.sessions.find((s) => s.id === past.id).is_free, false);
+});
+
+// ------------------------------------------------------------------ WhatsApp number
+// Loay, 5 Nov 2026: "whatsapp number is essential". 50 of 126 booked for 8 Nov had none:
+// bootcamp booking never asked. Bookings and bootcamp purchases now need one on file; a
+// run-club number counts; a personal emailed link sets it without signing in.
+const profile = require('../api/profile');
+const waApi = require('../api/whatsapp-number');
+const noPhone = () => tables({ members: [{ id: BUYER.id, email: BUYER.email, full_name: 'Bea Buyer', is_admin: false }] });
+
+test('WhatsApp: every way a UAE member types a mobile becomes E.164; anything else is refused', () => {
+  const ok = {
+    '050 123 4567': '+971501234567', '0501234567': '+971501234567', '50 123 4567': '+971501234567',
+    '971501234567': '+971501234567', '+971 50 123 4567': '+971501234567', '+971 050 123 4567': '+971501234567',
+    '00971501234567': '+971501234567', '050-123-4567': '+971501234567', '(050) 123 4567': '+971501234567',
+    '+44 7700 900123': '+447700900123', '0044 7700 900123': '+447700900123'
+  };
+  for (const [typed, e164] of Object.entries(ok)) assert.equal(L.whatsappE164(typed), e164, typed);
+  for (const bad of ['', '   ', '1234', '04 123 4567', '+971 4 123 4567', '7700900123', '+0123456789', 'call me'])
+    assert.equal(L.whatsappE164(bad), null, JSON.stringify(bad));
+});
+
+test('WhatsApp: no number, no booking; the answer tells the page to ask', async () => {
+  DB = newDb({ tables: noPhone(), rpc: { ensure_referral_code: () => ({}), book_with_credit: () => ({ ok: true, section: 'A', credits_left: 1 }) }, tokens: { tok: BUYER }, authUsers: [BUYER] });
+  const r = await call(book, { token: 'tok', body: { session_id: SID, section: 'A' } });
+  assert.equal(r.status, 400, JSON.stringify(r.body));
+  assert.equal(r.body.needs_whatsapp, true);
+  assert.deepEqual(bookingRpcs(), [], 'nothing booked');
+  const join = await call(book, { token: 'tok', body: { join: 'a'.repeat(64) } });
+  assert.equal(join.body.needs_whatsapp, true, 'an invite join asks too');
+  stripeCalls.length = 0;
+  for (const body of [{ kind: 'single', session_id: SID, section: 'A' }, { kind: 'package', package_id: 1 }]) {
+    const c = await call(checkout, { token: 'tok', body });
+    assert.equal(c.status, 400, body.kind + ' ' + JSON.stringify(c.body));
+    assert.equal(c.body.needs_whatsapp, true);
+  }
+  assert.equal(stripeCalls.filter((c) => c[0] === 'create').length, 0, 'no card form opened');
+});
+
+test('WhatsApp: a number from the run club counts, and is copied onto the member', async () => {
+  const t = noPhone();
+  t.run_registrations = [{ id: 'rr1', email: BUYER.email, member_id: null, whatsapp_e164: '+971 55 222 3333' }];
+  DB = newDb({ tables: t, rpc: { ensure_referral_code: () => ({}), book_with_credit: () => ({ ok: true, section: 'A', credits_left: 1 }) }, tokens: { tok: BUYER }, authUsers: [BUYER] });
+  const r = await call(book, { token: 'tok', body: { session_id: SID, section: 'A' } });
+  assert.equal(r.status, 200, JSON.stringify(r.body));
+  assert.equal(DB.tables.members.find((m) => m.id === BUYER.id).phone, '+971552223333');
+});
+
+test('WhatsApp: /api/profile saves a typed number as E.164 and explains a wrong one', async () => {
+  DB = newDb({ tables: noPhone(), rpc: { ensure_referral_code: () => ({}) }, tokens: { tok: BUYER }, authUsers: [BUYER] });
+  const bad = await call(profile, { token: 'tok', body: { whatsapp: '04 123 4567' } });
+  assert.equal(bad.status, 400);
+  assert.match(bad.body.error, /050 123 4567/);
+  const good = await call(profile, { token: 'tok', body: { whatsapp: '050 123 4567' } });
+  assert.equal(good.status, 200, JSON.stringify(good.body));
+  assert.equal(DB.tables.members.find((m) => m.id === BUYER.id).phone, '+971501234567');
+  assert.equal(DB.tables.members.find((m) => m.id === BUYER.id).full_name, 'Bea Buyer', 'the name is left alone');
+});
+
+test('WhatsApp: the emailed link sets that member\'s number without signing in, until it runs out', async () => {
+  const tok = 'b'.repeat(64), old = 'c'.repeat(64);
+  const t = noPhone();
+  t.whatsapp_requests = [
+    { token: tok, member_id: BUYER.id, expires_at: future() },
+    { token: old, member_id: BUYER.id, expires_at: '2020-01-01T00:00:00Z' }
+  ];
+  DB = newDb({ tables: t });
+  const open = await call(waApi, { method: 'GET', query: { t: tok } });
+  assert.equal(open.status, 200, JSON.stringify(open.body));
+  assert.deepEqual(open.body, { ok: true, first_name: 'Bea', current: null });
+  const wrong = await call(waApi, { body: { t: tok, whatsapp: '123' } });
+  assert.equal(wrong.status, 400);
+  const saved = await call(waApi, { body: { t: tok, whatsapp: '+971 50 999 8877' } });
+  assert.equal(saved.status, 200, JSON.stringify(saved.body));
+  assert.equal(DB.tables.members.find((m) => m.id === BUYER.id).phone, '+971509998877');
+  assert.ok(DB.tables.whatsapp_requests[0].saved_at);
+  const again = await call(waApi, { method: 'GET', query: { t: tok } });
+  assert.equal(again.body.current, '+971 •• ••• 8877', 'shows the number masked');
+  for (const t2 of [old, 'd'.repeat(64), 'not-a-token']) {
+    const r = await call(waApi, { body: { t: t2, whatsapp: '0501234567' } });
+    assert.equal(r.status, 410, t2);
+    assert.equal(r.body.expired, true);
+  }
+  assert.equal(DB.tables.members.find((m) => m.id === BUYER.id).phone, '+971509998877', 'a dead link changes nothing');
 });

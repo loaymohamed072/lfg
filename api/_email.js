@@ -313,6 +313,33 @@ async function sendFriendInvite(args) {
   });
 }
 
+// "Add your WhatsApp number" (Loay, 5 Nov 2026). Sent by scripts/whatsapp-ask.js to members
+// with no number; the button opens their personal /whatsapp link. `booked` (optional) names
+// the Sunday they are booked on: { sessionDate, startTime, theme, location, section }.
+function buildWhatsappAsk({ firstName, link, booked }) {
+  const greeting = firstName ? 'Hi ' + escapeHtml(firstName) + ',' : 'Hi,';
+  const spot = booked ? `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);margin:0 0 22px;">
+      <tr><td style="padding:18px 20px;">
+        <div style="font-family:'Barlow Condensed','Helvetica Neue',sans-serif;font-size:11px;letter-spacing:0.26em;text-transform:uppercase;color:#999966;margin-bottom:6px;">You're booked</div>
+        <div style="font-family:'Barlow Condensed','Helvetica Neue',sans-serif;font-weight:700;font-size:24px;letter-spacing:0.02em;color:#fff;line-height:1.1;">${escapeHtml(formatDubaiDate(booked.sessionDate))} · ${escapeHtml(formatTime12(booked.startTime))}</div>
+        <div style="margin-top:10px;color:rgba(255,255,255,0.7);font-size:14px;">${escapeHtml(booked.location || 'CrossFit Alioth')}${booked.section ? ' · Station <b style="color:#999966;">' + escapeHtml(booked.section) + '</b>' : ''}</div>
+        ${booked.theme ? '<div style="margin-top:6px;font-size:13px;color:rgba(255,255,255,0.55);">' + escapeHtml(booked.theme) + '</div>' : ''}
+      </td></tr>
+    </table>` : '';
+  const body = `
+    <h1 style="font-family:'Barlow Condensed','Helvetica Neue',sans-serif;font-weight:800;font-size:26px;text-transform:uppercase;letter-spacing:0.04em;margin:0 0 8px;color:#fff;">Add your <span style="color:#999966;">WhatsApp.</span></h1>
+    <p style="margin:0 0 22px;color:rgba(255,255,255,0.65);font-size:15px;line-height:1.55;">${greeting}<br>Your coaches send Sunday updates on WhatsApp: your station, the start time, and any change on the day. We don't have a number for you yet.</p>
+    ${spot}
+    <a href="${escapeHtml(link)}" style="display:inline-block;background:#999966;color:#0A0A0A;font-family:'Barlow Condensed','Helvetica Neue',sans-serif;font-weight:800;font-size:14px;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;padding:14px 28px;">Add my WhatsApp number</a>
+    <p style="margin:22px 0 0;font-size:13px;color:rgba(255,255,255,0.5);line-height:1.6;">The link is yours, so there's no sign-in. It works for 30 days.</p>
+  `;
+  return {
+    subject: booked ? 'Add your WhatsApp number before Sunday' : 'Add your WhatsApp number to your LFG account',
+    html: emailShell({ preheader: 'Your coaches use it for your station, the start time and any change on the day.', bodyHtml: body })
+  };
+}
+
 // A card payment that could not become a seat (the Sunday filled while they paid, it was
 // called off, or everyone was already booked). Plain: what happened, the refund, what next.
 function buildRefundNotice({ firstName, sessionDate, amount, group, refunded, reason }) {
@@ -410,4 +437,4 @@ async function sendLoginLink({ email, magicUrl, code }) {
   });
 }
 
-module.exports = { sendEmail, buildIcs, sendBookingConfirmation, buildSingleConfirmation, buildPackageConfirmation, buildRunnerWelcome, sendRunnerWelcome, buildLoginLinkEmail, sendLoginLink, emailShell, formatDubaiDate, escapeHtml, formatTime12, buildFriendInvite, sendFriendInvite, buildRefundNotice, sendRefundNotice };
+module.exports = { sendEmail, buildIcs, sendBookingConfirmation, buildSingleConfirmation, buildPackageConfirmation, buildRunnerWelcome, sendRunnerWelcome, buildLoginLinkEmail, sendLoginLink, emailShell, formatDubaiDate, escapeHtml, formatTime12, buildFriendInvite, sendFriendInvite, buildRefundNotice, sendRefundNotice, buildWhatsappAsk };

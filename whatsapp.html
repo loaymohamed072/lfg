@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your WhatsApp number - LFG Dubai</title>
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<link rel="icon" type="image/png" href="/lfg-logo.png">
+<link rel="stylesheet" href="/app-assets/lfg-app.css">
+</head>
+<body>
+<!-- Reached from the "Add your WhatsApp number" email: a personal link (?t=TOKEN) that
+     saves the member's number without signing in. api/whatsapp-number.js holds the rules. -->
+<div class="lfg-shell">
+  <main class="lfg-card">
+    <div class="lfg-eyebrow">LFG Dubai</div>
+
+    <div id="loading"><p class="lfg-sub">Opening your link…</p></div>
+
+    <div id="ask" hidden>
+      <h1 class="lfg-title" id="askTitle">Your WhatsApp <em>number</em></h1>
+      <p class="lfg-sub">Your coaches use it for Sundays: your station, the start time, and any change on the day.</p>
+      <p class="lfg-sub" id="current" hidden></p>
+      <form id="waForm" novalidate>
+        <div class="lfg-field">
+          <label class="lfg-label" for="wa">WhatsApp number</label>
+          <input class="lfg-input" type="tel" id="wa" name="whatsapp" inputmode="tel" autocomplete="tel" dir="ltr"
+                 placeholder="050 123 4567" required aria-describedby="msg" style="font-size:16px">
+        </div>
+        <button type="submit" id="saveBtn" class="lfg-btn lfg-btn-primary">Save my number</button>
+      </form>
+    </div>
+
+    <div id="done" hidden>
+      <h1 class="lfg-title">Saved<em>.</em></h1>
+      <p class="lfg-sub" id="doneText"></p>
+      <a class="lfg-btn lfg-btn-primary" href="/bootcamp">See the next Sunday</a>
+    </div>
+
+    <div id="expired" hidden>
+      <h1 class="lfg-title">This link has <em>run out</em></h1>
+      <p class="lfg-sub">Sign in to My Account and add your number there.</p>
+      <a class="lfg-btn lfg-btn-primary" href="/account">Go to My Account</a>
+    </div>
+
+    <div id="msg" class="lfg-msg" role="alert"></div>
+  </main>
+</div>
+<script>
+(function () {
+  var token = new URLSearchParams(location.search).get('t') || '';
+  var msg = document.getElementById('msg');
+  function show(id) { ['loading', 'ask', 'done', 'expired'].forEach(function (k) { document.getElementById(k).hidden = k !== id; }); }
+  function err(text) { msg.className = 'lfg-msg show err'; msg.textContent = text; }
+  function clearErr() { msg.className = 'lfg-msg'; msg.textContent = ''; }
+  // Mirrors whatsappE164 in api/_lib.js: 050 123 4567, 50..., 971..., +971..., 00971..., or +<country code>.
+  var WA_ERROR = 'That number doesn’t look right. Try 050 123 4567, or add the country code, like +44.';
+  function waE164(v) {
+    var s = String(v == null ? '' : v).trim(); if (!s) return null;
+    var d = s.replace(/\D/g, ''), intl = s.charAt(0) === '+' || d.indexOf('00') === 0;
+    if (d.indexOf('00') === 0) d = d.slice(2);
+    if (!intl) { var m = d.match(/^(?:971|0)?(5\d{8})$/); return m ? '+971' + m[1] : null; }
+    if (d.indexOf('9710') === 0) d = '971' + d.slice(4);
+    if (d.indexOf('971') === 0) return /^9715\d{8}$/.test(d) ? '+' + d : null;
+    return /^[1-9]\d{7,14}$/.test(d) ? '+' + d : null;
+  }
+  function pretty(e164) { return e164.indexOf('+971') === 0 ? '+971 ' + e164.slice(4, 6) + ' ' + e164.slice(6, 9) + ' ' + e164.slice(9) : e164; }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  var first = null;
+
+  fetch('/api/whatsapp-number?t=' + encodeURIComponent(token)).then(function (r) { return r.json(); }).then(function (d) {
+    if (!d || !d.ok) { show('expired'); return; }
+    first = d.first_name;
+    if (first) document.getElementById('askTitle').innerHTML = 'Hi ' + esc(first) + ', add your <em>WhatsApp</em>';
+    if (d.current) {
+      var c = document.getElementById('current');
+      c.textContent = 'We have ' + d.current + ' for you. Change it here if it’s wrong.';
+      c.hidden = false;
+    }
+    show('ask');
+    document.getElementById('wa').focus();
+  }).catch(function () { show('ask'); err('We couldn’t open your link. Check your connection and refresh.'); });
+
+  var input = document.getElementById('wa'), touched = false;
+  function check() {
+    var ok = !!waE164(input.value);
+    input.setAttribute('aria-invalid', ok ? 'false' : 'true');
+    if (ok) clearErr(); else err(WA_ERROR);
+    return ok;
+  }
+  input.addEventListener('blur', function () { if (input.value.trim()) { touched = true; check(); } });
+  input.addEventListener('input', function () { if (touched) check(); });
+
+  document.getElementById('waForm').addEventListener('submit', function (e) {
+    e.preventDefault(); touched = true;
+    if (!check()) { input.focus(); return; }
+    var btn = document.getElementById('saveBtn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    fetch('/api/whatsapp-number', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ t: token, whatsapp: input.value })
+    }).then(function (r) { return r.json(); }).then(function (d) {
+      if (d && d.ok) {
+        document.getElementById('doneText').textContent = (first ? 'Thanks, ' + first + '. ' : 'Thanks. ') +
+          'Your coaches can reach you on ' + pretty(d.whatsapp) + '.';
+        clearErr(); show('done'); return;
+      }
+      if (d && d.expired) { clearErr(); show('expired'); return; }
+      btn.disabled = false; btn.textContent = 'Save my number';
+      err((d && d.error) || 'Could not save your number. Try again in a minute.');
+    }).catch(function () {
+      btn.disabled = false; btn.textContent = 'Save my number';
+      err('Could not save your number. Check your connection and try again.');
+    });
+  });
+})();
+</script>
+</body>
+</html>
