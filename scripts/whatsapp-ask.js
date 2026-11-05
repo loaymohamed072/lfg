@@ -48,6 +48,10 @@ async function audience(db) {
       if (m.is_guest || !m.email || /\.invalid$/i.test(m.email)) continue;
       if (args.to && m.email.toLowerCase() !== String(args.to).toLowerCase()) continue;
       if (await memberWhatsapp(db, { id: m.id, email: m.email })) continue;
+      // One email per person: skip anyone already sent a link that is still live.
+      const { data: live } = await db.from('whatsapp_requests').select('token').eq('member_id', m.id)
+        .not('emailed_at', 'is', null).gt('expires_at', new Date().toISOString()).limit(1);
+      if (live && live.length) continue;
       out.push({ ...m, booking: rows.find((r) => r.member_id === m.id).booking });
     }
   }
