@@ -9,6 +9,8 @@
 //     It does copy run-club numbers onto member records, as the site does on their next visit.
 //   ... --send            emails everyone on the list (one token each, ~2 a second)
 //   ... --to=<email>      emails one member only (a test send to yourself)
+//   ... --at=<ISO time>   with --send: Resend holds every email until then (up to 30 days;
+//                         cancellable). Ids go to --log=<file> so a batch can be cancelled.
 //
 // Audiences: sunday:<date> = booked (or attended) that Sunday; members = everyone who ever
 // booked a bootcamp. Guests and anyone with a number (a run-club number counts and is
@@ -80,15 +82,20 @@ function emailFor(m, link) {
   }
 
   let sent = 0, failed = 0;
+  const ids = [];
   for (const m of list) {
     const token = crypto.randomBytes(32).toString('hex');
     const ins = await db.from('whatsapp_requests').insert({ token, member_id: m.id });
     if (ins.error) { failed++; console.warn('token failed for', m.id.slice(0, 8), ins.error.message); continue; }
     const mail = emailFor(m, ORIGIN + '/whatsapp?t=' + token);
-    const r = await sendEmail({ to: m.email, subject: mail.subject, html: mail.html });
-    if (r.ok) { sent++; await db.from('whatsapp_requests').update({ emailed_at: new Date().toISOString() }).eq('token', token); }
+    const r = await sendEmail({ to: m.email, subject: mail.subject, html: mail.html, scheduledAt: args.at || undefined });
+    if (r.ok) {
+      sent++; ids.push({ id: r.id, member_id: m.id });
+      await db.from('whatsapp_requests').update({ emailed_at: args.at || new Date().toISOString() }).eq('token', token);
+    }
     else { failed++; console.warn('send failed for', m.id.slice(0, 8), r.error); }
     await sleep(550);
   }
-  console.log(`sent ${sent}, failed ${failed}`);
+  if (args.log) fs.writeFileSync(args.log, JSON.stringify({ at: args.at || null, ids }, null, 2));
+  console.log(`${args.at ? 'scheduled for ' + args.at + ':' : 'sent'} ${sent}, failed ${failed}`);
 })().catch((e) => { console.error(e); process.exit(1); });

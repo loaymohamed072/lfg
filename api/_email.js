@@ -23,7 +23,7 @@
 // lfgdubai.com is a verified domain on the account, so default to it.
 const DEFAULT_FROM = 'LFG Dubai <bookings@lfgdubai.com>';
 
-async function sendEmail({ to, subject, html, text, attachments, replyTo }) {
+async function sendEmail({ to, subject, html, text, attachments, replyTo, scheduledAt }) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
     console.warn('[email] RESEND_API_KEY not set - skipping send to', to);
@@ -40,7 +40,9 @@ async function sendEmail({ to, subject, html, text, attachments, replyTo }) {
     html,
     ...(text ? { text } : {}),
     ...(replyTo || process.env.LFG_REPLY_TO ? { reply_to: replyTo || process.env.LFG_REPLY_TO } : {}),
-    ...(attachments && attachments.length ? { attachments } : {})
+    ...(attachments && attachments.length ? { attachments } : {}),
+    // ISO 8601, up to 30 days ahead; Resend holds the email until then (cancellable).
+    ...(scheduledAt ? { scheduled_at: scheduledAt } : {})
   };
 
   // Bounded, but not hair-trigger. At 3s a normal Resend round trip to the
@@ -328,15 +330,16 @@ function buildWhatsappAsk({ firstName, link, booked }) {
       </td></tr>
     </table>` : '';
   const body = `
-    <h1 style="font-family:'Barlow Condensed','Helvetica Neue',sans-serif;font-weight:800;font-size:26px;text-transform:uppercase;letter-spacing:0.04em;margin:0 0 8px;color:#fff;">Add your <span style="color:#999966;">WhatsApp.</span></h1>
-    <p style="margin:0 0 22px;color:rgba(255,255,255,0.65);font-size:15px;line-height:1.55;">${greeting}<br>Your coaches send Sunday updates on WhatsApp: your station, the start time, and any change on the day. We don't have a number for you yet.</p>
+    <h1 style="font-family:'Barlow Condensed','Helvetica Neue',sans-serif;font-weight:800;font-size:26px;text-transform:uppercase;letter-spacing:0.04em;margin:0 0 8px;color:#fff;">A quick <span style="color:#999966;">favour.</span></h1>
+    <p style="margin:0 0 14px;color:rgba(255,255,255,0.65);font-size:15px;line-height:1.55;">${greeting}<br>Could you add your WhatsApp number to your LFG account? Your coaches use WhatsApp for Sunday updates: your station, the start time, and any change on the day.</p>
+    <p style="margin:0 0 22px;color:rgba(255,255,255,0.65);font-size:15px;line-height:1.55;">${booked ? 'Your booking stays exactly as it is. This just helps us reach you.' : 'Nothing else changes. This just helps us reach you.'}</p>
     ${spot}
     <a href="${escapeHtml(link)}" style="display:inline-block;background:#999966;color:#0A0A0A;font-family:'Barlow Condensed','Helvetica Neue',sans-serif;font-weight:800;font-size:14px;letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;padding:14px 28px;">Add my WhatsApp number</a>
-    <p style="margin:22px 0 0;font-size:13px;color:rgba(255,255,255,0.5);line-height:1.6;">The link is yours, so there's no sign-in. It works for 30 days.</p>
+    <p style="margin:22px 0 0;font-size:13px;color:rgba(255,255,255,0.5);line-height:1.6;">It takes a few seconds, and the link opens straight to your account with no sign-in. Thank you${booked ? ', and see you Sunday' : ''}.</p>
   `;
   return {
-    subject: booked ? 'Add your WhatsApp number before Sunday' : 'Add your WhatsApp number to your LFG account',
-    html: emailShell({ preheader: 'Your coaches use it for your station, the start time and any change on the day.', bodyHtml: body })
+    subject: 'A quick favour: your WhatsApp number',
+    html: emailShell({ preheader: booked ? 'Your booking stays as it is. It just helps your coaches reach you.' : 'It helps your coaches reach you on Sundays.', bodyHtml: body })
   };
 }
 
