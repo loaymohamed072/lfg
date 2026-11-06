@@ -77,7 +77,7 @@
     var host = d.host_first_name || 'your friend', Host = d.host_first_name || 'Your friend', st = d.station;
     switch (d.status) {
       case 'active': return { title: 'Join ' + host + ' on Station ' + st, text: '' };
-      case 'expired': return { title: 'This saved spot has ended', text: Host + '’s spots on Station ' + st + ' were held for 24 hours and are open to everyone now.' };
+      case 'expired': return { title: 'This saved spot has ended', text: Host + '’s spots on Station ' + st + ' were held for ' + (d.free ? 6 : 24) + ' hours and are open to everyone now.' };
       case 'cancelled': return { title: 'This saved spot has ended', text: Host + ' released the spots on Station ' + st + '.' };
       case 'full': return { title: 'Those spots are taken', text: 'Every spot ' + host + ' saved on Station ' + st + ' has been claimed.' };
       case 'closed': return { title: 'Booking has closed', text: 'This Sunday is no longer taking bookings.' };
@@ -293,7 +293,7 @@
       }
       box.innerHTML = '<div class="lfgw-upsell lfgf-panel">' +
         '<div class="lfgw-upsell-h">Bring friends: hold spots on Station ' + esc(d.section) + '</div>' +
-        '<div class="lfgw-text">Training with a friend is always better. The spots stay locked for your friends for 24 hours, then open to everyone. ' + (d.free ? 'This Sunday is free, for them too.' : 'Same price as a normal ticket: <b>AED ' + esc(d.price_aed) + '</b>.') + '</div>' +
+        '<div class="lfgw-text">Training with a friend is always better. The spots stay locked for your friends for ' + (d.free ? '6' : '24') + ' hours, then open to everyone. ' + (d.free ? 'This Sunday is free, for them too.' : 'Same price as a normal ticket: <b>AED ' + esc(d.price_aed) + '</b>.') + '</div>' +
         make + '<div class="lfgw-promo-msg lfgf-msg lfgf-main-msg" role="status" aria-live="polite"></div>' +
         (d.holds.length ? '<div class="lfgf-holds">' + d.holds.map(function (h) { return holdHtml(d, h); }).join('') + '</div>' : '') +
         '</div>';

@@ -13,7 +13,7 @@
 // or miss, counts toward 10 per link and 20 per host per day (a miss is kept only as a
 // hash), and mail only reaches addresses already on LFG, so the endpoint can neither mail
 // strangers nor be used to sweep for members. The rules themselves (station room, 7 spots,
-// 24 hours, expiry) live in create_booking_hold / book_from_hold.
+// 24 hours or 6 on a free Sunday, expiry) live in create_booking_hold / book_from_hold.
 const crypto = require('crypto');
 const { admin, getUser, formatDate, earlyWeekPromo, earlyWeekPrice, canonicalOrigin, safeError } = require('./_lib');
 const F = require('./_friends');

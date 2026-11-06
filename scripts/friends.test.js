@@ -158,6 +158,9 @@ test('client copy: when, share text, landing states', () => {
     assert.ok(c.title && c.text, status);
     assert.equal((c.title + c.text).indexOf('—'), -1, 'no em dashes: ' + status);
   }
+  // A free Sunday holds a friend's spot 6 hours (sql/2026-11-06_free_sunday_short_holds.sql).
+  assert.match(C.landingCopy({ status: 'expired', host_first_name: 'Sara', station: 'B', free: true }).text, /held for 6 hours/);
+  assert.match(C.landingCopy({ status: 'expired', host_first_name: 'Sara', station: 'B' }).text, /held for 24 hours/);
 });
 
 test('emails: friend confirmation, invite, refund', () => {
