@@ -18,6 +18,11 @@
       "source": "/payitforward",
       "destination": "/bootcamp#give",
       "permanent": false
+    },
+    {
+      "source": "/run",
+      "destination": "/#register-form",
+      "permanent": false
     }
   ],
   "crons": [

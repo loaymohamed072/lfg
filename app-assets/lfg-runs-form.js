@@ -252,25 +252,9 @@
           }
         } catch (e) { /* on any error, fall through to the default behaviour */ }
 
-        // Next run(s) from the admin config (weekly recurring Wednesday + optional Saturday).
-        var cfg = null;
-        try {
-          var c = await window.lfg.sb.from('event_config')
-            .select('event_datetime,location,run_map_url,saturday_datetime,saturday_location,saturday_enabled')
-            .eq('id', 1).maybeSingle();
-          cfg = c && c.data;
-        } catch (e) { return; }
-        if (!cfg) return;
-
-        var runs = [];
-        var wed = advanceIfPast(cfg.event_datetime);
-        if (wed) runs.push({ when: wed, location: cfg.location || '', mapUrl: /^https:\/\//i.test(cfg.run_map_url || '') ? cfg.run_map_url : (cfg.location ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(/dubai/i.test(cfg.location) ? cfg.location : cfg.location + ', Dubai') : ''), type: weekdayType(wed) });
-        if (cfg.saturday_enabled && cfg.saturday_datetime) {
-          var sat = advanceIfPast(cfg.saturday_datetime);
-          if (sat) runs.push({ when: sat, location: cfg.saturday_location || '', type: weekdayType(sat) });
-        }
-        if (!runs.length) return;
-        runs.sort(function (a, b) { return a.when - b.when; });
+        // The next free run from the admin config (weekly main run + optional Saturday).
+        var runs = await loadFreeRuns();
+        if (!runs || !runs.length) return;
         var next = runs[0];
         var runDate = dubaiYMD(next.when);
 
@@ -283,7 +267,9 @@
         if (formEl) formEl.hidden = true;
         if (progEl) progEl.style.display = 'none';
         var labelEl = document.querySelector('#register-form .activity-form-label');
-        if (labelEl) labelEl.textContent = 'Joining the next run?';
+        // Beside the paid CTA the label covers both runs, and the homepage sets it.
+        var paidCta = document.getElementById('run-paid-cta');
+        if (labelEl && !(paidCta && !paidCta.hidden)) labelEl.textContent = 'Joining the next run?';
 
         var dayStr = next.when.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Asia/Dubai' });
         var timeStr = next.when.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Dubai' });
@@ -363,26 +349,53 @@
       }
     }
 
-    // Next run (date + type) from config, cached. Used by the form submit to record an
-    // RSVP for the next run. Returns null if config/schedule isn't available.
-    var _nextRunCache;
-    async function getNextRun() {
-      if (_nextRunCache !== undefined) return _nextRunCache;
-      _nextRunCache = null;
-      try {
+    // The free runs from the admin config, soonest first, loaded once. A main run flagged
+    // paid is booked on /track, so it is left out: with a paid Tuesday and a free Saturday,
+    // this form signs people up for the Saturday run. Null when the config can't load.
+    var _freeRuns;
+    function loadFreeRuns() {
+      if (_freeRuns) return _freeRuns;
+      _freeRuns = (async function () {
         if (!window.lfg || !window.lfg.sb) return null;
         var c = await window.lfg.sb.from('event_config')
-          .select('event_datetime,saturday_datetime,saturday_enabled').eq('id', 1).maybeSingle();
+          .select('event_datetime,location,run_map_url,run_paid,saturday_datetime,saturday_location,saturday_enabled')
+          .eq('id', 1).maybeSingle();
         var cfg = c && c.data; if (!cfg) return null;
         var runs = [];
-        var wed = advanceIfPast(cfg.event_datetime); if (wed) runs.push(wed);
-        if (cfg.saturday_enabled && cfg.saturday_datetime) { var sat = advanceIfPast(cfg.saturday_datetime); if (sat) runs.push(sat); }
-        if (!runs.length) return null;
-        runs.sort(function (a, b) { return a - b; });
-        _nextRunCache = { run_date: dubaiYMD(runs[0]), run_type: weekdayType(runs[0]) };
-        return _nextRunCache;
-      } catch (e) { return null; }
+        var wed = cfg.run_paid ? null : advanceIfPast(cfg.event_datetime);
+        if (wed) runs.push({ when: wed, location: cfg.location || '', mapUrl: /^https:\/\//i.test(cfg.run_map_url || '') ? cfg.run_map_url : mapsSearch(cfg.location), type: weekdayType(wed) });
+        if (cfg.saturday_enabled && cfg.saturday_datetime) {
+          var sat = advanceIfPast(cfg.saturday_datetime);
+          if (sat) runs.push({ when: sat, location: cfg.saturday_location || '', mapUrl: mapsSearch(cfg.saturday_location), type: weekdayType(sat) });
+        }
+        runs.sort(function (a, b) { return a.when - b.when; });
+        return runs;
+      })().catch(function () { return null; });
+      return _freeRuns;
     }
+    function mapsSearch(loc) {
+      var l = String(loc || '').trim();
+      return l ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(/dubai/i.test(l) ? l : l + ', Dubai') : '';
+    }
+
+    // Next free run (date + type). Used by the form submit to record an RSVP for it.
+    async function getNextRun() {
+      var runs = await loadFreeRuns();
+      if (!runs || !runs.length) return null;
+      return { run_date: dubaiYMD(runs[0].when), run_type: runs[0].type };
+    }
+
+    // Name the run on the form's first step, so nobody signs up guessing which one it is.
+    (async function showRunWhen() {
+      var el = document.getElementById('lfgrf-run-when');
+      var runs = await loadFreeRuns();
+      if (!el || !runs || !runs.length) return;
+      var r = runs[0];
+      el.textContent = r.when.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Asia/Dubai' }) +
+        ' · ' + r.when.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Dubai' }) +
+        (r.location ? ' · ' + r.location : '');
+      el.hidden = false;
+    })();
 
     function advanceIfPast(dtStr) {
       if (!dtStr) return null;

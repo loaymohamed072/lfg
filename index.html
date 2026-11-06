@@ -3064,7 +3064,7 @@ footer {
         <div id="run-paid-cta" class="run-paid-cta" hidden>
           <p class="rpc-eyebrow" id="rpc-eyebrow">This Tuesday · Paid session</p>
           <h3 class="rpc-title">Intervals at <span id="rpc-loc">Gems World Academy</span></h3>
-          <p class="rpc-sub">This week's run is a paid intervals session. Reserve your spot and pay online — <b id="rpc-price">AED 30</b> per person.</p>
+          <p class="rpc-sub"><span id="rpc-what">This week's run</span> is a paid intervals session. Reserve your spot and pay online — <b id="rpc-price">AED 30</b> per person.</p>
           <a href="/track" class="rpc-btn">Reserve your spot · <span id="rpc-price2">AED 30</span> →</a>
           <p class="rpc-note">Spots are limited. You'll get an email confirmation.</p>
         </div>
@@ -3082,8 +3082,10 @@ footer {
 
             <!-- Step 1 - commit -->
             <div class="lfgrf-step active" data-step="1">
-              <h3 class="lfgrf-h">Run with <em>LFG.</em></h3>
+              <h3 class="lfgrf-h" id="lfgrf-h1">Run with <em>LFG.</em></h3>
               <p class="lfgrf-sub">Two minutes. Three short steps. We'll email you the next run details.</p>
+              <!-- The free run this form signs you up for (date, time, place): filled by lfg-runs-form.js. -->
+              <div class="lfgrf-rsvp-run" id="lfgrf-run-when" hidden></div>
 
               <div class="lfgrf-row-2">
                 <div class="lfgrf-row">
@@ -3920,19 +3922,35 @@ async function fetchEventConfig() {
         } else { runBadge.hidden = true; }
       }
 
-      // Register section: swap the free form for the paid CTA (→ /track) when paid.
+      // Register section: the paid CTA (→ /track) when the main run is paid. A Saturday run
+      // stays free, so its sign-up form shows beside the paid CTA, soonest run first. Until
+      // 6 Nov 2026 a paid main run hid the form outright, so a free Saturday run had no
+      // sign-up at all (Loay: "only the intervals paid sign is showing").
       const runForm = document.getElementById('lfgrf-root');
       const runPaidCta = document.getElementById('run-paid-cta');
       const formLabel = document.querySelector('#register-form .activity-form-label');
       if (runForm && runPaidCta) {
+        const satRun = row.saturday_enabled && row.saturday_datetime ? _advanceIfPast(row.saturday_datetime) : null;
+        const freeH = document.getElementById('lfgrf-h1');
+        runForm.style.marginTop = ''; runPaidCta.style.marginTop = '';
         if (_isPaidRun) {
           const re = document.getElementById('rpc-eyebrow'); if (re) re.textContent = 'This ' + wedDay + ' · Paid session';
           const rl = document.getElementById('rpc-loc'); if (rl && row.location) rl.textContent = row.location;
           const r1 = document.getElementById('rpc-price'); if (r1) r1.textContent = _runPrice;
           const r2 = document.getElementById('rpc-price2'); if (r2) r2.textContent = _runPrice;
-          runForm.style.display = 'none';
+          const rw = document.getElementById('rpc-what'); if (rw) rw.textContent = wedDay + '\u2019s run';
           runPaidCta.hidden = false;
-          if (formLabel) formLabel.textContent = 'Reserve the next run';
+          if (satRun) {
+            const satName = satRun.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'Asia/Dubai' });
+            if (freeH) freeH.innerHTML = satName + '&rsquo;s run is <em>free.</em>';
+            runForm.style.display = '';
+            if (satRun < wedTarget) { runPaidCta.before(runForm); runPaidCta.style.marginTop = '44px'; }
+            else { runForm.before(runPaidCta); runForm.style.marginTop = '44px'; }
+            if (formLabel) formLabel.textContent = 'Pick your run';
+          } else {
+            runForm.style.display = 'none';
+            if (formLabel) formLabel.textContent = 'Reserve the next run';
+          }
         } else {
           runPaidCta.hidden = true;
           runForm.style.display = '';
@@ -4484,7 +4502,7 @@ document.querySelectorAll('.faq-question').forEach(btn => {
 <script src="/app-assets/lfg-supabase.js?v=3"></script>
 <script src="https://js.stripe.com/v3/"></script>
 <script src="/app-assets/lfg-home-booking.js?v=16"></script>
-<script src="/app-assets/lfg-runs-form.js?v=7"></script>
+<script src="/app-assets/lfg-runs-form.js?v=8"></script>
 <script>
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     var lfgReloaded = false;
