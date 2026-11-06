@@ -21,9 +21,11 @@ module.exports = async (req, res) => {
       db.from('bookings').select('id', { count: 'exact', head: true })
         .eq('session_id', body.session_id).in('status', ['booked', 'attended']),
       liveHolds(db, [body.session_id], { strict: true }),
-      db.from('sessions').select('stations').eq('id', body.session_id).maybeSingle()
+      db.from('sessions').select('stations,capacity').eq('id', body.session_id).maybeSingle()
     ]);
     if (sessErr) throw new Error(sessErr.message);
+    // Saving the number already there changes nothing (a hand-set 162 must not round to 156).
+    if (sess && sess.capacity === cap) return res.status(200).json({ ok: true, capacity: cap });
     const held = (heldBySession(holds, Date.now())[body.session_id] || { total: 0 }).total;
     const taken = (count || 0) + held;
     if (cap < taken) {
