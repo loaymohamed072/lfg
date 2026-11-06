@@ -6,14 +6,13 @@
 // them off the row means this public endpoint never needs the api schema. Also
 // returns recent group photos (each tied to its Sunday) for the gallery.
 const { admin, getUser, formatDate } = require('./_lib');
-const { liveHolds, heldBySession, capacityForBooker } = require('./_friends');
+const { liveHolds, heldBySession, capacityForBooker, sectionCap } = require('./_friends');
 
 function stationLabels(n) {
   const out = [];
   for (let i = 0; i < n; i++) out.push(String.fromCharCode(65 + i)); // A, B, C, …
   return out;
 }
-function sectionCap(total, idx, n) { return Math.floor(total / n) + (idx < (total % n) ? 1 : 0); }
 // Soft balancing, mirroring public.balanced_open_stations (the RPCs enforce it; keep the
 // two in sync). The stations with the fewest people booked open first; a spot held for a
 // friend fills its station's cap but is not a person yet (sql/2026-11-04_balance_by_people.sql).

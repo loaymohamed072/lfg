@@ -49,7 +49,7 @@ module.exports = async (req, res) => {
       return {
         id: s.id, date_label: formatDate(s.session_date, s.start_time), location: s.location || null,
         capacity: s.capacity, booked: e.total, stations: n, photo_url: s.photo_url || null, past: true,
-        sections: stationLabelsN(n).map((l, i) => ({ label: l, booked: e.secs[l] || 0, cap: sectionCapN(s.capacity, i, n) }))
+        sections: stationLabelsN(n).map((l, i) => ({ label: l, booked: e.secs[l] || 0, cap: sectionCapN(s.capacity, i, n, s.session_date < '2026-09-19') }))
       };
     });
 

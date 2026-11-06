@@ -606,7 +606,14 @@ function earlyWeekPrice(amountAed, promo) {
   return promo && promo.active ? Math.round(amount * (100 - promo.percent) / 100) : amount;
 }
 
-function sectionCapN(total, idx, n) { return Math.floor(total / n) + (idx < (total % n) ? 1 : 0); }
+// A station's cap in whole pairs, same as _friends.sectionCap and public.section_cap.
+// Sundays before the pairs rule (sql/2026-09-19_balanced_stations.sql) were booked on a
+// plain split, so their history passes legacy and keeps it.
+function sectionCapN(total, idx, n, legacy) {
+  if (legacy) return Math.floor(total / n) + (idx < (total % n) ? 1 : 0);
+  const pairs = Math.floor(total / 2), rest = pairs % n;
+  return 2 * Math.floor(pairs / n) + (idx < rest ? 2 : 0) + (total % 2 && idx === rest ? 1 : 0);
+}
 function stationLabelsN(n) { const o = []; for (let i = 0; i < (n || 4); i++) o.push(String.fromCharCode(65 + i)); return o; }
 
 // PostgREST answers with at most 1000 rows and says nothing about the rest, so a

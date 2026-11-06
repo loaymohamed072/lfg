@@ -75,7 +75,14 @@ function bookingOpen(sess, nowMs) {
   return isNaN(t) ? true : t + BOOK_GRACE_MS >= nowMs;
 }
 
-function sectionCap(total, idx, n) { return Math.floor(total / n) + (idx < (total % n) ? 1 : 0); }
+// Partners train in pairs, so a station holds whole pairs: every station gets the same
+// number of pairs and leftover pairs go one each to the first stations (162 on 6 stations:
+// 28,28,28,26,26,26). A capacity that is a multiple of 2 x stations splits evenly, as before.
+// Mirrors public.section_cap (sql/2026-11-06_pair_station_caps.sql).
+function sectionCap(total, idx, n) {
+  const pairs = Math.floor(total / 2), rest = pairs % n;
+  return 2 * Math.floor(pairs / n) + (idx < rest ? 2 : 0) + (total % 2 && idx === rest ? 1 : 0);
+}
 
 // Live held spots from booking_holds rows: { [session_id]: { total, sections: { A: n } } }.
 function heldBySession(rows, nowMs) {
@@ -93,13 +100,15 @@ function heldBySession(rows, nowMs) {
 // The capacity a booker meets. Bookings plus held spots filling a Sunday below
 // max_capacity make the next booking grow it by one bump_increment
 // (bump_capacity_for_held in the migration), so held spots never show it as sold out.
-// The database rounds capacity up to a whole pair per station (sessions_even_capacity).
+// The database rounds capacity up to a whole pair per station (sessions_even_capacity),
+// except an even capacity that reaches max_capacity, which it keeps.
 function capacityForBooker(sess, booked, held) {
   const cap = Number(sess && sess.capacity) || 0;
   const max = Number(sess && sess.max_capacity) || cap;
   if (!((booked || 0) + (held || 0) >= cap && cap < max)) return cap;
   const step = 2 * Math.max(Number(sess.stations) || 4, 1);
-  return Math.ceil(Math.min(cap + (Number(sess.bump_increment) || 10), max) / step) * step;
+  const next = Math.min(cap + (Number(sess.bump_increment) || 10), max);
+  return next === max && max % 2 === 0 ? max : Math.ceil(next / step) * step;
 }
 
 // Room on one station once bookings and live holds are counted, never below zero.

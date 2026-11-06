@@ -79,9 +79,25 @@ test('stationRoom matches section_cap', () => {
   assert.equal(F.stationRoom(32, 4, 'A', 3, 2), 3);
   assert.equal(F.stationRoom(32, 4, 'D', 8, 0), 0);
   assert.equal(F.stationRoom(32, 4, 'D', 7, 3), 0);   // never negative
-  assert.equal(F.stationRoom(30, 4, 'A', 0, 0), 8);   // uneven caps: 8,8,7,7
-  assert.equal(F.stationRoom(30, 4, 'D', 0, 0), 7);
+  assert.equal(F.stationRoom(30, 4, 'A', 0, 0), 8);   // uneven caps split in pairs: 8,8,8,6
+  assert.equal(F.stationRoom(30, 4, 'D', 0, 0), 6);
   assert.equal(F.stationRoom(32, 4, 'E', 0, 0), 0);   // no such station
+});
+
+test('sectionCap splits in whole pairs', () => {
+  const caps = (t, n) => Array.from({ length: n }, (_, i) => F.sectionCap(t, i, n));
+  assert.deepEqual(caps(162, 6), [28, 28, 28, 26, 26, 26]);  // Loay, 6 Nov 2026
+  assert.deepEqual(caps(156, 6), [26, 26, 26, 26, 26, 26]);  // multiples of 2 x stations: even split, as before
+  assert.deepEqual(caps(40, 4), [10, 10, 10, 10]);
+  assert.deepEqual(caps(45, 4), [12, 12, 11, 10]);           // odd total: the single goes after the extra pairs
+  [[162, 6], [150, 6], [45, 4], [96, 4], [7, 3]].forEach(([t, n]) => assert.equal(caps(t, n).reduce((a, b) => a + b, 0), t));
+});
+
+test('capacityForBooker keeps an even hand-set ceiling', () => {
+  const s = { capacity: 156, max_capacity: 162, stations: 6, bump_increment: 10 };
+  assert.equal(F.capacityForBooker(s, 156, 0), 162);         // the bump stops at 162, it does not round to 168
+  assert.equal(F.capacityForBooker({ ...s, capacity: 40, max_capacity: 96, stations: 4 }, 40, 0), 56);  // 50 rounds to 56, as before
+  assert.equal(F.capacityForBooker({ ...s, capacity: 162 }, 162, 0), 162);
 });
 
 test('planGroupOutcome: refund nobody, part, or all', () => {

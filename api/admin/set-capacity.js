@@ -32,7 +32,8 @@ module.exports = async (req, res) => {
     // Partners train in pairs, so the sessions trigger keeps capacity a multiple of
     // 2 x stations, rounding up. A typed number rounds DOWN instead (Loay, 4 Nov 2026: 150 on
     // 6 stations became 156; it should be 144, 24 a station). If that would leave someone
-    // already in without a place, the typed number goes in and the trigger rounds it up.
+    // already in without a place, the typed number goes in: an even one stays as typed and
+    // the stations split it in pairs (162 on 6: 28,28,28,26,26,26), an odd one rounds up.
     const step = 2 * Math.max((sess && sess.stations) || 4, 1);
     const down = Math.floor(cap / step) * step;
     const stored = down > 0 && down >= taken ? down : cap;
