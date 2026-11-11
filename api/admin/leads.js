@@ -11,6 +11,7 @@
 //
 // Each person resolves to the FIRST bucket they match (A>B>C>D>E), so no one appears twice.
 const { admin, getUser, isAdmin } = require('../_lib');
+const { fetchAllRows } = require('../_fetch-all');
 
 const STAGE_LABEL = {
   A: 'Paid, not in', B: 'Came before', C: 'Ran, never bootcamped',
@@ -59,13 +60,14 @@ module.exports = async (req, res) => {
 
     const [sRes, bRes, pRes, mRes, rRes, raRes, payRes, touchRes] = await Promise.all([
       db.from('sessions').select('id,session_date,start_time,status').order('session_date', { ascending: true }),
-      db.from('bookings').select('member_id,session_id,status,booked_at'),
+      // paged past the 1,000-row cap: bookings (1,128), members (1,557) and attendance (986) are over or at it
+      fetchAllRows(() => db.from('bookings').select('member_id,session_id,status,booked_at').order('id', { ascending: true })),
       db.from('member_packages').select('member_id,sessions_remaining,status,expires_at'),
-      db.from('members').select('id,full_name,email,created_at,is_admin'),
-      db.from('run_registrations').select('member_id,first_name,last_name,email,whatsapp_e164,instagram_handle,nationality,occupation,date_of_birth,created_at'),
-      db.from('run_attendance').select('member_id'),
+      fetchAllRows(() => db.from('members').select('id,full_name,email,created_at,is_admin').order('id', { ascending: true })),
+      fetchAllRows(() => db.from('run_registrations').select('member_id,first_name,last_name,email,whatsapp_e164,instagram_handle,nationality,occupation,date_of_birth,created_at').order('id', { ascending: true })),
+      fetchAllRows(() => db.from('run_attendance').select('member_id').order('id', { ascending: true })),
       // Paid runs (real money in) - the strongest free->paid intent signal we have.
-      db.from('payments').select('member_id,amount_aed,run_date').eq('kind', 'run').eq('status', 'paid').then(r => r, () => ({ data: [] })),
+      fetchAllRows(() => db.from('payments').select('member_id,amount_aed,run_date').eq('kind', 'run').eq('status', 'paid').order('id', { ascending: true })).then(r => r, () => ({ data: [] })),
       // lead_touch may not exist yet (migration applied at deploy). Never let it break the feed.
       db.from('lead_touch').select('lead_key,status,note,snooze_until,updated_at').then(r => r, () => ({ data: [] }))
     ]);

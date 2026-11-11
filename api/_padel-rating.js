@@ -16,6 +16,8 @@
  * scripts/padel-rerate.js, which prints the same table without writing.
  */
 
+const { fetchAllRows } = require('./_fetch-all');
+
 // Level 1..7 maps onto 1000..1600. One level = 100 rating points, so a full
 // level of movement is a real night's worth of results, not a rounding error.
 const PER_LEVEL = 100;
@@ -59,7 +61,7 @@ async function computeLevels(db) {
       db.from('padel_teams').select('event_date, round, team_no, player_a, player_b'),
       db.from('padel_matches').select('event_date, round, court, team_a, team_b, score_a, score_b'),
       db.from('padel_profiles').select('member_id, level, initial_level, estimated, level_adjust'),
-      db.from('members').select('id, full_name'),
+      fetchAllRows(() => db.from('members').select('id, full_name').order('id', { ascending: true })),
     ]);
 
   const nameOf = new Map((members || []).map((m) => [m.id, m.full_name || 'Unnamed']));

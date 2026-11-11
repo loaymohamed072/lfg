@@ -17,6 +17,7 @@
 // Anything less certain is reported with its reason so the owner can judge,
 // rather than the UI asserting "didn't pay" as fact.
 const { admin, getUser, isAdmin } = require('../_lib');
+const { fetchAllRows } = require('../_fetch-all');
 
 function dubaiYMD(d) {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dubai', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
@@ -56,8 +57,9 @@ module.exports = async (req, res) => {
     const [scanRes, payRes, memRes, regRes] = await Promise.all([
       db.from('run_attendance').select('member_id, checked_in_at, run_type, location').eq('run_date', runDate),
       db.from('payments').select('member_id, amount_aed, status, promo_code').eq('kind', 'run').eq('run_date', runDate),
-      db.from('members').select('id, full_name, email, is_admin'),
-      db.from('run_registrations').select('member_id, whatsapp_e164, first_name, last_name')
+      // paged: members passed the 1,000-row cap and showed as "—" (11 Nov 2026)
+      fetchAllRows(() => db.from('members').select('id, full_name, email, is_admin').order('id', { ascending: true })),
+      fetchAllRows(() => db.from('run_registrations').select('member_id, whatsapp_e164, first_name, last_name').order('id', { ascending: true }))
     ]);
 
     const scans = scanRes.data || [];

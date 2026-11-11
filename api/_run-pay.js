@@ -12,6 +12,8 @@
 //             accounts, so member_id alone wrongly flags real payers - see the
 //             2026-07-22 run where 2 of 4 "unpaid" scanners had paid on a
 //             second account.
+
+const { fetchAllRows } = require('./_fetch-all');
 const normName = s => String(s || '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
 const normPhone = s => String(s || '').replace(/[^\d]/g, '').slice(-9);
 
@@ -64,8 +66,9 @@ async function memberPaidForRun(db, memberId, runDate) {
 async function buildRunPaidIndex(db, runDate) {
   const [payRes, memRes, regRes] = await Promise.all([
     db.from('payments').select('member_id, status').eq('kind', 'run').eq('run_date', runDate),
-    db.from('members').select('id, full_name, is_admin'),
-    db.from('run_registrations').select('member_id, whatsapp_e164')
+    // paged: members passed the 1,000-row cap; past it, a linked account could be read as unpaid
+    fetchAllRows(() => db.from('members').select('id, full_name, is_admin').order('id', { ascending: true })),
+    fetchAllRows(() => db.from('run_registrations').select('member_id, whatsapp_e164').order('id', { ascending: true }))
   ]);
 
   const members = {};

@@ -7,6 +7,7 @@
 //   - top_source_this_week: hear_source winner this week
 //   - upcoming_next: the very next session with fill summary
 const { admin, getUser, isAdmin, canViewRevenue, formatDate, safeError } = require('../_lib');
+const { fetchAllRows } = require('../_fetch-all');
 
 const DAY = 86400000;
 const WEEK = 7 * DAY;
@@ -31,10 +32,11 @@ module.exports = async (req, res) => {
     // Pull just enough data - one round-trip per table.
     const [payR, memR, bookR, sessR, runR] = await Promise.all([
       db.from('payments').select('amount_aed,created_at,status').eq('status', 'paid').gte('created_at', new Date(twoWeeksAgo).toISOString()),
-      db.from('members').select('id,created_at,is_admin').neq('is_admin', true),
-      db.from('bookings').select('member_id,session_id,status,booked_at').in('status', ['booked', 'attended', 'no_show', 'cancelled']),
+      // paged: members (1,553 non-admin) and bookings (1,128) are past the 1,000-row cap
+      fetchAllRows(() => db.from('members').select('id,created_at,is_admin').neq('is_admin', true).order('id', { ascending: true })),
+      fetchAllRows(() => db.from('bookings').select('member_id,session_id,status,booked_at').in('status', ['booked', 'attended', 'no_show', 'cancelled']).order('id', { ascending: true })),
       db.from('sessions').select('id,session_date,start_time,location,capacity,status').gte('session_date', today).order('session_date'),
-      db.from('run_registrations').select('member_id,created_at,hear_source')
+      fetchAllRows(() => db.from('run_registrations').select('member_id,created_at,hear_source').order('id', { ascending: true }))
     ]);
 
     const payments = payR.data || [];

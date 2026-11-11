@@ -16,6 +16,7 @@
 // reason label, we stop and ask for confirmation (force:true) so a coach can't
 // silently double-apply the same sheet.
 const { admin, getUser, isAdmin } = require('../_lib');
+const { fetchAllRows } = require('../_fetch-all');
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -40,7 +41,7 @@ module.exports = async (req, res) => {
 
   try {
     // Load every member once for id validation + unique-name fallback.
-    const { data: members, error: mErr } = await db.from('members').select('id,full_name,email');
+    const { data: members, error: mErr } = await fetchAllRows(() => db.from('members').select('id,full_name,email').order('id', { ascending: true }));
     if (mErr) return res.status(500).json({ error: mErr.message });
     const idSet = new Set();
     const nameMap = {}; // lowercased name -> [ids]
