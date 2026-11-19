@@ -88,8 +88,15 @@ Check your connection and try again." + Try again (back to the page's previous s
 values kept) + WhatsApp. Paying: "Paying…" in the button, disabled, aria-busy. Bank
 approval (3-D Secure) opens over the page and returns to it. Declined: "Payment didn't go
 through. {Stripe's reason} Nothing was charged. Try again or use another card.", form
-kept. Field problem: Stripe's line only. Lost connection mid-payment: "We couldn't confirm
-your payment. If a receipt reaches your email, you're paid. If not, try again." Paid: the
+kept (card declines and rejected requests only). Field problem: Stripe's line only.
+Connection or server error, or a lost answer: "We couldn't confirm whether that payment went
+through. Check your email for a receipt before you try again, or message us on WhatsApp."
+(no "nothing was charged" when the state is unknown, so nobody pays twice).
+**Anonymous buyer (sponsor box, no account).** "Your name" field above the email, 16px,
+required on the card path ("Add your name above, so we know who paid."), passed to Stripe
+with `updateIndividualName` on a session created with optional `name_collection`, so it lands
+in `customer_details.name` where fulfilment reads `sponsor_name` (the embedded page asked for
+a cardholder name; the Elements card form does not). Paid: the
 page's own server verify, then its own success. Instagram/Facebook in-app browser on an
 iPhone with no Apple Pay offered: "Want Apple Pay? Open this page in Safari: tap ••• then
 Open in browser." A payment method that leaves the page returns to `return_url` with

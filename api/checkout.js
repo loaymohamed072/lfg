@@ -303,22 +303,31 @@ module.exports = async (req, res) => {
     // redirecting off-site. No success/cancel URL - the client uses onComplete and we
     // confirm via the GET handler above. Fulfilment still runs from `metadata` in the
     // webhook, so the server-side flow is unchanged.
+    const ui = checkoutUi(req, body, 'checkout');
+    // An anonymous sponsor's name comes from Stripe (sponsor_name on the hand-out).
+    // The embedded page always asked for a cardholder name; the Elements card form
+    // does not, so the Elements session collects it explicitly and lfg-pay.js shows a
+    // name field (collect_name). Optional on the session so a wallet payment never
+    // fails on it; the card path requires it in the form.
+    const collectName = ui.ui_mode === 'elements' && !user;
     const session = await stripe.checkout.sessions.create({
-      ...checkoutUi(req, body, 'checkout'),
+      ...ui,
       mode: 'payment',
       line_items: [lineItem],
       // No customer_email for an anonymous sponsor: Stripe collects it, and that
       // is where the attribution on the hand-out comes from.
       customer_email: user ? user.email : undefined,
       metadata: metadata,
-      payment_method_types: ['card']
+      payment_method_types: ['card'],
+      ...(collectName ? { name_collection: { individual: { enabled: true, optional: true } } } : {})
     });
 
     if (pay) await db.from('payments').update({ stripe_session_id: session.id }).eq('id', pay.id);
     res.status(200).json({
       client_secret: session.client_secret,
       id: session.id,
-      publishable_key: process.env.STRIPE_PUBLISHABLE_KEY
+      publishable_key: process.env.STRIPE_PUBLISHABLE_KEY,
+      collect_name: collectName
     });
 
   } catch (e) {

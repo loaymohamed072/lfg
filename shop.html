@@ -529,23 +529,28 @@
       toast((res.data && res.data.error) || 'Checkout failed. Try again.', true); leaveInline(); return;
     }
     var sessionId = res.data.id;
+    var boughtSize = picked; // the size this session charges for, whatever is picked later
     var ctl = await window.LFGPay.start('#shopPayMount', res.data, async function(){
       var paid = false;
       try{ var st = await window.lfg.api('/api/checkout?session_id=' + encodeURIComponent(sessionId)); paid = st.ok && st.data && st.data.payment_status === 'paid'; }catch(e){}
-      showInlineSuccess(paid);
+      // They left this checkout while the check ran: say what happened, don't paint over
+      // whatever they opened since.
+      if (gen !== inlineGen){ toast(paid ? 'Paid: LFG Tee · ' + boughtSize + '. Check your email for the confirmation.' : 'Your payment for the ' + boughtSize + ' tee is confirming. Check your email.'); return; }
+      showInlineSuccess(paid, boughtSize);
     }, { onRetry: leaveInline, waText: 'Hi LFG, I had trouble buying the LFG Tee.' });
     if (gen !== inlineGen){ try{ ctl.destroy(); }catch(e){} return; }
     inlinePay = ctl;
   }
 
-  function showInlineSuccess(paid){
+  function showInlineSuccess(paid, size){
+    size = size || picked;
     if (inlinePay){ try{ inlinePay.destroy(); }catch(e){} inlinePay = null; }
     el('shopPayBack').hidden = true;
     el('shopPayMount').innerHTML =
       '<div class="m-success" style="text-align:left;padding:0">' +
         '<div class="m-eyebrow">' + (paid ? 'Order confirmed' : 'Payment processing') + '</div>' +
         '<div class="m-title" style="margin-top:6px">' + (paid ? 'You got the tee.' : 'Almost there') + '</div>' +
-        '<div class="m-success-line">LFG Tee · Size ' + esc(picked) + '</div>' +
+        '<div class="m-success-line">LFG Tee · Size ' + esc(size) + '</div>' +
         '<p class="m-sub" style="margin-bottom:8px">' + (paid
             ? 'We’ll have it ready with your name on it at the next run. Check your email for the confirmation.'
             : 'Your payment is confirming. If it went through, you’ll get a confirmation email shortly.') + '</p>' +

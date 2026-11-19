@@ -31,6 +31,7 @@
   var KEY = 'lfg_checkout';
   var WA = 'https://wa.me/971504264410?text=';
   var LOAD_MS = 15000;
+  var UNKNOWN = 'We couldn\'t confirm whether that payment went through. Check your email for a receipt before you try again, or message us on WhatsApp.';
   var ROUTES = ['checkout', 'run-pay', 'padel-pay', 'trip-pay', 'event-pay'];
   var ME = document.currentScript;
 
@@ -59,13 +60,21 @@
     if (stripeLoading) return stripeLoading;
     stripeLoading = new Promise(function (resolve, reject) {
       // In-app browsers sometimes block js.stripe.com outright; never wait forever.
+      // One script tag per page, ever: a retry after a slow load waits on the same tag
+      // instead of adding a second Stripe.js (two copies on a page break Stripe).
+      var s = document.getElementById('lfgpay-stripe-js');
       var t = setTimeout(function () { stripeLoading = null; reject(new Error('Stripe.js timeout')); }, 10000);
-      var s = document.createElement('script');
-      s.src = STRIPE_SRC;
-      s.async = true;
-      s.onload = function () { clearTimeout(t); window.Stripe ? resolve(window.Stripe) : reject(new Error('no Stripe')); };
-      s.onerror = function () { clearTimeout(t); stripeLoading = null; reject(new Error('Stripe.js blocked')); };
-      document.head.appendChild(s);
+      function ok() { clearTimeout(t); if (window.Stripe) resolve(window.Stripe); else { stripeLoading = null; reject(new Error('no Stripe')); } }
+      function bad() { clearTimeout(t); stripeLoading = null; if (s && s.parentNode) s.parentNode.removeChild(s); reject(new Error('Stripe.js blocked')); }
+      if (!s) {
+        s = document.createElement('script');
+        s.id = 'lfgpay-stripe-js';
+        s.src = STRIPE_SRC;
+        s.async = true;
+        document.head.appendChild(s);
+      }
+      s.addEventListener('load', ok);
+      s.addEventListener('error', bad);
     });
     return stripeLoading;
   }
@@ -130,6 +139,11 @@
     '.lfgpay-or{display:flex;align-items:center;gap:12px;margin:18px 0 16px;color:rgba(255,255,255,.34);font-family:"Barlow Condensed",Arial,sans-serif;font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase}',
     '.lfgpay-or::before,.lfgpay-or::after{content:"";flex:1;height:1px;background:rgba(255,255,255,.08)}',
     '.lfgpay-contact{margin-bottom:14px}',
+    '.lfgpay-name{display:block;margin:0 0 14px}',
+    '.lfgpay-name span{display:block;margin-bottom:6px;font-family:"Barlow Condensed",Arial,sans-serif;font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.52)}',
+    '.lfgpay-name input{width:100%;padding:14px 15px;background:#171717;border:1px solid rgba(255,255,255,.08);border-radius:0;color:#fff;font-family:"Barlow",Arial,sans-serif;font-size:16px;-webkit-appearance:none;appearance:none}',
+    '.lfgpay-name input::placeholder{color:rgba(255,255,255,.34)}',
+    '.lfgpay-name input:focus{outline:none;border-color:#999966;box-shadow:0 0 0 1px #999966}',
     '.lfgpay-err{margin:16px 0 0;padding:12px 14px;border:1px solid rgba(224,101,94,.45);background:rgba(224,101,94,.08);color:#f2b3ae;font-size:14px;line-height:1.5}',
     '.lfgpay-pay{width:100%;min-height:54px;margin-top:18px;padding:15px 18px;background:#999966;border:0;border-radius:0;color:#0A0A0A;font-family:"Barlow Condensed",Arial,sans-serif;font-size:17px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:background-color .15s ease-out,transform .1s ease-out,opacity .15s ease-out;-webkit-tap-highlight-color:transparent}',
     '.lfgpay-pay:hover:not(:disabled){background:#bcbc86}',
@@ -167,9 +181,13 @@
   }
   function money(session) {
     try {
-      var minor = session.total.total.minorUnitsAmount;
+      // Stripe's contract: divide minor units by the session's own divisor, never a
+      // hard-coded 100 (zero- and three-decimal currencies differ).
+      var t = session.total.total;
+      var minor = t.minorUnitsAmount;
+      var div = t.minorUnitsAmountDivisor || 100;
       var cur = String(session.currency || 'aed').toUpperCase();
-      var n = minor / 100;
+      var n = minor / div;
       return cur + ' ' + (n % 1 === 0 ? n.toLocaleString('en-US') : n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
     } catch (e) { return ''; }
   }
@@ -230,6 +248,8 @@
           '<p class="lfgpay-iab" hidden>Want Apple Pay? Open this page in Safari: tap ••• then Open in browser.</p>' +
           '<div class="lfgpay-express is-pending"></div>' +
           '<div class="lfgpay-or" hidden><span>or pay by card</span></div>' +
+          '<label class="lfgpay-name"' + (opts.collectName ? '' : ' hidden') + '><span>Your name</span>' +
+            '<input type="text" class="lfgpay-name-input" autocomplete="name" autocapitalize="words" maxlength="80" placeholder="First and last name"></label>' +
           '<div class="lfgpay-contact" hidden></div>' +
           '<div class="lfgpay-card"></div>' +
           '<p class="lfgpay-err" role="alert" hidden></p>' +
@@ -259,8 +279,11 @@
       e.hidden = false;
     }
     function hideErr() { q('.lfgpay-err').hidden = true; }
+    var shown = false;
+    var failed = false;
     function failLoad() {
-      if (dead) return;
+      if (dead || failed) return;
+      failed = true;
       clearTimeout(timer);
       els.forEach(function (e) { try { e.destroy(); } catch (x) {} });
       els = [];
@@ -276,12 +299,25 @@
 
     function pay(expressEvent) {
       if (paying || !actions || dead) return;
+      // A buyer the page doesn't know (anonymous sponsor) gives their name here; the
+      // embedded page always asked for a cardholder name. A wallet supplies its own,
+      // so only the card path insists.
+      var nameIn = q('.lfgpay-name-input');
+      var name = opts.collectName && nameIn ? nameIn.value.replace(/\s+/g, ' ').trim() : '';
+      if (opts.collectName && !name && !expressEvent) {
+        showErr('Add your name above, so we know who paid.');
+        nameIn.focus();
+        return;
+      }
       paying = true;
       hideErr();
       setPending(true);
       var args = { redirect: 'if_required' };
       if (expressEvent) args.expressCheckoutConfirmEvent = expressEvent;
-      actions.confirm(args).then(function (res) {
+      var before = name && actions.updateIndividualName
+        ? actions.updateIndividualName(name).catch(function () {})
+        : Promise.resolve();
+      before.then(function () { return actions.confirm(args); }).then(function (res) {
         if (dead) return;
         if (res && res.type === 'success') {
           setPending(true, 'Paid');
@@ -294,32 +330,37 @@
         var err = (res && res.error) || {};
         var msg = String(err.message || '').trim();
         // A field the customer still has to fix: Stripe marks it in place, so the line
-        // above the button only repeats what to fix. Anything else is a payment that
-        // did not happen, and saying nothing was charged stops a nervous second try.
+        // above the button only repeats what to fix. A decline or a rejected request is
+        // a payment that did not happen, and saying so stops a nervous second try. A
+        // connection or server error is unknown: say that, and point at the receipt
+        // before any second attempt, so nobody pays twice.
         if (err.type === 'validation_error' || /^(incomplete|invalid)_/.test(err.code || '')) {
           showErr(msg || 'Check your card details.');
-        } else {
+        } else if (err.type === 'card_error' || err.type === 'invalid_request_error') {
           showErr('Payment didn\'t go through.' + (msg ? ' ' + msg : '') + ' Nothing was charged. Try again or use another card.');
+        } else {
+          showErr(UNKNOWN);
         }
       }, function () {
         if (dead) return;
         paying = false;
         setPending(false);
-        showErr('We couldn\'t confirm your payment. If a receipt reaches your email, you\'re paid. If not, try again.');
+        showErr(UNKNOWN);
       });
     }
     payBtn.addEventListener('click', function () { pay(null); });
 
-    timer = setTimeout(function () { if (!actions) failLoad(); }, LOAD_MS);
+    // Bounded on what the customer sees: the card form on screen, not just Stripe answering.
+    timer = setTimeout(function () { if (!shown) failLoad(); }, LOAD_MS);
 
-    return stripeFor(opts.publishableKey).then(function (stripe) {
-      if (dead) return ctl;
+    var chain = stripeFor(opts.publishableKey).then(function (stripe) {
+      if (dead || failed) return ctl;
       var checkout = stripe.initCheckoutElementsSdk({
         clientSecret: opts.clientSecret,
         elementsOptions: { appearance: APPEARANCE, fonts: FONTS }
       });
       return checkout.loadActions().then(function (r) {
-        if (dead) return ctl;
+        if (dead || failed) return ctl;
         if (!r || r.type !== 'success') { failLoad(); return ctl; }
         actions = r.actions;
         var session = actions.getSession();
@@ -372,9 +413,8 @@
           layout: 'tabs',
           wallets: { applePay: 'never', googlePay: 'never', link: 'never' }
         });
-        var shown = false;
         function show() {
-          if (shown || dead) return;
+          if (shown || dead || failed) return;
           shown = true;
           clearTimeout(timer);
           q('.lfgpay-load').hidden = true;
@@ -387,24 +427,47 @@
         return ctl;
       });
     }).catch(function () { failLoad(); return ctl; });
+
+    // The page awaits this, often behind its own "in flight" guard, so it settles even
+    // when Stripe hangs; otherwise Try again would hit that guard and do nothing.
+    return new Promise(function (resolve) {
+      chain.then(resolve, function () { resolve(ctl); });
+      setTimeout(function () { resolve(ctl); }, LOAD_MS + 50);
+    });
   }
 
   // ---------------------------------------------------------------- coming back
   // Card, Apple Pay, Google Pay and Link confirm on the page. A method that leaves it
   // returns to return_url (checkoutUi in api/_lib.js) with ?lfgpay=<route>&session_id=.
   // Verify with that route's own GET, say what happened, and tidy the address bar.
+  // Kept in sessionStorage for 30 s: some pages reload once when the service worker
+  // takes over on a first visit (bootcamp.html, controllerchange), and the cleaned
+  // address bar would otherwise lose the return before the banner is seen.
+  var RETURN_KEY = 'lfgpay_return';
+  function validReturn(route, sid) {
+    return !!route && !!sid && ROUTES.indexOf(route) !== -1 && /^cs_[A-Za-z0-9_]+$/.test(sid);
+  }
   function handleReturn() {
     var p;
     try { p = new URLSearchParams(location.search); } catch (e) { return; }
     var route = p.get('lfgpay');
     var sid = p.get('session_id');
-    if (!route || !sid || ROUTES.indexOf(route) === -1 || !/^cs_[A-Za-z0-9_]+$/.test(sid)) return;
-    try {
-      p.delete('lfgpay');
-      p.delete('session_id');
-      var rest = p.toString();
-      history.replaceState(null, '', location.pathname + (rest ? '?' + rest : '') + location.hash);
-    } catch (e) {}
+    if (validReturn(route, sid)) {
+      try { sessionStorage.setItem(RETURN_KEY, JSON.stringify({ route: route, sid: sid, t: Date.now() })); } catch (e) {}
+      try {
+        p.delete('lfgpay');
+        p.delete('session_id');
+        var rest = p.toString();
+        history.replaceState(null, '', location.pathname + (rest ? '?' + rest : '') + location.hash);
+      } catch (e) {}
+    } else {
+      var kept = null;
+      try { kept = JSON.parse(sessionStorage.getItem(RETURN_KEY) || 'null'); } catch (e) {}
+      if (!kept || Date.now() - kept.t > 30000 || !validReturn(kept.route, kept.sid)) return;
+      route = kept.route;
+      sid = kept.sid;
+    }
+    setTimeout(function () { try { sessionStorage.removeItem(RETURN_KEY); } catch (e) {} }, 30000);
     var url = '/api/' + route + '?session_id=' + encodeURIComponent(sid);
     var get = window.lfg && window.lfg.api
       ? window.lfg.api(url).then(function (r) { return r && r.data; })
@@ -452,6 +515,7 @@
       return mount(target, {
         clientSecret: data.client_secret,
         publishableKey: data.publishable_key,
+        collectName: !!data.collect_name,
         onComplete: onComplete,
         onRetry: opts.onRetry,
         waText: opts.waText
@@ -462,6 +526,12 @@
       var init = stripe.initEmbeddedCheckout || stripe.createEmbeddedCheckoutPage;
       return init.call(stripe, { clientSecret: data.client_secret, onComplete: onComplete });
     }).then(function (embedded) {
+      // Stripe mounts only into an empty box. Pages put "Loading secure checkout…" there
+      // first and the old code cleared it right before mounting; without this the
+      // embedded page failed to load on track, events, padel, Musandam and bookings
+      // (caught by the switch-off test, 19 Nov).
+      var box = typeof target === 'string' ? document.querySelector(target) : target;
+      if (box) box.innerHTML = '';
       embedded.mount(target);
       return embedded;
     });

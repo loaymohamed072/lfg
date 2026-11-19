@@ -255,7 +255,19 @@
         if (window.LFGPay) {
           // LFG's own checkout step when the switch is on, Stripe's embedded page when off.
           embedded = await window.LFGPay.start('#track-pay-mount', data, onDone, {
-            onRetry: function () { destroy(); if (form) form.style.display = ''; payWrap.style.display = 'none'; },
+            // Back to the control that started it, working again: the member's one-tap
+            // button for a member, the re-enabled form (details kept) for a guest.
+            onRetry: function () {
+              destroy();
+              payWrap.style.display = 'none';
+              if (opts.authed && memberCard) {
+                memberCard.hidden = false;
+                if (memPayBtn) { memPayBtn.disabled = false; memPayBtn.innerHTML = 'Pay <span id="tm-price">AED ' + RUN.price + '</span> &amp; reserve →'; }
+              } else if (form) {
+                form.style.display = '';
+                if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = 'Continue to payment · <span id="btn-price">AED ' + RUN.price + '</span>'; }
+              }
+            },
             waText: 'Hi LFG, I had trouble paying for the run.'
           });
           return true;
