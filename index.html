@@ -2839,7 +2839,7 @@ footer {
      STICKY FLOATING CTAs
      ============================================================ -->
 <!-- Desktop sticky CTAs -->
-<div class="sticky-ctas sticky-ctas-desktop">
+<div class="sticky-ctas sticky-ctas-desktop" data-hide-during-pay>
   <a href="#register-form" class="sticky-btn run">
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
     Join Next Run
@@ -2851,7 +2851,7 @@ footer {
 </div>
 
 <!-- Mobile sticky bar - shows after scrolling past hero, 3 CTAs -->
-<div class="mobile-sticky-bar" id="mobile-sticky-bar">
+<div class="mobile-sticky-bar" id="mobile-sticky-bar" data-hide-during-pay>
   <a href="#register-form" class="mobile-sticky-btn mobile-sticky-primary" id="mobile-run-btn">
     Join the Run
   </a>
@@ -4500,8 +4500,8 @@ document.querySelectorAll('.faq-question').forEach(btn => {
 <!-- LFG bootcamp booking flow (rewires #bootcamp-booking; replaces Meet & Train) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.1"></script>
 <script src="/app-assets/lfg-supabase.js?v=3"></script>
-<script src="https://js.stripe.com/v3/"></script>
-<script src="/app-assets/lfg-home-booking.js?v=16"></script>
+<script src="/app-assets/lfg-pay.js?v=1" data-preload-stripe></script>
+<script src="/app-assets/lfg-home-booking.js?v=17"></script>
 <script src="/app-assets/lfg-runs-form.js?v=8"></script>
 <script>
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {

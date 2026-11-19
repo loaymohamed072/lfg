@@ -210,14 +210,16 @@
     async function startCheckout(opts) {
       opts = opts || {};
       var data = null, status = 0;
+      // Asks for LFG's own checkout step while the switch is on (app-assets/lfg-pay.js).
+      var payBody = function (b) { return window.LFGPay ? window.LFGPay.body(b) : b; };
       try {
         if (opts.authed && window.lfg && window.lfg.api) {
-          var r = await window.lfg.api('/api/run-pay', { method: 'POST', body: JSON.stringify({ run_date: RUN.run_date, mc_id: window.lfg.mcId ? window.lfg.mcId() : null }) });
+          var r = await window.lfg.api('/api/run-pay', { method: 'POST', body: JSON.stringify(payBody({ run_date: RUN.run_date, mc_id: window.lfg.mcId ? window.lfg.mcId() : null })) });
           status = r.status; data = r.data;
         } else {
           var res = await fetch('/api/run-pay', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: opts.email, run_date: RUN.run_date, mc_id: (window.lfg && window.lfg.mcId) ? window.lfg.mcId() : null })
+            body: JSON.stringify(payBody({ email: opts.email, run_date: RUN.run_date, mc_id: (window.lfg && window.lfg.mcId) ? window.lfg.mcId() : null }))
           });
           status = res.status; try { data = await res.json(); } catch (_) {}
         }
@@ -228,7 +230,7 @@
         showError((data && data.error) || 'Could not start payment. Try again or message us on WhatsApp.');
         return false;
       }
-      var StripeLib = window.Stripe || await ensureStripe(6000);
+      var StripeLib = window.Stripe || await (window.LFGPay ? window.LFGPay.loadStripe().catch(function () { return null; }) : ensureStripe(6000));
       if (!StripeLib) {
         showError(isInAppBrowser()
           ? "Card payments are blocked inside the Instagram/in-app browser. Tap the ••• menu (top right) and choose “Open in Safari” or “Open in Chrome”, then pay from there."
@@ -243,17 +245,23 @@
       payWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
       try {
+        var onDone = async function () {
+          try {
+            var st = await fetch('/api/run-pay?session_id=' + encodeURIComponent(data.id));
+            var sd = await st.json();
+            if (sd && sd.payment_status === 'paid') { destroy(); showSuccess(); }
+          } catch (e) { destroy(); showSuccess(); }
+        };
+        if (window.LFGPay) {
+          // LFG's own checkout step when the switch is on, Stripe's embedded page when off.
+          embedded = await window.LFGPay.start('#track-pay-mount', data, onDone, {
+            onRetry: function () { destroy(); if (form) form.style.display = ''; payWrap.style.display = 'none'; },
+            waText: 'Hi LFG, I had trouble paying for the run.'
+          });
+          return true;
+        }
         var stripe = StripeLib(data.publishable_key);
-        embedded = await stripe.initEmbeddedCheckout({
-          clientSecret: data.client_secret,
-          onComplete: async function () {
-            try {
-              var st = await fetch('/api/run-pay?session_id=' + encodeURIComponent(data.id));
-              var sd = await st.json();
-              if (sd && sd.payment_status === 'paid') { destroy(); showSuccess(); }
-            } catch (e) { destroy(); showSuccess(); }
-          }
-        });
+        embedded = await stripe.initEmbeddedCheckout({ clientSecret: data.client_secret, onComplete: onDone });
         payMount.innerHTML = '';
         embedded.mount('#track-pay-mount');
         return true;

@@ -541,7 +541,7 @@
     function destroyEmbedded() { try { if (embeddedCheckout) embeddedCheckout.destroy(); } catch (e) {} embeddedCheckout = null; }
 
     async function startEmbedded(payload, opts) {
-      if (!window.Stripe) { showToast('Payment library not loaded. Refresh and try again.', true); return false; }
+      if (!window.Stripe && !window.LFGPay) { showToast('Payment library not loaded. Refresh and try again.', true); return false; }
       // Swap to the checkout view with a spinner immediately, so the click feels instant.
       // The session create + Stripe load then happen behind the spinner instead of on a
       // frozen button - this is what makes the payment step stop feeling slow.
@@ -560,7 +560,7 @@
 
       // ManyChat subscriber id when the visitor came from an Instagram DM link.
       payload.mc_id = window.lfg.mcId ? window.lfg.mcId() : null;
-      var res = await window.lfg.api('/api/checkout', { method: 'POST', body: JSON.stringify(payload) });
+      var res = await window.lfg.api('/api/checkout', { method: 'POST', body: JSON.stringify(window.LFGPay ? window.LFGPay.body(payload) : payload) });
       if (backedOut) return true; // user left while the session was being created
       if (res.data && res.data.needs_whatsapp) {
         needsWhatsapp = true; modalEl.classList.remove('co');
@@ -575,21 +575,29 @@
       }
       var sessionId = res.data.id;
       try {
+        var onDone = async function () {
+          // Verify server-side that the session is genuinely paid before celebrating.
+          var paid = false;
+          try {
+            var st = await window.lfg.api('/api/checkout?session_id=' + encodeURIComponent(sessionId));
+            paid = st.ok && st.data && st.data.payment_status === 'paid';
+          } catch (e) {}
+          destroyEmbedded(); modalEl.classList.remove('co');
+          if (paid && opts.onSuccess) opts.onSuccess();
+          else showResult('Payment processing', 'Your payment is being confirmed. It’ll show in <b>My bookings</b> in a moment.');
+        };
+        if (window.LFGPay) {
+          // LFG's own checkout step when the switch is on, Stripe's embedded page when off.
+          if (backedOut || !document.getElementById('lfgwCheckout')) return true;
+          embeddedCheckout = await window.LFGPay.start('#lfgwCheckout', res.data, onDone, {
+            onRetry: function () { destroyEmbedded(); modalEl.classList.remove('co'); if (opts.onBack) opts.onBack(); },
+            waText: 'Hi LFG, I had trouble paying for a bootcamp booking.'
+          });
+          if (backedOut) { destroyEmbedded(); return true; }
+          return true;
+        }
         var stripe = window.Stripe(res.data.publishable_key);
-        embeddedCheckout = await stripe.initEmbeddedCheckout({
-          clientSecret: res.data.client_secret,
-          onComplete: async function () {
-            // Verify server-side that the session is genuinely paid before celebrating.
-            var paid = false;
-            try {
-              var st = await window.lfg.api('/api/checkout?session_id=' + encodeURIComponent(sessionId));
-              paid = st.ok && st.data && st.data.payment_status === 'paid';
-            } catch (e) {}
-            destroyEmbedded(); modalEl.classList.remove('co');
-            if (paid && opts.onSuccess) opts.onSuccess();
-            else showResult('Payment processing', 'Your payment is being confirmed. It’ll show in <b>My bookings</b> in a moment.');
-          }
-        });
+        embeddedCheckout = await stripe.initEmbeddedCheckout({ clientSecret: res.data.client_secret, onComplete: onDone });
         if (backedOut) { destroyEmbedded(); return true; }
         var mountEl = document.getElementById('lfgwCheckout');
         if (!mountEl) { destroyEmbedded(); return true; }

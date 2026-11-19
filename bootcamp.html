@@ -638,7 +638,7 @@
 <!-- ============================================================
      STICKY MOBILE CTA
      ============================================================ -->
-<div class="bc-sticky" id="bcSticky">
+<div class="bc-sticky" id="bcSticky" data-hide-during-pay>
   <div class="bc-sticky-inner">
     <div class="bc-sticky-info">
       <span class="when" id="bcStickyWhen">Next Sunday · <span data-bc-time>12:45</span></span>
@@ -656,9 +656,9 @@
      ============================================================ -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.1"></script>
 <script src="/app-assets/lfg-supabase.js?v=3"></script>
-<script src="https://js.stripe.com/v3/"></script>
-<script src="/app-assets/lfg-home-booking.js?v=16"></script>
-<script src="/app-assets/lfg-sponsor.js?v=2"></script>
+<script src="/app-assets/lfg-pay.js?v=1" data-preload-stripe></script>
+<script src="/app-assets/lfg-home-booking.js?v=17"></script>
+<script src="/app-assets/lfg-sponsor.js?v=3"></script>
 
 <!-- Live bootcamp location: single source of truth is lfg_event_config.bootcamp_location
      (set from the admin Schedule view). Fills every [data-bc-loc] placeholder so the venue

@@ -762,3 +762,34 @@ Checked, with evidence:
 Gate (`security-gate.sh --legacy --url https://www.lfgdubai.com`): FLAG, nothing new. Carried: legacy baseline 2/9, CSP without script-src, sharp 0.34.5 (dev-only image tool, 3 advisories), semgrep "JWT" hits are the public Supabase key in pages (by design), web_vuln_scan innerHTML leads (the new strings are static or escaped). Supabase advisors unchanged: `short_name` search_path, `vector` in public, older SECURITY DEFINER functions callable by anon/authenticated (`is_coach`, `bootcamp_checkin_state`, `crm_*`, `group_leaderboard`, `lfg_get_stats`, `mark_password_set`), leaked-password protection off.
 
 Verdict: FLAG.
+
+## 2026-11-19: checkout built into the page (branch checkout-elements), change-level review
+
+Verdict: FLAG (no BLOCK; every FLAG predates this change).
+
+Surface changed: `checkoutUi()` in `api/_lib.js` reads `body.ui` and `body.return_path`;
+the 5 payment routes (`checkout`, `run-pay`, `padel-pay`, `trip-pay`, `event-pay`) spread it
+instead of a fixed `ui_mode`; new client component `app-assets/lfg-pay.js`; Stripe.js now
+injected by that component (v3 with the switch off, dahlia with it on).
+
+- `body.ui` only selects the Stripe UI mode; any value other than `'elements'` keeps the
+  embedded page exactly as before. No route's authentication or pricing changed.
+- `return_url` = `canonicalOrigin(req)` + a path matching `^/[A-Za-z0-9\-_/]{0,80}$` with no
+  `//` (else `/`). Tested: `//evil.com`, `https://evil.com` and `/event/x?y=1` all fall back
+  to `/`. No open redirect; the origin is the site's own.
+- `lfg-pay.js`: dynamic values reach `innerHTML` only through `esc()`; the WhatsApp href is
+  the fixed `https://wa.me/971504264410?text=` + `encodeURIComponent`; Stripe error text and
+  the return banner use `textContent`. The two `web_vuln_scan` hits (lines 226, 252) are
+  these escaped writes: false positives, confirmed by reading.
+- Return handling: `?lfgpay=` must be one of the 5 route names and `session_id` must match
+  `^cs_[A-Za-z0-9_]+$`; the follow-up is a same-origin GET of an existing read-only status
+  endpoint.
+- `Permissions-Policy` already allows `payment` for `js.stripe.com`, which the Express
+  Checkout Element's Apple Pay iframe needs. CSP has no `script-src`, so loading
+  `js.stripe.com/dahlia/stripe.js` needs no header change.
+- Gate (`security-gate.sh --legacy`): leak scan PASS; gitleaks clean incl. history; semgrep
+  3 `detected-jwt-token` in `admin.html`, `lfg-padel-score.js`, `index.html:3834` (the public
+  Supabase key, unchanged lines); OSV + npm audit: `sharp@0.34.5` (devDependency, not
+  deployed); baseline 2/9 (legacy repo); live header check not run (vercel.json unchanged).
+- Webhook (`api/stripe-webhook.js`) unchanged; it fulfils on `checkout.session.completed`
+  for both UI modes.

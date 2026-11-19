@@ -328,8 +328,8 @@
 <div class="lfg-toast" id="lfgToast" role="status" aria-live="polite"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.1"></script>
-<script src="https://js.stripe.com/v3/"></script>
 <script src="/app-assets/lfg-supabase.js?v=3"></script>
+<script src="/app-assets/lfg-pay.js?v=1" data-preload-stripe></script>
 <script src="/app-assets/lfg-friends.js?v=2"></script>
 <script>
   (function () {
@@ -1080,10 +1080,11 @@
       el('spGo').addEventListener('click', async function () {
         if (busy) return;
         showErr('');
-        if (!window.Stripe) { showErr('Payment library did not load. Refresh and try again.'); return; }
+        if (!window.Stripe && !window.LFGPay) { showErr('Payment library did not load. Refresh and try again.'); return; }
         busy = true;
         var btn = el('spGo'); var prev = btn.textContent; btn.disabled = true; btn.textContent = 'Opening checkout…';
-        var res = await lfg.api('/api/checkout', { method: 'POST', body: JSON.stringify({ kind: 'sponsor', qty: qty, note: el('spNote').value }) });
+        var payload = { kind: 'sponsor', qty: qty, note: el('spNote').value };
+        var res = await lfg.api('/api/checkout', { method: 'POST', body: JSON.stringify(window.LFGPay ? LFGPay.body(payload) : payload) });
         btn.disabled = false; btn.textContent = prev; busy = false;
         if (!res.ok || !res.data || !res.data.client_secret || !res.data.publishable_key) {
           showErr((res.data && res.data.error) || 'Checkout failed. Try again.');
@@ -1093,26 +1094,32 @@
         var paidQty = qty;
         el('spForm').style.display = 'none'; el('spCheckout').style.display = '';
         try {
-          var stripe = window.Stripe(res.data.publishable_key);
-          checkout = await stripe.initEmbeddedCheckout({
-            clientSecret: res.data.client_secret,
-            onComplete: async function () {
-              var paid = false;
-              try {
-                var st = await lfg.api('/api/checkout?session_id=' + encodeURIComponent(sessionId));
-                paid = st.ok && st.data && st.data.payment_status === 'paid';
-              } catch (e) {}
-              destroy(); el('spCheckout').style.display = 'none';
-              var done = el('spDone'); done.style.display = '';
-              done.textContent = paid
-                ? ('Thank you. ' + paidQty + ' ticket' + (paidQty === 1 ? '' : 's') + ' paid forward. The coaches will hand ' + (paidQty === 1 ? 'it' : 'them') + ' out.')
-                : 'Payment is being confirmed. It will show here in a moment.';
-              qty = 1; el('spNote').value = '';
-              el('spForm').style.display = '';
-              load();
-            }
-          });
-          checkout.mount('#spMount');
+          var onDone = async function () {
+            var paid = false;
+            try {
+              var st = await lfg.api('/api/checkout?session_id=' + encodeURIComponent(sessionId));
+              paid = st.ok && st.data && st.data.payment_status === 'paid';
+            } catch (e) {}
+            destroy(); el('spCheckout').style.display = 'none';
+            var done = el('spDone'); done.style.display = '';
+            done.textContent = paid
+              ? ('Thank you. ' + paidQty + ' ticket' + (paidQty === 1 ? '' : 's') + ' paid forward. The coaches will hand ' + (paidQty === 1 ? 'it' : 'them') + ' out.')
+              : 'Payment is being confirmed. It will show here in a moment.';
+            qty = 1; el('spNote').value = '';
+            el('spForm').style.display = '';
+            load();
+          };
+          if (window.LFGPay) {
+            // LFG's own checkout step when the switch is on, Stripe's embedded page when off.
+            checkout = await LFGPay.start('#spMount', res.data, onDone, {
+              onRetry: backToForm,
+              waText: 'Hi LFG, I had trouble paying for sponsored tickets.'
+            });
+          } else {
+            var stripe = window.Stripe(res.data.publishable_key);
+            checkout = await stripe.initEmbeddedCheckout({ clientSecret: res.data.client_secret, onComplete: onDone });
+            checkout.mount('#spMount');
+          }
         } catch (e) {
           showErr('Could not load checkout. Try again.');
           backToForm();

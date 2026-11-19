@@ -26,7 +26,7 @@
 //     The already-paid gate is what keeps this from being the public guest
 //     checkout that was closed on 2026-08-09.
 const Stripe = require('stripe');
-const { admin, getUser, ensureMember, createGuestMember, safeError } = require('./_lib');
+const { admin, getUser, ensureMember, createGuestMember, safeError, checkoutUi } = require('./_lib');
 const { resolveEvent } = require('./padel-status');
 
 // One entry per quiz question, answers ordered easiest -> strongest. The score
@@ -280,14 +280,18 @@ module.exports = async (req, res) => {
       { onConflict: 'member_id,event_date' }
     );
 
+    const ui = checkoutUi(req, body, 'padel-pay');
     const session = await stripe.checkout.sessions.create({
-      ui_mode: 'embedded_page',
+      ...ui,
       mode: 'payment',
-      branding_settings: {
-        background_color: '#0a0a0a',
-        button_color: '#B3B38A',
-        border_style: 'rectangular'
-      },
+      // Branding styles Stripe's own page; the Elements step carries the site's look.
+      ...(ui.ui_mode === 'embedded_page' ? {
+        branding_settings: {
+          background_color: '#0a0a0a',
+          button_color: '#B3B38A',
+          border_style: 'rectangular'
+        }
+      } : {}),
       line_items: [{
         quantity: 1,
         price_data: {
@@ -303,8 +307,7 @@ module.exports = async (req, res) => {
       }],
       customer_email: custEmail,
       metadata: metadata,
-      payment_method_types: ['card'],
-      redirect_on_completion: 'never'
+      payment_method_types: ['card']
     });
 
     if (pay) await db.from('payments').update({ stripe_session_id: session.id }).eq('id', pay.id);

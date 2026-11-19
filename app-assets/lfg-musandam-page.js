@@ -332,6 +332,8 @@
     var payload = { slug: SLUG };
     if (body.guests && body.guests.length) payload.guests = body.guests;
     if (body.phone) payload.phone = body.phone;
+    // Asks for LFG's own checkout step while the switch is on (app-assets/lfg-pay.js).
+    if (window.LFGPay) payload = window.LFGPay.body(payload);
     if (window.lfg && window.lfg.api) {
       return window.lfg.api('/api/trip-pay', { method: 'POST', body: JSON.stringify(payload) }).then(function (r) { return { status: r.status, data: r.data }; });
     }
@@ -366,7 +368,7 @@
       }
       // The server knows whether the buyer already holds a seat; the summary follows its count.
       if (data.seats != null && data.seats !== seatCount()) selfIn = data.seats < seatCount();
-      var StripeLib = window.Stripe || await ensureStripe(6000);
+      var StripeLib = window.Stripe || await (window.LFGPay ? window.LFGPay.loadStripe().catch(function () { return null; }) : ensureStripe(6000));
       if (!StripeLib) {
         renderPayError(isInAppBrowser()
           ? 'Card payments are blocked inside the Instagram/in-app browser. Tap the ••• menu (top right) and choose "Open in Safari" or "Open in Chrome", then pay there.'
@@ -379,11 +381,23 @@
       el('msPayRetry').hidden = true;
       try {
         destroyEmbedded();
-        var stripe = StripeLib(data.publishable_key);
         paySession = data.id;
-        embedded = await stripe.initEmbeddedCheckout({ clientSecret: data.client_secret, onComplete: verifyPaid });
-        el('msPayMount').innerHTML = '';
-        embedded.mount('#msPayMount');
+        if (window.LFGPay) {
+          // LFG's own checkout step when the switch is on, Stripe's embedded page when off.
+          embedded = await window.LFGPay.start('#msPayMount', data, verifyPaid, {
+            onRetry: function () {
+              destroyEmbedded();
+              el('msPayMount').innerHTML = '<p class="ms-payload">Loading secure checkout…</p>';
+              startPay({});
+            },
+            waText: "Hey, I'm trying to book the Musandam trip and the payment won't go through"
+          });
+        } else {
+          var stripe = StripeLib(data.publishable_key);
+          embedded = await stripe.initEmbeddedCheckout({ clientSecret: data.client_secret, onComplete: verifyPaid });
+          el('msPayMount').innerHTML = '';
+          embedded.mount('#msPayMount');
+        }
       } catch (e) { renderPayError('Could not load checkout. Try again.'); }
     } finally {
       inflight = false;

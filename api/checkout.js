@@ -8,7 +8,7 @@
 // Auth: required for every kind except 'sponsor', which is public (see below).
 // Returns: { url } to redirect the member to Stripe.
 const Stripe = require('stripe');
-const { admin, getUser, ensureMember, validatePromoCode, earlyWeekPromo, earlyWeekPrice, safeError, requireWhatsapp } = require('./_lib');
+const { admin, getUser, ensureMember, validatePromoCode, earlyWeekPromo, earlyWeekPrice, safeError, requireWhatsapp, checkoutUi } = require('./_lib');
 const { cleanMcId } = require('./_manychat');
 const F = require('./_friends');
 
@@ -148,7 +148,7 @@ module.exports = async (req, res) => {
       let session;
       try {
         session = await stripe.checkout.sessions.create({
-          ui_mode: 'embedded_page',
+          ...checkoutUi(req, body, 'checkout'),
           mode: 'payment',
           line_items: [
             priceItem(buyer.amount, 'LFG Bootcamp - Single Session', day + ' · Station ' + section + (buyer.early ? earlyNote : '')),
@@ -157,7 +157,6 @@ module.exports = async (req, res) => {
           customer_email: user.email,
           metadata: gmeta,
           payment_method_types: ['card'],
-          redirect_on_completion: 'never',
           // The hold lasts 35 minutes; the card form closes before it does.
           expires_at: Math.floor(Date.now() / 1000) + F.STRIPE_EXPIRE_MIN * 60
         });
@@ -305,15 +304,14 @@ module.exports = async (req, res) => {
     // confirm via the GET handler above. Fulfilment still runs from `metadata` in the
     // webhook, so the server-side flow is unchanged.
     const session = await stripe.checkout.sessions.create({
-      ui_mode: 'embedded_page',
+      ...checkoutUi(req, body, 'checkout'),
       mode: 'payment',
       line_items: [lineItem],
       // No customer_email for an anonymous sponsor: Stripe collects it, and that
       // is where the attribution on the hand-out comes from.
       customer_email: user ? user.email : undefined,
       metadata: metadata,
-      payment_method_types: ['card'],
-      redirect_on_completion: 'never'
+      payment_method_types: ['card']
     });
 
     if (pay) await db.from('payments').update({ stripe_session_id: session.id }).eq('id', pay.id);

@@ -1427,6 +1427,26 @@ function canonicalOrigin(req) {
   return proto + '://' + host;
 }
 
+// How the customer pays for a Checkout Session. 'embedded_page' is Stripe's own form in
+// a box, what every page used until 19 Nov 2026. 'elements' is LFG's checkout step built
+// from Stripe Elements (app-assets/lfg-pay.js): Apple Pay / Google Pay / Link first, card
+// fields under them, in the site's own look. The page asks for it with body.ui ===
+// 'elements' while the switch is on (?checkout=new). The session, the webhook and every
+// GET ?session_id= verify are the same either way.
+// Elements needs a return_url for payment methods that leave the page. Card, Apple Pay,
+// Google Pay and Link confirm in place, so in practice nobody lands on it; if someone
+// does, lfg-pay.js on that page verifies the session and says so. The path comes from
+// the page and must be a plain path on this site.
+function checkoutUi(req, body, route) {
+  if (!body || body.ui !== 'elements') return { ui_mode: 'embedded_page', redirect_on_completion: 'never' };
+  const p = body.return_path;
+  const path = typeof p === 'string' && /^\/[A-Za-z0-9\-_/]{0,80}$/.test(p) && p.indexOf('//') === -1 ? p : '/';
+  return {
+    ui_mode: 'elements',
+    return_url: canonicalOrigin(req) + path + '?lfgpay=' + encodeURIComponent(route) + '&session_id={CHECKOUT_SESSION_ID}'
+  };
+}
+
 // Build a sign-in URL that points at our own /auth page carrying the one-time
 // token_hash in the QUERY string. Query params survive redirects (unlike the
 // implicit #access_token hash, which in-app browsers strip), and the /auth page
@@ -1443,7 +1463,7 @@ function buildAuthLink(origin, link, nextPath) {
 
 module.exports = {
   admin, publicDb, authService,
-  canonicalOrigin, buildAuthLink,
+  canonicalOrigin, buildAuthLink, checkoutUi,
   getUser, getAuthUserById,
   ensureMember, createGuestMember, isAdmin, isGateStaff, canViewRevenue,
   WHATSAPP_ERROR, whatsappE164, memberWhatsapp, requireWhatsapp,

@@ -925,13 +925,15 @@
       if (body.answers) payload.answers = body.answers;
       if (body.guest) payload.guest = body.guest;
       if (body.phone) payload.phone = body.phone;
+      // Asks for LFG's own checkout step while the switch is on (app-assets/lfg-pay.js).
+      if (window.LFGPay) payload = window.LFGPay.body(payload);
       return window.lfg.api('/api/padel-pay', { method: 'POST', body: JSON.stringify(payload) })
         .then(function (r) { return { status: r.status, data: r.data }; });
     }
     return fetch('/api/padel-pay', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ answers: body.answers || undefined, guest: body.guest || undefined, phone: body.phone || undefined })
+      body: JSON.stringify((function (b) { return window.LFGPay ? window.LFGPay.body(b) : b; })({ answers: body.answers || undefined, guest: body.guest || undefined, phone: body.phone || undefined }))
     }).then(function (res) {
       return res.json().catch(function () { return null; }).then(function (data) {
         return { status: res.status, data: data };
@@ -995,7 +997,7 @@
         return;
       }
 
-      var StripeLib = window.Stripe || await ensureStripe(6000);
+      var StripeLib = window.Stripe || await (window.LFGPay ? window.LFGPay.loadStripe().catch(function () { return null; }) : ensureStripe(6000));
       if (!StripeLib) {
         stepError(isInAppBrowser()
           ? "Card payments are blocked inside the Instagram/in-app browser. Tap the ••• menu (top right) and choose “Open in Safari” or “Open in Chrome”, then pay from there."
@@ -1010,14 +1012,26 @@
       el('pdPayRetry').hidden = true;
       try {
         destroyEmbedded();
-        var stripe = StripeLib(data.publishable_key);
         paySession = data.id;
-        embedded = await stripe.initEmbeddedCheckout({
-          clientSecret: data.client_secret,
-          onComplete: verifyPaid
-        });
-        el('pdPayMount').innerHTML = '';
-        embedded.mount('#pdPayMount');
+        if (window.LFGPay) {
+          // LFG's own checkout step when the switch is on, Stripe's embedded page when off.
+          embedded = await window.LFGPay.start('#pdPayMount', data, verifyPaid, {
+            onRetry: function () {
+              destroyEmbedded();
+              el('pdPayMount').innerHTML = '<p class="pd-payload pd-payload-busy">Loading secure checkout…</p>';
+              startPay({ authed: true });
+            },
+            waText: "Hey, I'm trying to book padel night and the payment won't go through"
+          });
+        } else {
+          var stripe = StripeLib(data.publishable_key);
+          embedded = await stripe.initEmbeddedCheckout({
+            clientSecret: data.client_secret,
+            onComplete: verifyPaid
+          });
+          el('pdPayMount').innerHTML = '';
+          embedded.mount('#pdPayMount');
+        }
       } catch (e) {
         renderPayError('Could not load checkout. Try again.');
       }

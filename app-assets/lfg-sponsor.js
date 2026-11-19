@@ -118,9 +118,10 @@
     var note = (el.note.value || '').trim().slice(0, 200);
     var res;
     try {
+      var payload = { kind: 'sponsor', qty: qty, note: note };
       res = await window.lfg.api('/api/checkout', {
         method: 'POST',
-        body: JSON.stringify({ kind: 'sponsor', qty: qty, note: note })
+        body: JSON.stringify(window.LFGPay ? window.LFGPay.body(payload) : payload)
       });
     } catch (e) {
       setBusy(false);
@@ -140,20 +141,26 @@
     el.mount.replaceChildren();
 
     try {
-      var stripe = window.Stripe(res.data.publishable_key);
-      embedded = await stripe.initEmbeddedCheckout({
-        clientSecret: res.data.client_secret,
-        onComplete: async function () {
-          // onComplete fires client-side, so confirm server-side before thanking them.
-          var paid = false;
-          try {
-            var st = await window.lfg.api('/api/checkout?session_id=' + encodeURIComponent(sessionId));
-            paid = st.ok && st.data && st.data.payment_status === 'paid';
-          } catch (e) {}
-          showDone(paid);
-        }
-      });
-      embedded.mount('#give-mount');
+      var onDone = async function () {
+        // onComplete fires client-side, so confirm server-side before thanking them.
+        var paid = false;
+        try {
+          var st = await window.lfg.api('/api/checkout?session_id=' + encodeURIComponent(sessionId));
+          paid = st.ok && st.data && st.data.payment_status === 'paid';
+        } catch (e) {}
+        showDone(paid);
+      };
+      if (window.LFGPay) {
+        // LFG's own checkout step when the switch is on, Stripe's embedded page when off.
+        embedded = await window.LFGPay.start('#give-mount', res.data, onDone, {
+          onRetry: function () { destroyEmbedded(); showForm(); },
+          waText: 'Hi LFG, I had trouble paying for sponsored tickets.'
+        });
+      } else {
+        var stripe = window.Stripe(res.data.publishable_key);
+        embedded = await stripe.initEmbeddedCheckout({ clientSecret: res.data.client_secret, onComplete: onDone });
+        embedded.mount('#give-mount');
+      }
       setBusy(false);
     } catch (e) {
       destroyEmbedded();

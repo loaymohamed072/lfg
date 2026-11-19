@@ -156,7 +156,9 @@
     try {
       var r, d;
       try {
-        r = await fetch(EV.paid ? '/api/event-pay' : '/api/event-signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) });
+        // A paid event asks for LFG's own checkout step while the switch is on (app-assets/lfg-pay.js).
+        var sendBody = EV.paid && window.LFGPay ? window.LFGPay.body(p) : p;
+        r = await fetch(EV.paid ? '/api/event-pay' : '/api/event-signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(sendBody) });
         d = await r.json().catch(function () { return {}; });
       } catch (err) { showErr('Network error. Check your connection and try again, or message us on WhatsApp.'); return; }
       if (r.status === 409 && d.already_paid) { showDone('already'); return; }
@@ -164,14 +166,22 @@
       if (!r.ok) { showErr(d.error || 'That did not go through. Try again, or message us on WhatsApp.'); return; }
       if (!EV.paid) { showDone('free'); return; }
       if (!d.client_secret || !d.publishable_key) { showErr(d.error || 'Could not start payment. Try again or message us on WhatsApp.'); return; }
-      var StripeLib = window.Stripe || await ensureStripe(6000);
+      var StripeLib = window.Stripe || await (window.LFGPay ? window.LFGPay.loadStripe().catch(function () { return null; }) : ensureStripe(6000));
       if (!StripeLib) { showErr('The payment library was blocked, usually by an in-app browser or a blocker. Open this page in Safari or Chrome and try again.'); return; }
       el('evMount').innerHTML = '<p class="ev-payload">Loading secure checkout…</p>';
       try {
         destroyEmbedded();
         paySession = d.id;
-        embedded = await StripeLib(d.publishable_key).initEmbeddedCheckout({ clientSecret: d.client_secret, onComplete: verifyPaid });
-        el('evMount').innerHTML = ''; embedded.mount('#evMount');
+        if (window.LFGPay) {
+          // LFG's own checkout step when the switch is on, Stripe's embedded page when off.
+          embedded = await window.LFGPay.start('#evMount', d, verifyPaid, {
+            onRetry: function () { destroyEmbedded(); el('evMount').innerHTML = ''; btn.hidden = false; },
+            waText: "Hey, I'm trying to book " + EV.title + " and the payment won't go through"
+          });
+        } else {
+          embedded = await StripeLib(d.publishable_key).initEmbeddedCheckout({ clientSecret: d.client_secret, onComplete: verifyPaid });
+          el('evMount').innerHTML = ''; embedded.mount('#evMount');
+        }
         btn.hidden = true;
         el('evMount').scrollIntoView({ behavior: 'smooth', block: 'start' });
       } catch (err) { el('evMount').innerHTML = ''; showErr('Could not load checkout. Try again.'); }

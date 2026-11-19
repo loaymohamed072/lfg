@@ -13,7 +13,7 @@
 // Security: price + paid flag come from event_config (server-side), never the client, so
 // nobody can set their own amount. Service-role writes only.
 const Stripe = require('stripe');
-const { admin, authService, getUser, ensureMember, safeError } = require('./_lib');
+const { admin, authService, getUser, ensureMember, safeError, checkoutUi } = require('./_lib');
 const { cleanMcId } = require('./_manychat');
 
 function cleanEmail(v) {
@@ -142,7 +142,7 @@ module.exports = async (req, res) => {
     );
 
     const session = await stripe.checkout.sessions.create({
-      ui_mode: 'embedded_page',
+      ...checkoutUi(req, body, 'run-pay'),
       mode: 'payment',
       line_items: [{
         quantity: 1,
@@ -157,8 +157,7 @@ module.exports = async (req, res) => {
       }],
       customer_email: custEmail,
       metadata: metadata,
-      payment_method_types: ['card'],
-      redirect_on_completion: 'never'
+      payment_method_types: ['card']
     });
 
     if (pay) await db.from('payments').update({ stripe_session_id: session.id }).eq('id', pay.id);

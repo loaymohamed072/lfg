@@ -17,7 +17,7 @@
 // Security: price, date and capacity come from the trips row, never the client.
 // Service-role writes only.
 const Stripe = require('stripe');
-const { admin, getUser, ensureMember, createGuestMember, safeError } = require('./_lib');
+const { admin, getUser, ensureMember, createGuestMember, safeError, checkoutUi } = require('./_lib');
 const { cleanSlug } = require('./trip-status');
 
 const MAX_GUESTS = 3;
@@ -156,10 +156,12 @@ module.exports = async (req, res) => {
     guestIds.forEach((gid) => rows.push({ trip_slug: slug, member_id: gid, booked_by: memberId, paid: false, cancelled_at: null, cancel_reason: null, updated_at: now }));
     if (rows.length) await db.from('trip_signups').upsert(rows, { onConflict: 'trip_slug,member_id' });
 
+    const ui = checkoutUi(req, body, 'trip-pay');
     const session = await stripe.checkout.sessions.create({
-      ui_mode: 'embedded_page',
+      ...ui,
       mode: 'payment',
-      branding_settings: { background_color: '#0a0a0a', button_color: '#B3B38A', border_style: 'rectangular' },
+      // Branding styles Stripe's own page; the Elements step carries the site's look.
+      ...(ui.ui_mode === 'embedded_page' ? { branding_settings: { background_color: '#0a0a0a', button_color: '#B3B38A', border_style: 'rectangular' } } : {}),
       line_items: [{
         quantity: seats,
         price_data: {
@@ -173,8 +175,7 @@ module.exports = async (req, res) => {
       }],
       customer_email: user.email,
       metadata,
-      payment_method_types: ['card'],
-      redirect_on_completion: 'never'
+      payment_method_types: ['card']
     });
 
     if (pay) await db.from('payments').update({ stripe_session_id: session.id }).eq('id', pay.id);

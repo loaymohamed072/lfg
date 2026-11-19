@@ -4,7 +4,7 @@
 //   GET  ?session_id=cs_... -> { status, payment_status } for the page's verify step
 // Price and capacity come from the events row, never the client. The signup row is
 // written unpaid now and flipped to paid by the webhook (fulfilment in _lib.js).
-const { admin, safeError } = require('./_lib');
+const { admin, safeError, checkoutUi } = require('./_lib');
 const { cleanSlug, publicEvent } = require('./event-status');
 const Stripe = require('stripe');
 
@@ -83,10 +83,12 @@ module.exports = async (req, res) => {
       kind: 'event', event_slug: slug, signup_id: row.id, member_id: memberId || '', email, name,
       places: String(places), payment_id: pay ? pay.id : ''
     };
+    const ui = checkoutUi(req, body, 'event-pay');
     const session = await stripe.checkout.sessions.create({
-      ui_mode: 'embedded_page',
+      ...ui,
       mode: 'payment',
-      branding_settings: { background_color: '#0a0a0a', button_color: '#B3B38A', border_style: 'rectangular' },
+      // Branding styles Stripe's own page; the Elements step carries the site's look.
+      ...(ui.ui_mode === 'embedded_page' ? { branding_settings: { background_color: '#0a0a0a', button_color: '#B3B38A', border_style: 'rectangular' } } : {}),
       line_items: [{
         quantity: places,
         price_data: {
@@ -97,8 +99,7 @@ module.exports = async (req, res) => {
       }],
       customer_email: email,
       metadata,
-      payment_method_types: ['card'],
-      redirect_on_completion: 'never'
+      payment_method_types: ['card']
     });
     await db.from('event_signups').update({ stripe_session_id: session.id, updated_at: now }).eq('id', row.id);
     if (pay) await db.from('payments').update({ stripe_session_id: session.id }).eq('id', pay.id);
