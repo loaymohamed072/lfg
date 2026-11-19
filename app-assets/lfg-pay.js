@@ -183,9 +183,11 @@
     try {
       // Stripe's contract: divide minor units by the session's own divisor, never a
       // hard-coded 100 (zero- and three-decimal currencies differ).
+      // The divisor lives on the session (dahlia: session.minorUnitsAmountDivisor, probed
+      // 19 Nov); total.total carries only amount + minorUnitsAmount.
       var t = session.total.total;
       var minor = t.minorUnitsAmount;
-      var div = t.minorUnitsAmountDivisor || 100;
+      var div = session.minorUnitsAmountDivisor || t.minorUnitsAmountDivisor || 100;
       var cur = String(session.currency || 'aed').toUpperCase();
       var n = minor / div;
       return cur + ' ' + (n % 1 === 0 ? n.toLocaleString('en-US') : n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
@@ -281,10 +283,14 @@
     function hideErr() { q('.lfgpay-err').hidden = true; }
     var shown = false;
     var failed = false;
+    var settle = null; // resolves what the page awaits; set below
     function failLoad() {
       if (dead || failed) return;
       failed = true;
       clearTimeout(timer);
+      // Release the page's own in-flight guard BEFORE Try again can be tapped (padel and
+      // Musandam ignore a restart while their guard is up).
+      if (settle) settle(ctl);
       els.forEach(function (e) { try { e.destroy(); } catch (x) {} });
       els = [];
       q('.lfgpay-load').hidden = true;
@@ -314,10 +320,15 @@
       setPending(true);
       var args = { redirect: 'if_required' };
       if (expressEvent) args.expressCheckoutConfirmEvent = expressEvent;
+      // The name is optional on the session, so a failed or slow update never blocks the
+      // payment: wait at most 5 s, then confirm. Nothing confirms once the step is closed.
       var before = name && actions.updateIndividualName
-        ? actions.updateIndividualName(name).catch(function () {})
+        ? Promise.race([
+            actions.updateIndividualName(name).catch(function () {}),
+            new Promise(function (r) { setTimeout(r, 5000); })
+          ])
         : Promise.resolve();
-      before.then(function () { return actions.confirm(args); }).then(function (res) {
+      before.then(function () { return dead ? null : actions.confirm(args); }).then(function (res) {
         if (dead) return;
         if (res && res.type === 'success') {
           setPending(true, 'Paid');
@@ -431,6 +442,7 @@
     // The page awaits this, often behind its own "in flight" guard, so it settles even
     // when Stripe hangs; otherwise Try again would hit that guard and do nothing.
     return new Promise(function (resolve) {
+      settle = resolve;
       chain.then(resolve, function () { resolve(ctl); });
       setTimeout(function () { resolve(ctl); }, LOAD_MS + 50);
     });
@@ -453,7 +465,7 @@
     var route = p.get('lfgpay');
     var sid = p.get('session_id');
     if (validReturn(route, sid)) {
-      try { sessionStorage.setItem(RETURN_KEY, JSON.stringify({ route: route, sid: sid, t: Date.now() })); } catch (e) {}
+      try { sessionStorage.setItem(RETURN_KEY, JSON.stringify({ route: route, sid: sid, t: Date.now(), p: location.pathname })); } catch (e) {}
       try {
         p.delete('lfgpay');
         p.delete('session_id');
@@ -463,7 +475,8 @@
     } else {
       var kept = null;
       try { kept = JSON.parse(sessionStorage.getItem(RETURN_KEY) || 'null'); } catch (e) {}
-      if (!kept || Date.now() - kept.t > 30000 || !validReturn(kept.route, kept.sid)) return;
+      // Only on the page the payment came back to, never on the next page they open.
+      if (!kept || Date.now() - kept.t > 30000 || kept.p !== location.pathname || !validReturn(kept.route, kept.sid)) return;
       route = kept.route;
       sid = kept.sid;
     }

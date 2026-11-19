@@ -523,7 +523,10 @@
     try{ history.pushState({ shopPay: 1 }, ''); }catch(e){}
     if (el('shopPay').getBoundingClientRect().top < 70) el('shopPay').scrollIntoView({ block: 'start' });
 
-    var res = await window.lfg.api('/api/checkout', { method:'POST', body: JSON.stringify(window.LFGPay.body({ kind:'merch', size: picked })) });
+    var res;
+    // lfg.api lets a network failure throw; never leave the spinner up.
+    try{ res = await window.lfg.api('/api/checkout', { method:'POST', body: JSON.stringify(window.LFGPay.body({ kind:'merch', size: picked })) }); }
+    catch(e){ res = { ok: false, data: { error: 'Could not reach checkout. Check your connection and try again.' } }; }
     if (gen !== inlineGen) return;
     if (!res.ok || !res.data || !res.data.client_secret || !res.data.publishable_key){
       toast((res.data && res.data.error) || 'Checkout failed. Try again.', true); leaveInline(); return;
