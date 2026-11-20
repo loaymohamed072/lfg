@@ -5,7 +5,7 @@
 // kept in sync with the admin's global settings by /api/admin/set-stations. Reading
 // them off the row means this public endpoint never needs the api schema. Also
 // returns recent group photos (each tied to its Sunday) for the gallery.
-const { admin, getUser, formatDate } = require('./_lib');
+const { admin, getUser, formatDate, stationLock } = require('./_lib');
 const { liveHolds, heldBySession, capacityForBooker, sectionCap } = require('./_friends');
 
 function stationLabels(n) {
@@ -37,6 +37,7 @@ module.exports = async (req, res) => {
   const user = await getUser(req); // optional
 
   try {
+    const lockP = stationLock(db, user && user.id);
     // A session stays "upcoming" until its start time (Dubai, UTC+4) passes; after that
     // it rolls to the next Sunday. Query from yesterday to stay timezone-safe, then filter
     // by the exact start time below.
@@ -105,6 +106,9 @@ module.exports = async (req, res) => {
       });
     }
 
+    // A member locked to one station sees only that one open, outside the balancing
+    // window (member_open_stations in sql/2026-11-20_station_locks.sql); the rest read full.
+    const lock = await lockP;
     const out = sessions.map(s => {
       const e = bySession[s.id] || { total: 0, held: 0, sections: {}, people: {}, mine: false };
       const n = s.stations || 4;
@@ -118,10 +122,19 @@ module.exports = async (req, res) => {
       const sections = labels.map((label, i) => {
         const cap = sectionCap(capNow, i, n);
         const booked = counts[i];
+        if (lock) {
+          // The other stations look the way a closed pick looks to anyone: Full at their
+          // cap, otherwise Opens soon. The locked one shows the usual number while it is
+          // open to everyone, and its real room once only it is open to them.
+          if (label !== lock) return { label, spots_left: Math.max(0, cap - booked), spots_now: 0, full: booked >= cap, waiting: booked < cap };
+          const left = Math.max(0, cap - booked);
+          return { label, spots_left: left, spots_now: Math.min(left, room[i] || left), full: !left, waiting: false };
+        }
         // spots_now: what this station can take before the others catch up (the picker's
         // number). waiting: has room, but the others must catch up first.
         return { label, spots_left: Math.max(0, cap - booked), spots_now: room[i], full: booked >= cap, waiting: booked < cap && !room[i] };
       });
+      const lockedOut = !!lock && !sections.some(x => !x.full && !x.waiting);
       return {
         id: s.id,
         date_label: formatDate(s.session_date, s.start_time),
@@ -137,8 +150,8 @@ module.exports = async (req, res) => {
         max_capacity: s.max_capacity || s.capacity,
         booked: e.total,
         held: e.held,
-        spots_left: spotsLeft,
-        sold_out: spotsLeft === 0 || s.status !== 'open',
+        spots_left: lockedOut ? 0 : spotsLeft,
+        sold_out: spotsLeft === 0 || s.status !== 'open' || lockedOut,
         booked_by_me: e.mine,
         sections
       };

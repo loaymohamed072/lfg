@@ -8,7 +8,7 @@
 // Auth: required for every kind except 'sponsor', which is public (see below).
 // Returns: { url } to redirect the member to Stripe.
 const Stripe = require('stripe');
-const { admin, getUser, ensureMember, validatePromoCode, earlyWeekPromo, earlyWeekPrice, safeError, requireWhatsapp, checkoutUi } = require('./_lib');
+const { admin, getUser, ensureMember, validatePromoCode, earlyWeekPromo, earlyWeekPrice, safeError, requireWhatsapp, checkoutUi, stationLock } = require('./_lib');
 const { cleanMcId } = require('./_manychat');
 const F = require('./_friends');
 
@@ -116,6 +116,9 @@ module.exports = async (req, res) => {
       const noRoom = (r) => r > 0
         ? 'Station ' + section + ' has room for ' + r + ' of you. Pick another station or remove a friend.'
         : 'Station ' + section + ' is full. Pick another station.';
+      // A member locked to one station books only that one (sql/2026-11-20_station_locks.sql).
+      const lock = await stationLock(db, user.id);
+      if (lock && section !== lock) return res.status(409).json({ error: noRoom(0), room: 0 });
       const { data: held, error: hErr } = await db.rpc('create_booking_hold', {
         p_host: user.id, p_session: sess.id, p_kind: 'checkout', p_spots: people, p_price: friendAmount,
         p_section: section, p_friends: friends.map((x) => ({ name: x.name, email: x.email }))
@@ -236,13 +239,22 @@ module.exports = async (req, res) => {
         .eq('session_id', sess.id).in('status', ['booked', 'attended']);
       const held = F.heldBySession(await F.liveHolds(db, [sess.id]), Date.now())[sess.id];
       const taken = (count || 0) + (held ? held.total : 0);
-      if (taken >= F.capacityForBooker(sess, count || 0, held ? held.total : 0)) return res.status(409).json({ error: 'Session is full' });
+      const capNow = F.capacityForBooker(sess, count || 0, held ? held.total : 0);
+      if (taken >= capNow) return res.status(409).json({ error: 'Session is full' });
+      // A member locked to one station is never moved off it (book_paid would refund),
+      // so check that station before the card is charged.
+      const lock = await stationLock(db, user.id);
+      if (lock) {
+        const load = await F.stationLoad(db, sess.id, lock);
+        if (F.stationRoom(capNow, sess.stations, lock, load.booked, load.held) <= 0) return res.status(409).json({ error: 'Session is full' });
+      }
 
       const priced = await priceWithPromo(Number(process.env.SINGLE_SESSION_PRICE_AED || 99), body.promo_code);
       if (priced.error) return res.status(400).json({ error: priced.error });
       if (priced.promo) { promo = priced.promo.code; metadata.promo_code = promo; }
       metadata.session_id = String(sess.id);
-      if (/^[A-Z]$/.test(body.section)) metadata.section = body.section; // preferred station
+      if (lock) metadata.section = lock;
+      else if (/^[A-Z]$/.test(body.section)) metadata.section = body.section; // preferred station
       lineItem = priceItem(priced.amount, 'LFG Bootcamp - Single Session', new Date(sess.session_date).toDateString() + (priced.early ? earlyNote : ''));
 
     } else if (kind === 'sponsor') {

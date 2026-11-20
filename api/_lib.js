@@ -616,6 +616,16 @@ function sectionCapN(total, idx, n, legacy) {
 }
 function stationLabelsN(n) { const o = []; for (let i = 0; i < (n || 4); i++) o.push(String.fromCharCode(65 + i)); return o; }
 
+// The one station a member may book, or null (public.station_locks, 20 Nov 2026). To
+// them every other station reads as full; the booking functions enforce the same rule,
+// so a failed read here only changes what the page shows.
+async function stationLock(db, memberId) {
+  if (!memberId) return null;
+  const { data, error } = await db.from('station_locks').select('section').eq('member_id', memberId).maybeSingle();
+  if (error) { console.warn('[station lock]', error.message); return null; }
+  return (data && data.section) || null;
+}
+
 // PostgREST answers with at most 1000 rows and says nothing about the rest, so a
 // growing table quietly starts returning a partial answer. That is how the run
 // roster emptied itself in Aug 2026. Use this wherever a query has no natural
@@ -1471,6 +1481,6 @@ module.exports = {
   safeError,
   buildMeResponse, formatDate, cancelCutoffOk,
   ownerStats, validatePromoCode, fulfillCheckoutSession, earlyWeekPromo, earlyWeekPrice,
-  stationLabelsN, sectionCapN,
+  stationLabelsN, sectionCapN, stationLock,
   POINTS_PER_RUN, POINTS_PER_BOOTCAMP, pointsByMember, memberPoints
 };
