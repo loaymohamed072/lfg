@@ -8,10 +8,11 @@
    GET ?session_id= verify are exactly what the embedded page used. Server side:
    checkoutUi() in api/_lib.js.
 
-   Rollout switch. Off for everyone until it is proven on a real iPhone:
-     ?checkout=new   turns it on in this browser (kept in localStorage)
-     ?checkout=old   turns it off again
-     DEFAULT_ON      flips it for everyone
+   On for everyone since 20 Nov 2026 (Loay: "make it available for everyone"). The
+   switch stays only as an emergency way back, never shown to customers:
+     DEFAULT_ON      on for everyone; false puts every page back on the embedded page
+     ?checkout=old   puts this one browser back on the embedded page (localStorage)
+     ?checkout=new   undoes that
    A page asks LFGPay.on() before starting a payment; when it is on, the page sends
    { ui: 'elements', return_path } with its create call and mounts with LFGPay.mount
    instead of stripe.initEmbeddedCheckout. LFGPay.mount returns { destroy() }, the same
@@ -27,7 +28,7 @@
 (function () {
   'use strict';
 
-  var DEFAULT_ON = false;
+  var DEFAULT_ON = true;
   var KEY = 'lfg_checkout';
   var WA = 'https://wa.me/971504264410?text=';
   var LOAD_MS = 15000;

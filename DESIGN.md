@@ -69,11 +69,12 @@ padel, Musandam, events). Stripe Checkout Sessions in `ui_mode: 'elements'`, so 
 session, the webhook and each page's `GET ?session_id=` verify are what the embedded page
 used. Server: `checkoutUi()` in `api/_lib.js`.
 
-**Rollout switch.** Off for everyone (`DEFAULT_ON = false`). `?checkout=new` turns it on in
-one browser, `?checkout=old` turns it off. Off = Stripe.js `/v3/` and the embedded page as
-before; on = Stripe.js `/dahlia/` and this checkout. No single Stripe.js runs both:
-`/v3/` refuses the Elements SDK, `/dahlia/` removed `initEmbeddedCheckout` (tested 19 Nov).
-Flip `DEFAULT_ON` after a real Apple Pay payment on an iPhone on the live site.
+**Switch.** On for everyone since 20 Nov (`DEFAULT_ON = true`, Loay's call). It stays only as
+an emergency way back: `DEFAULT_ON = false` returns every page to the embedded page, and
+`?checkout=old` does it for one browser (`?checkout=new` undoes that). Off = Stripe.js `/v3/`
+and the embedded page as before; on = Stripe.js `/dahlia/` and this checkout. No single
+Stripe.js runs both: `/v3/` refuses the Elements SDK, `/dahlia/` removed
+`initEmbeddedCheckout` (tested 19 Nov).
 
 **The step, top to bottom.** Wallet buttons (Apple Pay first, then Google Pay, Link; only
 what the device offers; the band stays collapsed until Stripe says) · "or pay by card" ·
