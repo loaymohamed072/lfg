@@ -5,7 +5,7 @@
 // kept in sync with the admin's global settings by /api/admin/set-stations. Reading
 // them off the row means this public endpoint never needs the api schema. Also
 // returns recent group photos (each tied to its Sunday) for the gallery.
-const { admin, getUser, formatDate, stationLock } = require('./_lib');
+const { admin, getUser, formatDate, stationLocks } = require('./_lib');
 const { liveHolds, heldBySession, capacityForBooker, sectionCap } = require('./_friends');
 
 function stationLabels(n) {
@@ -16,16 +16,15 @@ function stationLabels(n) {
 // Soft balancing, mirroring public.balanced_open_stations (the RPCs enforce it; keep the
 // two in sync). The stations with the fewest people booked open first; a spot held for a
 // friend fills its station's cap but is not a person yet (sql/2026-11-04_balance_by_people.sql).
-// The window moves with the session: a station may run 4 ahead of the emptiest one while
-// the Sunday is under half full (friends can group), 2 once it passes half (stations
-// converge and each tile reads "Only 2 left"). people: booked per station, taken: booked
-// plus held. Returns what each station can take now; 0 = waiting or full.
+// A station may run 4 ahead of the emptiest one for the whole Sunday (it tightened to 2
+// past half full until 20 Nov 2026: sql/2026-11-20_station_window.sql). people: booked
+// per station, taken: booked plus held. Returns what each station can take now;
+// 0 = waiting or full.
 function stationRoom(total, n, people, taken) {
   const caps = people.map((_, i) => sectionCap(total, i, n));
   const withRoom = people.filter((_, i) => taken[i] < caps[i]);
   if (!withRoom.length) return people.map(() => 0);
-  const win = total > 0 && taken.reduce((a, b) => a + b, 0) * 2 >= total ? 2 : 4;
-  const level = 2 * Math.floor(Math.min(...withRoom) / 2) + win;
+  const level = 2 * Math.floor(Math.min(...withRoom) / 2) + 4;
   return people.map((p, i) => Math.max(0, Math.min(level - p, caps[i] - taken[i])));
 }
 
@@ -37,7 +36,7 @@ module.exports = async (req, res) => {
   const user = await getUser(req); // optional
 
   try {
-    const lockP = stationLock(db, user && user.id);
+    const locksP = stationLocks(db, user && user.id);
     // A session stays "upcoming" until its start time (Dubai, UTC+4) passes; after that
     // it rolls to the next Sunday. Query from yesterday to stay timezone-safe, then filter
     // by the exact start time below.
@@ -106,10 +105,11 @@ module.exports = async (req, res) => {
       });
     }
 
-    // A member locked to one station sees only that one open, outside the balancing
-    // window (member_open_stations in sql/2026-11-20_station_locks.sql); the rest read full.
-    const lock = await lockP;
+    // A member locked to one station on a Sunday sees only that one open there, outside the
+    // balancing window (member_open_stations, sql/2026-11-20_station_lock_one_sunday.sql).
+    const locks = await locksP;
     const out = sessions.map(s => {
+      const lock = locks[s.id] || null;
       const e = bySession[s.id] || { total: 0, held: 0, sections: {}, people: {}, mine: false };
       const n = s.stations || 4;
       // Held spots never sell out a Sunday that can still grow: the next booking grows it,
