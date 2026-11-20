@@ -132,6 +132,9 @@
     '.lfgpay-spin{width:26px;height:26px;border:2px solid rgba(255,255,255,.08);border-top-color:#999966;border-radius:50%;animation:lfgpay-spin .8s linear infinite}',
     '@keyframes lfgpay-spin{to{transform:rotate(360deg)}}',
     '.lfgpay-express.is-pending{height:0;overflow:hidden}',
+    // Stripe sizes its frames 8px wider than the box (margin -4px) so the fields line up
+    // with it; a page reset like track's `iframe{max-width:100%}` cut them 8px short.
+    '.lfgpay iframe{max-width:none!important}',
     // A page's sticky "Book" bar sat on top of the Pay button on phones and took the tap.
     // Any element marked data-hide-during-pay steps aside while a checkout is open.
     'html.lfgpay-active [data-hide-during-pay]{display:none!important}',
