@@ -13,7 +13,7 @@
 // Security: price + paid flag come from event_config (server-side), never the client, so
 // nobody can set their own amount. Service-role writes only.
 const Stripe = require('stripe');
-const { admin, authService, getUser, ensureMember, safeError, checkoutUi } = require('./_lib');
+const { admin, getUser, ensureMember, safeError, checkoutUi } = require('./_lib');
 const { cleanMcId } = require('./_manychat');
 
 function cleanEmail(v) {
@@ -39,27 +39,6 @@ function weekdayType(runDate) {
     const d = new Date(runDate + 'T12:00:00Z');
     return d.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'Asia/Dubai' }).toLowerCase();
   } catch (e) { return null; }
-}
-
-// Ensure a member row exists for this email so the payment (and the webhook's RSVP
-// upsert) has a stable member_id to hang off. Idempotent - reuses the row that
-// run-register just created, or provisions a passwordless account if we somehow got
-// here first.
-async function ensureRunnerByEmail(db, email, fullName) {
-  const { data: m } = await db.from('members').select('id').eq('email', email).maybeSingle();
-  if (m) return m.id;
-  try {
-    const auth = authService();
-    const { data: created } = await auth.auth.admin.createUser({
-      email, email_confirm: true, user_metadata: fullName ? { full_name: fullName } : {}
-    });
-    if (created && created.user) {
-      await db.from('members').upsert({ id: created.user.id, email, full_name: fullName || null }, { onConflict: 'id' });
-      return created.user.id;
-    }
-  } catch (e) { /* already registered or transient - fall through to re-lookup */ }
-  const { data: m2 } = await db.from('members').select('id').eq('email', email).maybeSingle();
-  return m2 ? m2.id : null;
 }
 
 module.exports = async (req, res) => {
@@ -107,8 +86,12 @@ module.exports = async (req, res) => {
     } else {
       const email = cleanEmail(body.email);
       if (!email) return res.status(400).json({ error: 'A valid email is required' });
+      // Only an email the registration form already saved (run-register, which has the
+      // honeypot and rate limit). Until 23 Nov 2026 an unknown email made a new account
+      // here and marked it coming: bots posting straight to this endpoint put 67 nameless
+      // "runners" on the 24 Nov roster.
       const { data: member } = await db.from('members').select('id').eq('email', email).maybeSingle();
-      memberId = member ? member.id : await ensureRunnerByEmail(db, email, null);
+      memberId = member ? member.id : null;
       custEmail = email;
     }
     if (!memberId) return res.status(400).json({ error: 'Register first, then pay.' });
