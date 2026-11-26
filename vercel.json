@@ -23,6 +23,11 @@
       "source": "/run",
       "destination": "/#register-form",
       "permanent": false
+    },
+    {
+      "source": "/musandam",
+      "destination": "/",
+      "permanent": false
     }
   ],
   "crons": [
